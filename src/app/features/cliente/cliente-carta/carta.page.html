@@ -1,0 +1,51 @@
+<div class="menu-page">
+  <section class="menu-hero">
+    <h1>Nuestra Carta</h1>
+    <p>Explora nuestras categorías y elige tu favorito</p>
+  </section>
+
+  <section class="menu-filters">
+    <div class="container">
+      <div class="chips">
+        @for (category of categories; track category) {
+          <button class="chip" [class.chip--active]="category === 'Todo'" type="button">{{ category }}</button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <main class="menu-content container">
+    @for (section of sections; track section.title) {
+      <section class="menu-block">
+        <div class="menu-block__header">
+          <h2>{{ section.title }}</h2>
+          <span class="menu-block__line"></span>
+        </div>
+        <div class="menu-cards">
+          @for (dish of section.items; track dish.name) {
+            <article class="menu-card card">
+              <div
+                class="menu-card__media"
+                [class.menu-card__media--sky]="dish.tone === 'sky'"
+                [class.menu-card__media--beige]="dish.tone === 'beige'"
+                [class.menu-card__media--mint]="dish.tone === 'mint'"
+                [class.menu-card__media--sand]="dish.tone === 'sand'"
+              >
+                @if (dish.badge) {
+                  <span class="menu-card__badge">{{ dish.badge }}</span>
+                }
+                <div class="dish-photo" [class.dish-photo--bowl]="dish.media === 'bowl'"></div>
+              </div>
+              <div class="menu-card__body">
+                <h3>{{ dish.name }}</h3>
+                <p>{{ dish.description }}</p>
+                <strong>{{ dish.price }}</strong>
+                <button class="btn menu-card__btn" type="button">Agregar</button>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+  </main>
+</div>

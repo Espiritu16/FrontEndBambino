@@ -1,0 +1,112 @@
+:host {
+  display: block;
+}
+
+.admin-dashboard {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-dashboard__hero {
+  background: linear-gradient(130deg, #8d0a0a 0%, #af1111 100%);
+  color: #fff;
+  padding: 1.1rem 1.2rem;
+}
+
+.overline {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  opacity: 0.88;
+}
+
+.admin-dashboard__hero h1 {
+  margin: 0.2rem 0;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(2.1rem, 4vw, 3.4rem);
+}
+
+.admin-dashboard__hero p {
+  margin: 0;
+}
+
+.admin-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.admin-kpi {
+  padding: 0.9rem;
+}
+
+.admin-kpi small {
+  color: #667085;
+  font-size: 0.76rem;
+}
+
+.admin-kpi strong {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 2rem;
+  color: #1f2a3e;
+}
+
+.admin-kpi span {
+  color: #067647;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.admin-panel {
+  padding: 1rem;
+}
+
+.admin-panel h2 {
+  margin: 0 0 0.6rem;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+  color: #8d0a0a;
+  font-size: 2rem;
+}
+
+.admin-panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-panel li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #334155;
+}
+
+.admin-panel .material-symbols-outlined {
+  font-size: 18px;
+  color: #b81c1c;
+}
+
+@media (max-width: 1100px) {
+  .admin-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .admin-kpis,
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}

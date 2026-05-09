@@ -1,0 +1,135 @@
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <a class="admin-brand" routerLink="/admin">
+      <img src="/logo-bambino-sinfondo.png" alt="Bambino" />
+      <div>
+        <strong>Bambino Chicken</strong>
+        <span>Panel Administrador</span>
+      </div>
+    </a>
+
+    <nav class="admin-nav" aria-label="Navegación administrador">
+      <a
+        routerLink="/admin"
+        routerLinkActive="admin-nav__item--active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="admin-nav__item"
+      >
+        <span class="material-symbols-outlined">space_dashboard</span>
+        <span>Dashboard</span>
+      </a>
+
+      <div class="admin-nav__group" [class.admin-nav__group--open]="commercialOpen || isCommercialRoute()">
+        <button class="admin-nav__item admin-nav__toggle" type="button" (click)="toggleCommercialMenu()">
+          <span class="admin-nav__left">
+            <span class="material-symbols-outlined">storefront</span>
+            <span>Gestión Comercial</span>
+          </span>
+          <span class="material-symbols-outlined admin-nav__chevron">expand_more</span>
+        </button>
+
+        @if (commercialOpen || isCommercialRoute()) {
+          <div class="admin-nav__submenu">
+            <a
+              routerLink="/admin/comercial/productos"
+              routerLinkActive="admin-nav__subitem--active"
+              class="admin-nav__subitem"
+            >
+              Productos
+            </a>
+            <a
+              routerLink="/admin/comercial/ofertas"
+              routerLinkActive="admin-nav__subitem--active"
+              class="admin-nav__subitem"
+            >
+              Ofertas
+            </a>
+          </div>
+        }
+      </div>
+
+      <div class="admin-nav__group" [class.admin-nav__group--open]="webOpen || isWebRoute()">
+        <button class="admin-nav__item admin-nav__toggle" type="button" (click)="toggleWebMenu()">
+          <span class="admin-nav__left">
+            <span class="material-symbols-outlined">language</span>
+            <span>Web</span>
+          </span>
+          <span class="material-symbols-outlined admin-nav__chevron">expand_more</span>
+        </button>
+
+        @if (webOpen || isWebRoute()) {
+          <div class="admin-nav__submenu">
+            <a
+              routerLink="/admin/web/inicio"
+              routerLinkActive="admin-nav__subitem--active"
+              class="admin-nav__subitem"
+            >
+              Inicio
+            </a>
+            <a
+              routerLink="/admin/web/nosotros"
+              routerLinkActive="admin-nav__subitem--active"
+              class="admin-nav__subitem"
+            >
+              Nosotros
+            </a>
+            <a
+              routerLink="/admin/web/carta-pdf"
+              routerLinkActive="admin-nav__subitem--active"
+              class="admin-nav__subitem"
+            >
+              Carta PDF
+            </a>
+          </div>
+        }
+      </div>
+
+      @for (item of navItems; track item.to) {
+        <a
+          [routerLink]="item.to"
+          routerLinkActive="admin-nav__item--active"
+          [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+          class="admin-nav__item"
+        >
+          <span class="material-symbols-outlined">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="admin-sidebar__bottom">
+      <button class="admin-user-card" type="button">
+        <span class="material-symbols-outlined">account_circle</span>
+        <div>
+          <strong>{{ userFullName }}</strong>
+          <small>{{ userEmail }}</small>
+        </div>
+      </button>
+
+      <button class="admin-action admin-action--home" type="button" (click)="openConfirm('home')">
+        <span class="material-symbols-outlined">home</span>
+        Volver al inicio
+      </button>
+
+      <button class="admin-action admin-action--logout" type="button" (click)="openConfirm('logout')">
+        <span class="material-symbols-outlined">logout</span>
+        Salir
+      </button>
+    </div>
+  </aside>
+
+  <main class="admin-content">
+    <router-outlet />
+  </main>
+</div>
+
+@if (confirmAction) {
+  <app-confirm-modal
+    [title]="confirmAction === 'home' ? '¿Volver al inicio?' : '¿Cerrar sesión?'"
+    [message]="confirmAction === 'home' ? 'Volverás al inicio del sitio manteniendo la sesión activa.' : 'Se cerrará tu sesión y regresarás al inicio.'"
+    cancelText="Cancelar"
+    confirmText="Confirmar"
+    (cancel)="closeConfirm()"
+    (confirm)="confirmCurrentAction()"
+  />
+}

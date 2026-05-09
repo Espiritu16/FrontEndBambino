@@ -1,0 +1,74 @@
+<div class="menu-page">
+  <section class="menu-hero">
+    <h1>Promociones</h1>
+    <p>Encuentra combos y ofertas especiales para compartir</p>
+  </section>
+
+  <section class="menu-filters section-cream">
+    <div class="container">
+      <div class="chips">
+        @for (category of categories; track category) {
+          <button
+            class="chip"
+            [class.chip--active]="category === selectedCategory"
+            type="button"
+            (click)="onSelectCategory(category)"
+          >
+            {{ category }}
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <main class="menu-content section-cream">
+    <div class="container">
+    @if (loading) {
+      <p>Cargando productos...</p>
+    }
+
+    @if (error) {
+      <p>{{ error }}</p>
+    }
+
+    <section class="menu-block">
+      <div class="menu-block__header menu-block__header--center">
+        <span class="menu-block__line"></span>
+        <h2>{{ sectionTitle }}</h2>
+        <span class="menu-block__line"></span>
+      </div>
+      <div class="menu-cards">
+        @for (item of productos; track item.idProducto; let i = $index) {
+          <article class="menu-card card">
+            <div
+              class="menu-card__media"
+              [class.menu-card__media--sky]="toneFor(i) === 'sky'"
+              [class.menu-card__media--beige]="toneFor(i) === 'beige'"
+              [class.menu-card__media--mint]="toneFor(i) === 'mint'"
+              [class.menu-card__media--sand]="toneFor(i) === 'sand'"
+            >
+              @if (badgeFor(i)) {
+                <span class="menu-card__badge">{{ badgeFor(i) }}</span>
+              }
+              @if (item.imagenUrl) {
+                <img class="dish-photo dish-photo--real" [src]="item.imagenUrl" [alt]="item.nombre" />
+              } @else {
+                <div class="dish-photo"></div>
+              }
+            </div>
+            <div class="menu-card__body">
+              <h3>{{ item.nombre }}</h3>
+              <p>{{ item.descripcion || 'Producto del catálogo Bambino.' }}</p>
+              <strong>S/ {{ item.precioBase }}</strong>
+              <button class="btn menu-card__btn" type="button">Agregar</button>
+            </div>
+          </article>
+        }
+      </div>
+      @if (!loading && !error && productos.length === 0) {
+        <p>No hay productos para este filtro.</p>
+      }
+    </section>
+    </div>
+  </main>
+</div>

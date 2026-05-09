@@ -1,0 +1,109 @@
+<section class="admin-module card">
+  <div class="admin-module__head">
+    <div>
+      <p class="overline">Gestión Web</p>
+      <h2>{{ sectionName }}</h2>
+      <p>Administra recurso multimedia y contenido de esta sección.</p>
+    </div>
+  </div>
+
+  @if (loading) {
+    <p class="muted">Cargando configuración...</p>
+  } @else {
+    @if (isInicioSection) {
+      <div class="inicio-preview">
+        <div class="inicio-preview__layout">
+          <div class="inicio-preview__copy">
+            <span class="eyebrow">Sabor 100% peruano</span>
+            <h3>DISFRUTA EL<br />AUTÉNTICO<br />SABOR.</h3>
+            <p>Preview estático de Inicio para edición visual del banner.</p>
+          </div>
+          <button class="inicio-preview__hero" type="button" (click)="openImageEditorModal()">
+            @if (previewImageUrl) {
+              <img [src]="previewImageUrl" alt="Preview inicio" />
+            } @else {
+              <div class="inicio-preview__placeholder">Sin imagen</div>
+            }
+            <span class="inicio-preview__edit">{{ previewImageUrl ? 'Editar imagen' : 'Agregar imagen' }}</span>
+          </button>
+        </div>
+        @if (previewImageUrl) {
+          <div class="inicio-preview__actions">
+            <button type="button" class="btn-ghost" [disabled]="saving || uploading" (click)="removeImage()">Quitar imagen</button>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="form-grid">
+      <label>
+        Clave
+        <input type="text" [ngModel]="form.clave" readonly />
+      </label>
+      <label>
+        Tipo
+        <input type="text" [ngModel]="form.tipo" readonly />
+      </label>
+      <label class="full">
+        Nombre
+        <input type="text" [(ngModel)]="form.nombre" />
+      </label>
+      <label class="full">
+        Descripción
+        <textarea rows="3" [(ngModel)]="form.descripcion"></textarea>
+      </label>
+      <label class="full">
+        URL
+        <input type="text" [ngModel]="form.url" readonly />
+      </label>
+      <label>
+        Public ID
+        <input type="text" [ngModel]="form.publicId" readonly />
+      </label>
+      <label>
+        Version Tag
+        <input type="text" [ngModel]="form.versionTag" readonly />
+      </label>
+    </div>
+
+    <div class="upload-block">
+      <label class="check-row">
+        <input type="checkbox" [(ngModel)]="form.activa" />
+        Activa
+      </label>
+      @if (selectedFileName) {
+        <small class="muted">Archivo pendiente: {{ selectedFileName }} (se sube al guardar)</small>
+      }
+    </div>
+
+    @if (error) {
+      <p class="error">{{ error }}</p>
+    }
+
+    <div class="actions">
+      <button type="button" class="btn-primary" [disabled]="saving || uploading" (click)="save()">
+        {{ saving ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+  }
+</section>
+
+@if (showImageEditorModal) {
+  <div class="modal-backdrop">
+    <section class="modal-card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3>Editar imagen de Inicio</h3>
+      <p class="muted">Selecciona un archivo, súbelo y luego guarda cambios.</p>
+      <div class="upload-inline">
+        <input
+          [attr.accept]="'image/png,image/jpeg,image/jpg,image/webp'"
+          type="file"
+          (change)="uploadFile($event)"
+        />
+        <small class="muted">{{ selectedFileName ? ('Archivo: ' + selectedFileName + ' (pendiente de guardar)') : 'Selecciona imagen; se sube al guardar cambios.' }}</small>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn-ghost" (click)="closeImageEditorModal()">Cerrar</button>
+      </div>
+    </section>
+  </div>
+}

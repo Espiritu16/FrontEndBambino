@@ -1,1 +1,350 @@
+<header class="topbar">
+  <div class="container topbar__inner">
+    <button class="topbar__mobile-menu" type="button" aria-label="Abrir menú" (click)="toggleMobileMenu()"><span class="material-symbols-outlined">menu</span></button>
+    <a class="brand" routerLink="/inicio" aria-label="Bambino inicio">
+      <img src="/logo-bambino-sinfondo.png" alt="Bambino" />
+      <span class="brand__text">Bambino Chicken</span>
+    </a>
+    <nav class="topbar__nav">
+      <a routerLink="/inicio">Inicio</a>
+      <a routerLink="/promociones">Promociones</a>
+      <a routerLink="/carta">Carta</a>
+      <a routerLink="/asistente-chat">Nosotros</a>
+    </nav>
+    <div class="topbar__tools">
+      <button class="pill pill--location" type="button"><span class="material-symbols-outlined">location_on</span>Sede Principal</button>
+      <label class="pill pill--search">
+        <span class="material-symbols-outlined">search</span>
+        <input type="text" placeholder="Buscar..." />
+      </label>
+    </div>
+
+    <div class="topbar__actions">
+      @if (!isAuthenticated) {
+        <button class="btn topbar-btn topbar-btn--ghost" (click)="openLoginModal()">Ingresar</button>
+      } @else {
+        <span class="topbar__hello">Hola, {{ displayName }}</span>
+        @if (isAdmin) {
+          <button class="btn topbar-btn topbar-btn--ghost" (click)="goToAdminPanel()">Admin</button>
+        }
+        <button class="btn topbar-btn topbar-btn--ghost" (click)="openLogoutConfirm()">Salir</button>
+      }
+      <button class="btn topbar-btn topbar-btn--solid" (click)="handleMyOrderClick()"><span class="material-symbols-outlined">shopping_bag</span>Mi pedido</button>
+    </div>
+    <div class="topbar__mobile-right">
+      <button class="topbar__mobile-bag" type="button" aria-label="Pedidos" (click)="handleMyOrderClick()"><span class="material-symbols-outlined">shopping_bag</span></button>
+      <button class="topbar__mobile-avatar" type="button" aria-label="Perfil"></button>
+    </div>
+  </div>
+</header>
+@if (isLogoutConfirmOpen) {
+  <app-confirm-modal
+    title="¿Deseas cerrar sesión?"
+    message="Se cerrará tu sesión actual en este dispositivo."
+    cancelText="Cancelar"
+    confirmText="Sí, salir"
+    (cancel)="closeLogoutConfirm()"
+    (confirm)="logout()"
+  />
+}
+@if (isLoginModalOpen) {
+  <div class="login-modal-backdrop">
+    <section class="login-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true" aria-label="Autenticación">
+      <button class="login-modal__close" type="button" aria-label="Cerrar" (click)="closeLoginModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+
+      <div class="login-modal__logo-wrap">
+        <img src="/logo-bambino-sinfondo.png" alt="Bambino" class="login-modal__logo" />
+      </div>
+
+      @if (modalView === 'login') {
+        <h3>Bienvenido a Bambino</h3>
+        <p>Inicia sesión para realizar tus pedidos y revisar tu historial</p>
+
+        <form class="login-modal__form" (submit)="$event.preventDefault(); submitLogin()">
+          <label>Correo Electrónico</label>
+          <div class="login-modal__field">
+            <span class="material-symbols-outlined">mail</span>
+            <input type="email" name="login_email" [(ngModel)]="loginEmail" placeholder="cliente@correo.com" />
+          </div>
+
+          <label>Contraseña</label>
+          <div class="login-modal__field" [class.login-modal__field--error]="!!loginError">
+            <span class="material-symbols-outlined">lock</span>
+            <input [type]="showLoginPassword ? 'text' : 'password'" name="login_password" [(ngModel)]="loginPassword" placeholder="********" />
+            <button type="button" aria-label="Mostrar contraseña" (click)="showLoginPassword = !showLoginPassword">
+              <span class="material-symbols-outlined">{{ showLoginPassword ? 'visibility' : 'visibility_off' }}</span>
+            </button>
+          </div>
+
+          @if (loginError) {
+            <small class="login-modal__error">
+              <span class="material-symbols-outlined">error</span> {{ loginError }}
+            </small>
+          }
+
+          <button type="button" class="login-modal__forgot" (click)="openForgotPassword()">¿Olvidaste tu contraseña?</button>
+
+          <button class="login-modal__submit" type="submit" [disabled]="loginLoading">
+            {{ loginLoading ? 'Ingresando...' : 'Ingresar' }}
+          </button>
+        </form>
+
+        <div class="login-modal__register">
+          ¿No tienes cuenta? <button type="button" (click)="openRegister()">Regístrate aquí</button>
+        </div>
+      }
+
+      @if (modalView === 'forgot') {
+        <h3>Recuperar Cuenta</h3>
+        <p>Te ayudaremos a restablecer tu contraseña</p>
+
+        @if (forgotSuccess) {
+          <small class="login-modal__success">{{ forgotSuccess }}</small>
+        }
+        @if (forgotError) {
+          <small class="login-modal__error"><span class="material-symbols-outlined">error</span> {{ forgotError }}</small>
+        }
+
+        @if (forgotStep === 'request') {
+          <form class="login-modal__form" (submit)="$event.preventDefault(); requestRecoveryCode()">
+            <label>Correo Electrónico</label>
+            <div class="login-modal__field">
+              <span class="material-symbols-outlined">mail</span>
+              <input type="email" name="forgot_email" [(ngModel)]="forgotEmail" placeholder="cliente@correo.com" />
+            </div>
+            <button class="login-modal__submit" type="submit" [disabled]="forgotLoading">{{ forgotLoading ? 'Enviando...' : 'Enviar código' }}</button>
+          </form>
+        }
+
+        @if (forgotStep === 'code') {
+          <form class="login-modal__form" (submit)="$event.preventDefault(); goToResetStep()">
+            <label>Código de verificación</label>
+            <div class="recovery-code" (paste)="onRecoveryCodePaste($event)">
+              @for (idx of recoveryCodeIndexes; track idx) {
+                <input
+                  [id]="'recovery-code-' + idx"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="1"
+                  autocomplete="one-time-code"
+                  [value]="recoveryCodeDigits[idx]"
+                  (input)="onRecoveryCodeInput(idx, $event)"
+                  (keydown)="onRecoveryCodeKeydown(idx, $event)"
+                  (paste)="onRecoveryCodePaste($event)"
+                  aria-label="Dígito {{ idx + 1 }} del código"
+                />
+              }
+            </div>
+            <button class="login-modal__submit" type="submit">Continuar</button>
+          </form>
+        }
+
+        @if (forgotStep === 'reset' && isRecoveryCodeValidated) {
+          <form class="login-modal__form" (submit)="$event.preventDefault(); confirmPasswordReset()">
+            <label>Nueva Contraseña</label>
+            <div class="login-modal__field">
+              <span class="material-symbols-outlined">lock</span>
+              <input [type]="showForgotNewPassword ? 'text' : 'password'" name="forgot_new_password" [(ngModel)]="forgotNewPassword" placeholder="Mínimo 8 caracteres" />
+              <button type="button" (click)="showForgotNewPassword = !showForgotNewPassword">
+                <span class="material-symbols-outlined">{{ showForgotNewPassword ? 'visibility' : 'visibility_off' }}</span>
+              </button>
+            </div>
+
+            <label>Confirmar Contraseña</label>
+            <div class="login-modal__field">
+              <span class="material-symbols-outlined">lock</span>
+              <input [type]="showForgotConfirmPassword ? 'text' : 'password'" name="forgot_confirm_password" [(ngModel)]="forgotConfirmPassword" placeholder="Repite la contraseña" />
+              <button type="button" (click)="showForgotConfirmPassword = !showForgotConfirmPassword">
+                <span class="material-symbols-outlined">{{ showForgotConfirmPassword ? 'visibility' : 'visibility_off' }}</span>
+              </button>
+            </div>
+
+            <button class="login-modal__submit" type="submit" [disabled]="forgotLoading">{{ forgotLoading ? 'Guardando...' : 'Guardar contraseña' }}</button>
+          </form>
+        }
+
+        @if (forgotStep === 'done') {
+          <div class="login-modal__done">
+            <button class="login-modal__submit" type="button" (click)="backToLogin()">Volver a iniciar sesión</button>
+          </div>
+        }
+
+        @if (forgotStep !== 'done') {
+          <div class="login-modal__register">
+            <button type="button" (click)="backToLogin()">Volver al inicio de sesión</button>
+          </div>
+        }
+      }
+
+      @if (modalView === 'register') {
+        <h3>Crear Cuenta</h3>
+        <p>Regístrate para empezar a pedir</p>
+
+        @if (registerSuccess) {
+          <small class="login-modal__success">{{ registerSuccess }}</small>
+        }
+        @if (registerError) {
+          <small class="login-modal__error"><span class="material-symbols-outlined">error</span> {{ registerError }}</small>
+        }
+
+        <form class="login-modal__form" (submit)="$event.preventDefault(); submitRegister()">
+          <label>Correo Electrónico</label>
+          <div class="login-modal__row-two login-modal__row-two--email">
+            <div class="login-modal__field">
+              <span class="material-symbols-outlined">mail</span>
+              <input
+                type="text"
+                name="register_email_local"
+                [(ngModel)]="registerEmailLocal"
+                (beforeinput)="preventEmailLocalBeforeInput($event)"
+                (input)="sanitizeEmailLocalInput()"
+                (keydown)="preventInvalidEmailLocalKey($event)"
+                (paste)="handleEmailLocalPaste($event)"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                maxlength="64"
+                placeholder="cliente"
+              />
+            </div>
+            <select name="register_email_domain" [(ngModel)]="registerEmailDomain" (ngModelChange)="persistRegisterDraft()">
+              <option value="gmail.com">@gmail.com</option>
+              <option value="hotmail.com">@hotmail.com</option>
+              <option value="outlook.com">@outlook.com</option>
+            </select>
+          </div>
+          @if (registerFieldErrors.email) { <small class="login-modal__field-error">{{ registerFieldErrors.email }}</small> }
+
+          <label>Nombres</label>
+          <div class="login-modal__field">
+            <span class="material-symbols-outlined">person</span>
+            <input type="text" name="register_nombres" [(ngModel)]="registerNombres" (ngModelChange)="registerNombres = sanitizePersonName($event); persistRegisterDraft()" (keydown)="preventInvalidNameKey($event)" (paste)="handleNamePaste($event, 'nombres')" placeholder="Nombres" />
+          </div>
+          @if (registerFieldErrors.nombres) { <small class="login-modal__field-error">{{ registerFieldErrors.nombres }}</small> }
+
+          <label>Apellidos</label>
+          <div class="login-modal__field">
+            <span class="material-symbols-outlined">person</span>
+            <input type="text" name="register_apellidos" [(ngModel)]="registerApellidos" (ngModelChange)="registerApellidos = sanitizePersonName($event); persistRegisterDraft()" (keydown)="preventInvalidNameKey($event)" (paste)="handleNamePaste($event, 'apellidos')" placeholder="Apellidos" />
+          </div>
+          @if (registerFieldErrors.apellidos) { <small class="login-modal__field-error">{{ registerFieldErrors.apellidos }}</small> }
+
+          <label>Documento</label>
+          <div class="login-modal__row-two">
+            <select name="register_doc_tipo" [(ngModel)]="registerDocTipo" (ngModelChange)="onDocTypeChange()">
+              <option value="DNI">DNI</option>
+              <option value="CE">CE</option>
+              <option value="PASAPORTE">PASAPORTE</option>
+            </select>
+            <div class="login-modal__field">
+              <span class="material-symbols-outlined">badge</span>
+              <input
+                type="text"
+                name="register_doc_numero"
+                [(ngModel)]="registerDocNumero"
+                (beforeinput)="preventDocBeforeInput($event)"
+                (input)="sanitizeDocInput()"
+                (keydown)="preventInvalidDocKey($event)"
+                (paste)="handleDocPaste($event)"
+                [attr.maxlength]="getDocMaxLength()"
+                placeholder="Número"
+              />
+            </div>
+          </div>
+          @if (registerFieldErrors.docNumero) { <small class="login-modal__field-error">{{ registerFieldErrors.docNumero }}</small> }
+
+          <label>Teléfono (Opcional)</label>
+          <div class="login-modal__field">
+            <span class="material-symbols-outlined">call</span>
+            <input type="tel" name="register_telefono" [(ngModel)]="registerTelefono" (beforeinput)="preventPhoneBeforeInput($event)" (input)="registerTelefono = registerTelefono.replace(/[^0-9]/g, '').slice(0, 9); persistRegisterDraft()" (keydown)="preventNonNumericKey($event)" (paste)="handlePhonePaste($event)" inputmode="numeric" pattern="[0-9]*" autocomplete="off" maxlength="9" placeholder="987654321" />
+          </div>
+          @if (registerFieldErrors.telefono) { <small class="login-modal__field-error">{{ registerFieldErrors.telefono }}</small> }
+
+          <label>Contraseña</label>
+          <div class="login-modal__field">
+            <span class="material-symbols-outlined">lock</span>
+            <input [type]="showRegisterPassword ? 'text' : 'password'" name="register_password" [(ngModel)]="registerPassword" (ngModelChange)="persistRegisterDraft()" placeholder="Mínimo 8 caracteres" />
+            <button type="button" (click)="showRegisterPassword = !showRegisterPassword">
+              <span class="material-symbols-outlined">{{ showRegisterPassword ? 'visibility' : 'visibility_off' }}</span>
+            </button>
+          </div>
+          @if (registerFieldErrors.password) { <small class="login-modal__field-error">{{ registerFieldErrors.password }}</small> }
+
+          <label>Confirmar Contraseña</label>
+          <div class="login-modal__field">
+            <span class="material-symbols-outlined">lock</span>
+            <input [type]="showRegisterConfirmPassword ? 'text' : 'password'" name="register_confirm_password" [(ngModel)]="registerConfirmPassword" (ngModelChange)="persistRegisterDraft()" placeholder="Repite la contraseña" />
+            <button type="button" (click)="showRegisterConfirmPassword = !showRegisterConfirmPassword">
+              <span class="material-symbols-outlined">{{ showRegisterConfirmPassword ? 'visibility' : 'visibility_off' }}</span>
+            </button>
+          </div>
+          @if (registerFieldErrors.confirmPassword) { <small class="login-modal__field-error">{{ registerFieldErrors.confirmPassword }}</small> }
+
+          <button class="login-modal__submit" type="submit" [disabled]="registerLoading">{{ registerLoading ? 'Registrando...' : 'Crear cuenta' }}</button>
+        </form>
+
+        <div class="login-modal__register">
+          ¿Ya tienes cuenta? <button type="button" (click)="backToLogin()">Inicia sesión</button>
+        </div>
+      }
+    </section>
+  </div>
+}
+@if (isMobileMenuOpen) {
+  <nav class="mobile-nav" aria-label="Menu principal movil">
+    <a routerLink="/inicio" (click)="closeMobileMenu()">Inicio</a>
+    <a routerLink="/promociones" (click)="closeMobileMenu()">Promociones</a>
+    <a routerLink="/carta" (click)="closeMobileMenu()">Carta</a>
+    <a routerLink="/asistente-chat" (click)="closeMobileMenu()">Nosotros</a>
+  </nav>
+}
+
 <router-outlet />
+
+<footer class="footer">
+  <div class="container footer__grid">
+    <div>
+      <h3 class="brand-title">Bambino</h3>
+      <p>El auténtico sabor del pollo a la brasa y la mejor fusión peruano-oriental. Un espacio cálido para compartir en familia.</p>
+      <div class="footer__social">
+        <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f" aria-hidden="true"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
+        <a href="#" aria-label="TikTok"><i class="fa-brands fa-tiktok" aria-hidden="true"></i></a>
+      </div>
+    </div>
+    <div>
+      <h4>Menú</h4>
+      <ul>
+        <li>Pollo a la Brasa</li>
+        <li>Combos Familiares</li>
+        <li>Los Mostros</li>
+        <li>Platos a la Carta</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Atención</h4>
+      <ul>
+        <li><span class="material-symbols-outlined">schedule</span>Lunes a Domingo</li>
+        <li><span class="material-symbols-outlined">schedule</span>3:00 PM - 11:00 PM</li>
+        <li><span class="material-symbols-outlined">delivery_dining</span>Delivery propio y apps</li>
+        <li><span class="material-symbols-outlined">shopping_bag</span>Recojo en tienda</li>
+      </ul>
+    </div>
+    <div>
+      <h4>Contacto</h4>
+      <ul>
+        <li><span class="material-symbols-outlined">location_on</span>Av. Principal 123</li>
+        <li><span class="material-symbols-outlined">call</span>(01) 123-4567</li>
+        <li><span class="material-symbols-outlined">chat</span>+51 987 654 321</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<footer class="footer__bottom">
+  <div class="container">
+    <p>© {{ currentYear }} Bambino Chicken. Todos los derechos reservados.</p>
+  </div>
+</footer>

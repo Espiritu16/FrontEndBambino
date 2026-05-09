@@ -1,0 +1,37 @@
+<section class="admin-dashboard">
+  <header class="admin-dashboard__hero card">
+    <p class="overline">Panel Operativo</p>
+    <h1>Dashboard Administrador</h1>
+    <p>Monitorea operación comercial, pedidos y pagos en tiempo real.</p>
+  </header>
+
+  <section class="admin-kpis">
+    @for (kpi of kpis; track kpi.label) {
+      <article class="admin-kpi card">
+        <small>{{ kpi.label }}</small>
+        <strong>{{ kpi.value }}</strong>
+        <span>{{ kpi.trend }}</span>
+      </article>
+    }
+  </section>
+
+  <section class="admin-grid">
+    <article class="card admin-panel">
+      <h2>Cola de atención</h2>
+      <ul>
+        <li><span class="material-symbols-outlined">schedule</span>5 pedidos en CONFIRMADO</li>
+        <li><span class="material-symbols-outlined">skillet</span>8 pedidos EN_PREPARACION</li>
+        <li><span class="material-symbols-outlined">delivery_dining</span>3 pedidos LISTO_DESPACHO</li>
+      </ul>
+    </article>
+
+    <article class="card admin-panel">
+      <h2>Alertas de pago</h2>
+      <ul>
+        <li><span class="material-symbols-outlined">warning</span>2 pagos rechazados por validación</li>
+        <li><span class="material-symbols-outlined">payments</span>3 pagos pendientes por confirmar</li>
+        <li><span class="material-symbols-outlined">receipt_long</span>1 comprobante por reemisión</li>
+      </ul>
+    </article>
+  </section>
+</section>

@@ -1,0 +1,99 @@
+<div class="home-design">
+  <section class="hero" id="inicio">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="material-symbols-outlined eyebrow-icon">local_fire_department</span> Sabor 100% peruano</span>
+        <h1>DISFRUTA EL<br />AUTÉNTICO<br />SABOR.</h1>
+        <p>
+          Tu polleria y resto bar de siempre, ahora con un toque moderno. El mejor pollo a la brasa,
+          mostros y fusion oriental para compartir en familia.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-home btn-home--light" routerLink="/carta">Ver Carta</a>
+          <a class="btn-home btn-home--ghost" routerLink="/checkout">Pedir Ahora</a>
+        </div>
+      </div>
+
+      <div class="hero-media">
+        @if (heroImageUrl) {
+          <img [src]="heroImageUrl" alt="Banner principal de inicio" />
+        } @else {
+          <div class="hero-media__placeholder">Sin imagen</div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="ticker" aria-label="Beneficios Bambino">
+    <div class="ticker-track">
+      <div class="ticker-group">
+        <span class="ticker-item">SABOR INIGUALABLE</span>
+        <span class="ticker-item">INGREDIENTES FRESCOS</span>
+        <span class="ticker-item">RECETA ORIGINAL</span>
+        <span class="ticker-item">EL MEJOR AJI</span>
+        <span class="ticker-item">SABOR INIGUALABLE</span>
+        <span class="ticker-item">INGREDIENTES FRESCOS</span>
+        <span class="ticker-item">RECETA ORIGINAL</span>
+        <span class="ticker-item">EL MEJOR AJI</span>
+      </div>
+      <div class="ticker-group" aria-hidden="true">
+        <span class="ticker-item">SABOR INIGUALABLE</span>
+        <span class="ticker-item">INGREDIENTES FRESCOS</span>
+        <span class="ticker-item">RECETA ORIGINAL</span>
+        <span class="ticker-item">EL MEJOR AJI</span>
+        <span class="ticker-item">SABOR INIGUALABLE</span>
+        <span class="ticker-item">INGREDIENTES FRESCOS</span>
+        <span class="ticker-item">RECETA ORIGINAL</span>
+        <span class="ticker-item">EL MEJOR AJI</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="promos" id="promociones">
+    <div class="container">
+      <div class="section-head centered">
+        <span class="kicker">Para compartir</span>
+        <h2>PROMOCIONES</h2>
+      </div>
+
+      <div class="product-grid">
+        <article class="product-card">
+          <span class="badge">Mas pedido</span>
+          <img src="/diseno/pollo_cuarto.png" alt="1/4 de Pollo con papas, ensalada y cremas" />
+          <div class="product-body">
+            <h3>1/4 de Pollo</h3>
+            <p>Papas fritas + Ensalada clasica + Cremas</p>
+            <div class="product-actions">
+              <strong>S/ 16.00</strong>
+              <button class="btn-home btn-home--outline" type="button">Agregar</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <img src="/diseno/pollo_medio.png" alt="1/2 de Pollo con papas y ensalada" />
+          <div class="product-body">
+            <h3>1/2 de Pollo</h3>
+            <p>Porcion de papas + Ensalada grande + Cremas</p>
+            <div class="product-actions">
+              <strong>S/ 30.00</strong>
+              <button class="btn-home btn-home--outline" type="button">Agregar</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card">
+          <img src="/diseno/mostro.png" alt="El Mostro con pollo, arroz chaufa y papas fritas" />
+          <div class="product-body">
+            <h3>El Mostro</h3>
+            <p>1/8 de Pollo + Arroz Chaufa + Papas Fritas</p>
+            <div class="product-actions">
+              <strong>S/ 17.00</strong>
+              <button class="btn-home btn-home--outline" type="button">Agregar</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</div>
