@@ -268,7 +268,11 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
   protected get previewPdfUrl(): SafeResourceUrl | '' {
     const base = this.previewImageUrl;
     if (!base) return '';
-    return this.sanitizer.bypassSecurityTrustResourceUrl(`${base}#toolbar=1&view=FitH`);
+    if (base.startsWith('blob:')) {
+      return this.sanitizer.bypassSecurityTrustResourceUrl(`${base}#toolbar=1&view=FitH`);
+    }
+    const viewerUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(base)}`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(viewerUrl);
   }
 
   private authHeaders(): HttpHeaders {
