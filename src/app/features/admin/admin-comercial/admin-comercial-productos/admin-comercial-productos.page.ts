@@ -64,7 +64,7 @@ export class AdminComercialProductosPageComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly enforceExactDimensions = false;
-  private readonly apiBase = 'http://localhost:8080/api/admin/catalogo';
+  private readonly apiBase = 'https://backendbambino.onrender.com/api/admin/catalogo';
   private readonly authStorageKey = 'bambino_basic_auth';
   private loadingInProgress = false;
 
