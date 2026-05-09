@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
@@ -30,6 +31,8 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly enforceExactDimensions = false;
   private readonly apiBase = 'http://localhost:8080/api/admin/configuracion/media';
   private readonly authStorageKey = 'bambino_basic_auth';
 
@@ -174,9 +177,16 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
     if (!file) {
       return;
     }
+    if (this.form.tipo === 'PDF' && !this.isPdfFile(file)) {
+      this.toast.error('Solo se permiten archivos PDF.');
+      input.value = '';
+      return;
+    }
     this.selectedFileName = file.name;
     try {
-      await this.ensureMinImageDimensions(file, 1000, 1200);
+      if (this.enforceExactDimensions) {
+        await this.ensureImageDimensionsInRange(file, 300, 250, 20);
+      }
     } catch (e: any) {
       this.error = e?.message || 'No se pudo validar dimensiones de imagen.';
       this.toast.error(this.error);
@@ -191,17 +201,28 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
     }
     this.localPreviewUrl = URL.createObjectURL(file);
     this.error = '';
-    this.toast.success('Imagen lista para guardar. Presiona "Guardar cambios".');
+    this.toast.success(this.form.tipo === 'PDF'
+      ? 'PDF listo para revisar. Presiona "Guardar cambios" para subir.'
+      : 'Imagen lista para guardar. Presiona "Guardar cambios".');
     this.closeImageEditorModal();
     this.cdr.detectChanges();
   }
 
-  private async ensureMinImageDimensions(file: File, minWidth: number, minHeight: number): Promise<void> {
+  private async ensureImageDimensionsInRange(file: File, baseWidth: number, baseHeight: number, tolerancePx: number): Promise<void> {
     if (this.form.tipo !== 'IMAGEN') return;
     const dimensions = await this.readImageDimensions(file);
-    if (dimensions.width < minWidth || dimensions.height < minHeight) {
+    const minWidthAllowed = baseWidth - tolerancePx;
+    const maxWidthAllowed = baseWidth + tolerancePx;
+    const minHeightAllowed = baseHeight - tolerancePx;
+    const maxHeightAllowed = baseHeight + tolerancePx;
+    if (
+      dimensions.width < minWidthAllowed ||
+      dimensions.width > maxWidthAllowed ||
+      dimensions.height < minHeightAllowed ||
+      dimensions.height > maxHeightAllowed
+    ) {
       throw new Error(
-        `La imagen es demasiado pequeña. Se requiere mínimo ${minWidth}x${minHeight} px y se recibió ${dimensions.width}x${dimensions.height} px.`
+        `La imagen debe estar dentro del rango permitido: ancho ${minWidthAllowed}-${maxWidthAllowed} px y alto ${minHeightAllowed}-${maxHeightAllowed} px y se recibió ${dimensions.width}x${dimensions.height} px.`
       );
     }
   }
@@ -234,6 +255,20 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
 
   protected get previewImageUrl(): string {
     return this.localPreviewUrl || (this.form.url ?? '');
+  }
+
+  protected get isPdfSection(): boolean {
+    return this.form.tipo === 'PDF';
+  }
+
+  private isPdfFile(file: File): boolean {
+    const lowerName = (file.name ?? '').toLowerCase();
+    return file.type === 'application/pdf' || lowerName.endsWith('.pdf');
+  }
+  protected get previewPdfUrl(): SafeResourceUrl | '' {
+    const base = this.previewImageUrl;
+    if (!base) return '';
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`${base}#toolbar=1&view=FitH`);
   }
 
   private authHeaders(): HttpHeaders {

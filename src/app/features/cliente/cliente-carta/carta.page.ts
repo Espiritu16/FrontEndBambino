@@ -1,141 +1,73 @@
-import { Component } from '@angular/core';
-type MenuItem = {
-  badge?: string;
-  name: string;
-  description: string;
-  price: string;
-  tone: 'sky' | 'beige' | 'mint' | 'sand';
-  media: 'plate' | 'bowl';
-};
+import { Component, OnInit, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
+import { firstValueFrom, timeout } from 'rxjs';
 
-type MenuSection = {
-  title: string;
-  items: MenuItem[];
+type ConfiguracionMediaPublicResponse = {
+  clave: string;
+  url: string;
+  activa: boolean;
 };
 
 @Component({
   selector: 'app-carta-page',
   standalone: true,
-  imports: [],
+  imports: [RouterLink],
   templateUrl: './carta.page.html',
   styleUrl: './carta.page.scss'
 })
-export class CartaPageComponent {
-  protected readonly categories = [
-    'Todo',
-    'Pollo a la Brasa',
-    'Combos',
-    'Mostros',
-    'Fusión Oriental',
-    'Platos a la Carta',
-    'Adicionales'
-  ];
+export class CartaPageComponent implements OnInit {
+  private readonly http = inject(HttpClient);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly apiBase = 'http://localhost:8080/api/public/configuracion/media';
+  private readonly cartaPdfCacheKey = 'bambino_carta_pdf_url';
 
-  protected readonly sections: MenuSection[] = [
-    {
-      title: 'Pollo a la Brasa',
-      items: [
-        {
-          name: '1/8 de Pollo',
-          description: 'Porción individual con papas fritas y ensalada clásica.',
-          price: 'S/ 10.00',
-          tone: 'sky',
-          media: 'plate'
-        },
-        {
-          badge: 'Popular',
-          name: '1/4 de Pollo',
-          description: 'Papas fritas + Ensalada clásica + Cremas bambino.',
-          price: 'S/ 16.00',
-          tone: 'beige',
-          media: 'plate'
-        },
-        {
-          name: '1/2 de Pollo',
-          description: 'Porción de papas + Ensalada grande + Cremas surtidas.',
-          price: 'S/ 30.00',
-          tone: 'mint',
-          media: 'plate'
-        },
-        {
-          name: '1 Pollo Entero',
-          description: 'Familiar: Papas fritas XL + Ensalada XL + Cremas.',
-          price: 'S/ 52.00',
-          tone: 'sand',
-          media: 'plate'
-        }
-      ]
-    },
-    {
-      title: 'Los Mostros',
-      items: [
-        {
-          name: 'El Mostro',
-          description: '1/4 de pollo + Arroz chaufa + Papas fritas crujientes.',
-          price: 'S/ 17.00',
-          tone: 'sky',
-          media: 'bowl'
-        },
-        {
-          name: 'Mostrito',
-          description: '1/8 de pollo + Arroz chaufa + Papas fritas clásicas.',
-          price: 'S/ 12.00',
-          tone: 'beige',
-          media: 'bowl'
-        },
-        {
-          name: 'Bambino a lo Pobre',
-          description: 'Pollo a la brasa + Huevo + Plátano frito + Papas.',
-          price: 'S/ 20.00',
-          tone: 'mint',
-          media: 'plate'
-        }
-      ]
-    },
-    {
-      title: 'Fusión Oriental',
-      items: [
-        {
-          name: 'Aeropuerto',
-          description: 'Mix de chaufa, tallarín salteado, frejolito chino y verduras.',
-          price: 'S/ 13.00',
-          tone: 'sky',
-          media: 'bowl'
-        },
-        {
-          name: 'Chaufa Especial',
-          description: 'Arroz chaufa con trozos de pollo, chancho y langostino.',
-          price: 'S/ 15.00',
-          tone: 'beige',
-          media: 'bowl'
-        },
-        {
-          name: 'Chaufa Amazónico',
-          description: 'Chaufa con cecina de la selva y plátano frito.',
-          price: 'S/ 18.00',
-          tone: 'mint',
-          media: 'bowl'
-        }
-      ]
-    },
-    {
-      title: 'Platos a la Carta',
-      items: [
-        {
-          name: 'Lomo Saltado',
-          description: 'Finos cortes de lomo fino, cebolla, tomate y papas.',
-          price: 'S/ 23.00',
-          tone: 'sand',
-          media: 'bowl'
-        },
-        {
-          name: 'Pechuga a lo Pobre',
-          description: 'Pechuga a la parrilla con huevo, plátano, arroz y papas.',
-          price: 'S/ 18.00',
-          tone: 'beige',
-          media: 'bowl'
-        }
-      ]
+  protected loading = true;
+  protected pdfUrl = '';
+  protected viewerUrl: SafeResourceUrl | '' = '';
+  protected error = '';
+
+  async ngOnInit(): Promise<void> {
+    await this.loadCartaPdf();
+  }
+
+  protected async retry(): Promise<void> {
+    this.loading = true;
+    this.error = '';
+    this.pdfUrl = '';
+    this.viewerUrl = '';
+    await this.loadCartaPdf();
+  }
+
+  private async loadCartaPdf(): Promise<void> {
+    try {
+      const data = await firstValueFrom(
+        this.http.get<ConfiguracionMediaPublicResponse>(`${this.apiBase}/CARTA_PDF`).pipe(timeout(10000))
+      );
+      this.pdfUrl = data?.activa ? (data.url?.trim() || '') : '';
+      if (this.pdfUrl) {
+        localStorage.setItem(this.cartaPdfCacheKey, this.pdfUrl);
+      }
+      if (!this.pdfUrl) {
+        this.error = 'No hay PDF de carta configurado.';
+      } else {
+        this.viewerUrl = this.buildViewerUrl(this.pdfUrl);
+      }
+    } catch {
+      this.pdfUrl = localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '';
+      if (!this.pdfUrl) {
+        this.error = 'No se pudo cargar la carta PDF.';
+      } else {
+        this.viewerUrl = this.buildViewerUrl(this.pdfUrl);
+      }
+    } finally {
+      this.loading = false;
     }
-  ];
+  }
+
+  private buildViewerUrl(url: string): SafeResourceUrl {
+    const googleViewer = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(url)}`;
+    return this.sanitizer.bypassSecurityTrustResourceUrl(googleViewer);
+  }
 }

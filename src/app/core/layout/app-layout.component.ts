@@ -15,6 +15,12 @@ type RegisterFieldErrors = {
   confirmPassword?: string;
 };
 
+type ConfiguracionMediaPublicResponse = {
+  clave: string;
+  url: string;
+  activa: boolean;
+};
+
 @Component({
   selector: 'app-layout',
   standalone: true,
@@ -28,6 +34,7 @@ export class AppLayoutComponent implements OnInit {
   private readonly userNameStorageKey = 'bambino_user_name';
   private readonly userRoleStorageKey = 'bambino_user_role';
   private readonly registerDraftStorageKey = 'bambino_register_draft';
+  private readonly cartaPdfCacheKey = 'bambino_carta_pdf_url';
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly ngZone = inject(NgZone);
   private readonly http = inject(HttpClient);
@@ -129,6 +136,31 @@ export class AppLayoutComponent implements OnInit {
   }
 
   protected backToLogin(): void { this.modalView = 'login'; this.loginError = ''; this.isRecoveryCodeValidated = false; }
+
+  protected async openCartaPdf(event?: Event): Promise<void> {
+    event?.preventDefault();
+    let targetUrl = '';
+    try {
+      const data = await firstValueFrom(
+        this.http
+          .get<ConfiguracionMediaPublicResponse>(`${this.apiBaseUrl}/api/public/configuracion/media/CARTA_PDF`)
+          .pipe(timeout(10000))
+      );
+      targetUrl = data?.activa ? (data.url?.trim() || '') : '';
+      if (targetUrl) {
+        localStorage.setItem(this.cartaPdfCacheKey, targetUrl);
+      }
+    } catch {
+      targetUrl = localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '';
+    }
+
+    if (!targetUrl) {
+      return;
+    }
+
+    const viewerUrl = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(targetUrl)}`;
+    window.open(viewerUrl, '_blank', 'noopener,noreferrer');
+  }
 
   protected async submitLogin(): Promise<void> {
     if (this.loginLoading) return;

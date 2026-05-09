@@ -10,6 +10,7 @@
   @if (loading) {
     <p class="muted">Cargando configuración...</p>
   } @else {
+    <div class="media-layout" [class.media-layout--pdf]="isPdfSection">
     @if (isInicioSection) {
       <div class="inicio-preview">
         <div class="inicio-preview__layout">
@@ -32,6 +33,20 @@
             <button type="button" class="btn-ghost" [disabled]="saving || uploading" (click)="removeImage()">Quitar imagen</button>
           </div>
         }
+      </div>
+    }
+    @if (isPdfSection) {
+      <div class="pdf-preview">
+        <div class="pdf-preview__toolbar">
+          <button type="button" class="btn-ghost" [disabled]="saving || uploading" (click)="openImageEditorModal()">Seleccionar PDF</button>
+        </div>
+        <button class="pdf-preview__frame pdf-preview__frame--btn" type="button" (click)="openImageEditorModal()">
+          @if (previewImageUrl) {
+            <iframe [src]="previewPdfUrl" title="Preview PDF carta" loading="lazy"></iframe>
+          } @else {
+            <div class="pdf-preview__placeholder">Sin PDF cargado</div>
+          }
+        </button>
       </div>
     }
 
@@ -85,21 +100,27 @@
         {{ saving ? 'Guardando...' : 'Guardar cambios' }}
       </button>
     </div>
+    </div>
   }
 </section>
 
 @if (showImageEditorModal) {
   <div class="modal-backdrop">
     <section class="modal-card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <h3>Editar imagen de Inicio</h3>
-      <p class="muted">Selecciona un archivo, súbelo y luego guarda cambios.</p>
+      <h3>{{ isPdfSection ? 'Seleccionar PDF de carta' : 'Editar imagen de Inicio' }}</h3>
+      <p class="muted">Selecciona un archivo y luego guarda cambios.</p>
       <div class="upload-inline">
         <input
-          [attr.accept]="'image/png,image/jpeg,image/jpg,image/webp'"
+          [attr.accept]="isPdfSection ? 'application/pdf,.pdf' : 'image/png,image/jpeg,image/jpg,image/webp'"
           type="file"
           (change)="uploadFile($event)"
         />
-        <small class="muted">{{ selectedFileName ? ('Archivo: ' + selectedFileName + ' (pendiente de guardar)') : 'Selecciona imagen; se sube al guardar cambios.' }}</small>
+        <small class="muted">
+          {{ selectedFileName
+            ? ('Archivo: ' + selectedFileName + ' (pendiente de guardar)')
+            : (isPdfSection ? 'Selecciona un PDF; se sube al guardar cambios.' : 'Selecciona imagen; se sube al guardar cambios.')
+          }}
+        </small>
       </div>
       <div class="actions">
         <button type="button" class="btn-ghost" (click)="closeImageEditorModal()">Cerrar</button>

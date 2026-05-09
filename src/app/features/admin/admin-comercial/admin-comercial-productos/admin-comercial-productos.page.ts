@@ -63,6 +63,7 @@ export class AdminComercialProductosPageComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly enforceExactDimensions = false;
   private readonly apiBase = 'http://localhost:8080/api/admin/catalogo';
   private readonly authStorageKey = 'bambino_basic_auth';
   private loadingInProgress = false;
@@ -595,7 +596,9 @@ export class AdminComercialProductosPageComponent implements OnInit, OnDestroy {
     this.error = '';
 
     try {
-      await this.ensureMinImageDimensions(file, 1000, 1200);
+      if (this.enforceExactDimensions) {
+        await this.ensureImageDimensionsInRange(file, 300, 250, 20);
+      }
       const formData = new FormData();
       formData.append('archivo', file);
       const response = await firstValueFrom(
@@ -618,11 +621,20 @@ export class AdminComercialProductosPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async ensureMinImageDimensions(file: File, minWidth: number, minHeight: number): Promise<void> {
+  private async ensureImageDimensionsInRange(file: File, baseWidth: number, baseHeight: number, tolerancePx: number): Promise<void> {
     const dimensions = await this.readImageDimensions(file);
-    if (dimensions.width < minWidth || dimensions.height < minHeight) {
+    const minWidthAllowed = baseWidth - tolerancePx;
+    const maxWidthAllowed = baseWidth + tolerancePx;
+    const minHeightAllowed = baseHeight - tolerancePx;
+    const maxHeightAllowed = baseHeight + tolerancePx;
+    if (
+      dimensions.width < minWidthAllowed ||
+      dimensions.width > maxWidthAllowed ||
+      dimensions.height < minHeightAllowed ||
+      dimensions.height > maxHeightAllowed
+    ) {
       throw new Error(
-        `La imagen es demasiado pequeña. Se requiere mínimo ${minWidth}x${minHeight} px y se recibió ${dimensions.width}x${dimensions.height} px.`
+        `La imagen debe estar dentro del rango permitido: ancho ${minWidthAllowed}-${maxWidthAllowed} px y alto ${minHeightAllowed}-${maxHeightAllowed} px y se recibió ${dimensions.width}x${dimensions.height} px.`
       );
     }
   }

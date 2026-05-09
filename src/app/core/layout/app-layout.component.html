@@ -8,7 +8,7 @@
     <nav class="topbar__nav">
       <a routerLink="/inicio">Inicio</a>
       <a routerLink="/promociones">Promociones</a>
-      <a routerLink="/carta">Carta</a>
+      <a href="#" (click)="openCartaPdf($event)">Carta</a>
       <a routerLink="/asistente-chat">Nosotros</a>
     </nav>
     <div class="topbar__tools">
@@ -296,7 +296,7 @@
   <nav class="mobile-nav" aria-label="Menu principal movil">
     <a routerLink="/inicio" (click)="closeMobileMenu()">Inicio</a>
     <a routerLink="/promociones" (click)="closeMobileMenu()">Promociones</a>
-    <a routerLink="/carta" (click)="closeMobileMenu()">Carta</a>
+    <a href="#" (click)="closeMobileMenu(); openCartaPdf($event)">Carta</a>
     <a routerLink="/asistente-chat" (click)="closeMobileMenu()">Nosotros</a>
   </nav>
 }
