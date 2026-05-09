@@ -1,0 +1,22 @@
+<div class="layout">
+  <header class="layout__header">
+    <h1>Bambino Frontend</h1>
+    <p>Arquitectura por features alineada al backend</p>
+  </header>
+
+  <nav class="layout__nav" aria-label="Modulos">
+    @for (section of sections; track section.path) {
+      <a
+        [routerLink]="section.path"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ exact: false }"
+      >
+        {{ section.label }}
+      </a>
+    }
+  </nav>
+
+  <main class="layout__content">
+    <router-outlet />
+  </main>
+</div>
