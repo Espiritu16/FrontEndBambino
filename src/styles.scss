@@ -1,1 +1,84 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-brand-900: #8f0a0d;
+  --color-brand-700: #b1171a;
+  --color-accent: #cf2e2e;
+  --color-navy-900: #18253a;
+  --color-paper: #efe2c4;
+  --color-ink: #1e232c;
+  --color-muted: #6f7680;
+  --color-white: #ffffff;
+  --radius-pill: 999px;
+  --radius-card: 18px;
+  --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Barlow', sans-serif;
+  color: var(--color-ink);
+  background: var(--color-paper);
+}
+
+h1,
+h2,
+h3,
+.brand-title {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.container {
+  width: min(1200px, 92vw);
+  margin-inline: auto;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-decoration: none;
+  padding: 0.82rem 1.55rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+
+.btn--light {
+  background: var(--color-white);
+  color: var(--color-brand-900);
+}
+
+.btn--outline {
+  border-color: var(--color-white);
+  color: var(--color-white);
+  background: transparent;
+}
+
+.card {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  background: var(--color-white);
+}
