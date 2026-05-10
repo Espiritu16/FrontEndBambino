@@ -51,7 +51,13 @@
                 <span class="menu-card__badge">{{ badgeFor(i) }}</span>
               }
               @if (item.imagenUrl) {
-                <img class="dish-photo dish-photo--real" [src]="item.imagenUrl" [alt]="item.nombre" />
+                <img
+                  class="dish-photo dish-photo--real"
+                  [src]="resolveCardImageUrl(item.imagenUrl)"
+                  [alt]="item.nombre"
+                  loading="lazy"
+                  decoding="async"
+                />
               } @else {
                 <div class="dish-photo"></div>
               }

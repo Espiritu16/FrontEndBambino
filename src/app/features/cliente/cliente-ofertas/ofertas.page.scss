@@ -126,7 +126,9 @@
 }
 
 .menu-card__media {
-  height: 220px;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  min-height: 220px;
   display: grid;
   place-items: center;
   position: relative;
@@ -255,6 +257,6 @@
   }
 
   .menu-card__media {
-    height: 220px;
+    min-height: 200px;
   }
 }

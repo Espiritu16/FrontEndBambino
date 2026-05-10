@@ -86,6 +86,25 @@ export class OfertasPageComponent {
     return this.tones[index % this.tones.length];
   }
 
+  protected resolveCardImageUrl(rawUrl: string | null): string {
+    const source = (rawUrl ?? '').trim();
+    if (!source) return '';
+    try {
+      const parsed = new URL(source);
+      const marker = '/image/upload/';
+      if (!parsed.hostname.includes('res.cloudinary.com') || !parsed.pathname.includes(marker)) {
+        return source;
+      }
+
+      const [prefix, suffix] = parsed.pathname.split(marker);
+      const transform = 'f_auto,q_auto:good,dpr_auto,c_fill,g_auto,w_1000,h_620';
+      parsed.pathname = `${prefix}${marker}${transform}/${suffix}`;
+      return parsed.toString();
+    } catch {
+      return source;
+    }
+  }
+
   private async loadProductosIniciales(): Promise<void> {
     this.loading = true;
     this.error = '';
