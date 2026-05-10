@@ -5,6 +5,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 
 type ConfiguracionMediaResponse = {
@@ -22,7 +23,7 @@ type ConfiguracionMediaResponse = {
 @Component({
   selector: 'app-admin-web-media-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './admin-web-media.page.html',
   styleUrl: './admin-web-media.page.scss'
 })
@@ -46,6 +47,7 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
   protected pendingImageFile: File | null = null;
   protected localPreviewUrl = '';
   protected pendingImageRemoval = false;
+  private originalSnapshot: string | null = null;
 
   protected sectionName = 'Web';
   protected mediaKey = '';
@@ -92,6 +94,7 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
         publicId: data.publicId ?? '',
         versionTag: data.versionTag ?? ''
       };
+      this.originalSnapshot = this.buildSnapshotFromForm();
     } catch (e: any) {
       this.error = e?.error?.mensaje || 'No se pudo cargar la configuración.';
       this.toast.error(this.error);
@@ -105,6 +108,10 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
     if (this.saving || this.uploading) return;
     if (!this.form.nombre.trim()) {
       this.toast.warning('El nombre es obligatorio.');
+      return;
+    }
+    if (!this.pendingImageFile && !this.pendingImageRemoval && this.originalSnapshot === this.buildSnapshotFromForm()) {
+      this.toast.info('No hay cambios para guardar.');
       return;
     }
     this.saving = true;
@@ -145,6 +152,7 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
       );
       this.form = { ...data, descripcion: data.descripcion ?? '', publicId: data.publicId ?? '', versionTag: data.versionTag ?? '' };
       this.pendingImageRemoval = false;
+      this.originalSnapshot = this.buildSnapshotFromForm();
       this.toast.success('Configuración actualizada correctamente.');
     } catch (e: any) {
       this.error = e?.error?.mensaje || 'No se pudo guardar la configuración.';
@@ -278,5 +286,17 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
   private authHeaders(): HttpHeaders {
     const token = localStorage.getItem(this.authStorageKey) ?? '';
     return new HttpHeaders({ Authorization: `Basic ${token}` });
+  }
+
+  private buildSnapshotFromForm(): string {
+    return JSON.stringify({
+      nombre: this.form.nombre.trim(),
+      descripcion: (this.form.descripcion ?? '').trim() || null,
+      tipo: this.form.tipo,
+      url: (this.form.url ?? '').trim(),
+      publicId: (this.form.publicId ?? '').trim() || null,
+      versionTag: (this.form.versionTag ?? '').trim() || null,
+      activa: this.form.activa
+    });
   }
 }

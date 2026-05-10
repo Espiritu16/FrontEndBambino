@@ -1,4 +1,38 @@
-<section>
-  <h2>Cobertura Delivery</h2>
-  <p>Validación pública de zona de reparto.</p>
+<section class="cobertura-page">
+  <header class="cobertura-page__header">
+    <div class="cobertura-page__title">
+      <span class="eyebrow">Mapa en tiempo real</span>
+      <h2>Cobertura Chorrillos</h2>
+      <p>
+        Zona única de reparto en Chorrillos. Haz click en el mapa para colocar tu punto y validar visualmente.
+      </p>
+    </div>
+    <div class="cobertura-page__badges">
+      <span class="badge badge--zone"><span class="material-symbols-outlined">map</span>Distrito oficial</span>
+      <span class="badge badge--store"><span class="material-symbols-outlined">storefront</span>Bambino Chicken</span>
+    </div>
+  </header>
+
+  <div class="cobertura-page__actions">
+    <button type="button" class="btn-cobertura" (click)="consultarCoberturaConMiUbicacion()" [disabled]="consultandoUbicacion">
+      <span class="material-symbols-outlined">my_location</span>
+      {{ consultandoUbicacion ? 'Consultando ubicación...' : 'Consultar cobertura con mi ubicación' }}
+    </button>
+    <span class="helper-text">Usa GPS del dispositivo para validar cobertura exacta</span>
+  </div>
+
+  <div class="cobertura-map-wrap">
+    <div id="cobertura-map" class="cobertura-map" role="img" aria-label="Mapa de cobertura de delivery en Chorrillos"></div>
+    <div class="map-legend">
+      <h3>Leyenda</h3>
+      <div class="legend-row"><span class="legend-shape legend-shape--area"></span><span>Cobertura oficial de Chorrillos</span></div>
+      <div class="legend-row"><span class="legend-shape legend-shape--pin"><i></i></span><span>Ubicación del restaurante</span></div>
+      <div class="legend-row"><span class="legend-shape legend-shape--person"><i class="material-symbols-outlined">person_pin_circle</i></span><span>Tu ubicación actual</span></div>
+    </div>
+  </div>
+
+  <div class="cobertura-page__hint" [class.cobertura-page__hint--ok]="estadoCobertura === 'dentro'" [class.cobertura-page__hint--bad]="estadoCobertura === 'fuera'">
+    <span class="material-symbols-outlined">place</span>
+    <p>{{ puntoSeleccionadoTexto }}</p>
+  </div>
 </section>

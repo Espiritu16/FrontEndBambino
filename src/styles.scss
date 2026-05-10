@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1');
+@import 'leaflet/dist/leaflet.css';
 
 :root {
   --color-brand-900: #8f0a0d;
@@ -101,4 +102,27 @@ h3,
   word-wrap: normal;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Admin: cursor consistente en controles clickeables */
+.admin-shell button:not(:disabled),
+.admin-shell .btn-primary:not(:disabled),
+.admin-shell .btn-ghost:not(:disabled),
+.admin-shell .btn-link:not(:disabled),
+.admin-shell .admin-action:not(:disabled),
+.admin-shell .admin-nav__toggle:not(:disabled),
+.admin-shell .inicio-preview__hero:not(:disabled),
+.admin-shell .pdf-preview__frame--btn:not(:disabled) {
+  cursor: pointer;
+}
+
+.admin-shell button:disabled,
+.admin-shell .btn-primary:disabled,
+.admin-shell .btn-ghost:disabled,
+.admin-shell .btn-link:disabled,
+.admin-shell .admin-action:disabled,
+.admin-shell .admin-nav__toggle:disabled,
+.admin-shell .inicio-preview__hero:disabled,
+.admin-shell .pdf-preview__frame--btn:disabled {
+  cursor: not-allowed;
 }

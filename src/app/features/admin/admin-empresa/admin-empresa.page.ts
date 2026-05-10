@@ -4,6 +4,7 @@ import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { firstValueFrom, timeout } from 'rxjs';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../shared/services/toast.service';
 
 type EmpresaResponse = {
@@ -54,7 +55,7 @@ type EmpresaForm = {
 @Component({
   selector: 'app-admin-empresa-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './admin-empresa.page.html',
   styleUrl: './admin-empresa.page.scss'
 })
@@ -76,6 +77,10 @@ export class AdminEmpresaPageComponent implements OnInit {
   protected editandoMapaUrl = false;
   protected mapaEmbedUrlDraft = '';
   protected form: EmpresaForm = this.emptyForm();
+  private originalEmpresaSnapshot: string | null = null;
+  private originalUbicacionSnapshot: string | null = null;
+  private zonaPrincipalActual: ZonaDeliveryResponse | null = null;
+  private currentMapSrc = '';
   protected mapEmbedUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl('https://maps.google.com/maps?q=Lima%20Peru&z=15&output=embed');
 
   protected get hasEmpresaPrincipal(): boolean {
@@ -90,8 +95,10 @@ export class AdminEmpresaPageComponent implements OnInit {
     void this.loadEmpresaPrincipal();
   }
 
-  protected async loadEmpresaPrincipal(): Promise<void> {
-    this.loading = true;
+  protected async loadEmpresaPrincipal(showLoader = true): Promise<void> {
+    if (showLoader) {
+      this.loading = true;
+    }
     this.error = '';
     try {
       const empresas = await firstValueFrom(
@@ -130,11 +137,14 @@ export class AdminEmpresaPageComponent implements OnInit {
       }
 
       this.actualizarMapaDesdeFormulario();
+      this.refreshSnapshots();
     } catch (e: any) {
       this.error = e?.error?.mensaje || 'No se pudo cargar la empresa principal.';
       this.toast.error(this.error);
     } finally {
-      this.loading = false;
+      if (showLoader) {
+        this.loading = false;
+      }
       this.cdr.detectChanges();
     }
   }
@@ -155,6 +165,10 @@ export class AdminEmpresaPageComponent implements OnInit {
       correo: this.nullIfBlank(this.form.correo),
       activo: this.form.activo
     };
+    if (this.editingId && this.originalEmpresaSnapshot === JSON.stringify(payload)) {
+      this.toast.info('No hay cambios para guardar en empresa.');
+      return;
+    }
 
     this.savingEmpresa = true;
     this.error = '';
@@ -171,7 +185,7 @@ export class AdminEmpresaPageComponent implements OnInit {
         this.editingId = created.idEmpresa;
         this.toast.success('Empresa principal registrada correctamente.');
       }
-      await this.loadEmpresaPrincipal();
+      await this.loadEmpresaPrincipal(false);
     } catch (e: any) {
       const detalle = e?.error?.detalles?.[0]?.mensaje;
       this.error = e?.error?.mensaje || detalle || 'No se pudo guardar la información de empresa.';
@@ -198,6 +212,12 @@ export class AdminEmpresaPageComponent implements OnInit {
       return;
     }
 
+    const payloadRapido = this.buildUbicacionPayload(this.zonaPrincipalActual, lat, lng);
+    if (this.zonaPrincipalId && this.originalUbicacionSnapshot === JSON.stringify(payloadRapido)) {
+      this.toast.info('No hay cambios para guardar en ubicación.');
+      return;
+    }
+
     this.savingUbicacion = true;
     this.error = '';
     try {
@@ -206,20 +226,11 @@ export class AdminEmpresaPageComponent implements OnInit {
       );
       const zonaActual = this.resolveZonaPrincipal(zonas);
 
-      const payload = {
-        nombre: zonaActual?.nombre || `EMPRESA_PRINCIPAL_${this.editingId}`,
-        activo: zonaActual?.activo ?? true,
-        tarifaBase: zonaActual?.tarifaBase ?? 0,
-        montoMinimo: zonaActual?.montoMinimo ?? 0,
-        tiempoEstimadoMinutos: zonaActual?.tiempoEstimadoMinutos ?? 35,
-        coberturaDescripcion: zonaActual?.coberturaDescripcion ?? 'Ubicacion principal de empresa',
-        mapaEmbedUrl: this.normalizarMapaEmbedInput(this.editandoMapaUrl ? this.mapaEmbedUrlDraft : this.form.mapaEmbedUrl) || null,
-        latitudCentro: lat,
-        longitudCentro: lng,
-        radioKm: zonaActual?.radioKm ?? 1.00,
-        horaInicioAtencion: zonaActual?.horaInicioAtencion ?? null,
-        horaFinAtencion: zonaActual?.horaFinAtencion ?? null
-      };
+      const payload = this.buildUbicacionPayload(zonaActual, lat, lng);
+      if (zonaActual?.idZona && this.originalUbicacionSnapshot === JSON.stringify(payload)) {
+        this.toast.info('No hay cambios para guardar en ubicación.');
+        return;
+      }
 
       if (zonaActual?.idZona) {
         const updated = await firstValueFrom(
@@ -236,7 +247,7 @@ export class AdminEmpresaPageComponent implements OnInit {
       this.toast.success('Ubicación de empresa actualizada correctamente.');
       this.editandoMapaUrl = false;
       this.mapaEmbedUrlDraft = '';
-      await this.loadEmpresaPrincipal();
+      await this.loadEmpresaPrincipal(false);
     } catch (e: any) {
       const detalle = e?.error?.detalles?.[0]?.mensaje;
       this.error = e?.error?.mensaje || detalle || 'No se pudo guardar la ubicación de empresa.';
@@ -262,18 +273,23 @@ export class AdminEmpresaPageComponent implements OnInit {
       } else {
         this.form.mapaEmbedUrl = embed;
       }
-      this.mapEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embed);
+      this.setMapSrcIfChanged(embed);
       return;
     }
     const lat = this.parseDecimalOrNull(this.form.latitud);
     const lng = this.parseDecimalOrNull(this.form.longitud);
     if (lat != null && lng != null) {
-      this.mapEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-        `https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`
-      );
+      this.setMapSrcIfChanged(`https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`);
       return;
     }
-    this.mapEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
+    this.setMapSrcIfChanged('about:blank');
+  }
+
+  private setMapSrcIfChanged(src: string): void {
+    const normalized = (src || '').trim();
+    if (!normalized || normalized === this.currentMapSrc) return;
+    this.currentMapSrc = normalized;
+    this.mapEmbedUrl = this.sanitizer.bypassSecurityTrustResourceUrl(normalized);
   }
 
   private normalizarMapaEmbedInput(raw: string): string {
@@ -331,6 +347,7 @@ export class AdminEmpresaPageComponent implements OnInit {
       });
 
       const zonaRef = zonaPrincipal ?? zonaConCoordenadas ?? zonas.find((z) => z.activo) ?? zonas[0];
+      this.zonaPrincipalActual = zonaRef ?? null;
       if (!zonaRef) return { latitud: null, longitud: null, mapaEmbedUrl: null };
 
       return {
@@ -339,8 +356,46 @@ export class AdminEmpresaPageComponent implements OnInit {
         mapaEmbedUrl: (zonaRef as any).mapaEmbedUrl ?? (zonaRef as any).mapa_embed_url ?? null
       };
     } catch {
+      this.zonaPrincipalActual = null;
       return { latitud: null, longitud: null, mapaEmbedUrl: null };
     }
+  }
+
+  private refreshSnapshots(): void {
+    const empresaPayload = {
+      ruc: this.form.ruc.trim(),
+      razonSocial: this.form.razonSocial.trim(),
+      nombreComercial: this.nullIfBlank(this.form.nombreComercial),
+      direccionFiscal: this.form.direccionFiscal.trim(),
+      telefono: this.nullIfBlank(this.form.telefono),
+      correo: this.nullIfBlank(this.form.correo),
+      activo: this.form.activo
+    };
+    this.originalEmpresaSnapshot = JSON.stringify(empresaPayload);
+
+    const ubicacionPayload = this.buildUbicacionPayload(
+      this.zonaPrincipalActual,
+      this.parseDecimalOrNull(this.form.latitud),
+      this.parseDecimalOrNull(this.form.longitud)
+    );
+    this.originalUbicacionSnapshot = JSON.stringify(ubicacionPayload);
+  }
+
+  private buildUbicacionPayload(zonaActual: ZonaDeliveryResponse | null, lat: number | null, lng: number | null) {
+    return {
+      nombre: zonaActual?.nombre || `EMPRESA_PRINCIPAL_${this.editingId}`,
+      activo: zonaActual?.activo ?? true,
+      tarifaBase: zonaActual?.tarifaBase ?? 0,
+      montoMinimo: zonaActual?.montoMinimo ?? 0,
+      tiempoEstimadoMinutos: zonaActual?.tiempoEstimadoMinutos ?? 35,
+      coberturaDescripcion: zonaActual?.coberturaDescripcion ?? 'Ubicacion principal de empresa',
+      mapaEmbedUrl: this.normalizarMapaEmbedInput(this.editandoMapaUrl ? this.mapaEmbedUrlDraft : this.form.mapaEmbedUrl) || null,
+      latitudCentro: lat,
+      longitudCentro: lng,
+      radioKm: zonaActual?.radioKm ?? 1.0,
+      horaInicioAtencion: zonaActual?.horaInicioAtencion ?? null,
+      horaFinAtencion: zonaActual?.horaFinAtencion ?? null
+    };
   }
 
   private resolveZonaPrincipal(zonas: ZonaDeliveryResponse[]): ZonaDeliveryResponse | null {

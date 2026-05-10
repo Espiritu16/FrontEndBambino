@@ -23,58 +23,67 @@
 
   <main class="menu-content section-cream">
     <div class="container">
-    @if (loading) {
-      <p>Cargando productos...</p>
-    }
-
-    @if (error) {
-      <p>{{ error }}</p>
-    }
-
-    <section class="menu-block">
-      <div class="menu-block__header menu-block__header--center">
-        <span class="menu-block__line"></span>
-        <h2>{{ sectionTitle }}</h2>
-        <span class="menu-block__line"></span>
-      </div>
-      <div class="menu-cards">
-        @for (item of productos; track item.idProducto; let i = $index) {
-          <article class="menu-card card">
-            <div
-              class="menu-card__media"
-              [class.menu-card__media--sky]="toneFor(i) === 'sky'"
-              [class.menu-card__media--beige]="toneFor(i) === 'beige'"
-              [class.menu-card__media--mint]="toneFor(i) === 'mint'"
-              [class.menu-card__media--sand]="toneFor(i) === 'sand'"
-            >
-              @if (badgeFor(i)) {
-                <span class="menu-card__badge">{{ badgeFor(i) }}</span>
-              }
-              @if (item.imagenUrl) {
-                <img
-                  class="dish-photo dish-photo--real"
-                  [src]="resolveCardImageUrl(item.imagenUrl)"
-                  [alt]="item.nombre"
-                  loading="lazy"
-                  decoding="async"
-                />
-              } @else {
-                <div class="dish-photo"></div>
-              }
-            </div>
-            <div class="menu-card__body">
-              <h3>{{ item.nombre }}</h3>
-              <p>{{ item.descripcion || 'Producto del catálogo Bambino.' }}</p>
-              <strong>S/ {{ item.precioBase }}</strong>
-              <button class="btn menu-card__btn" type="button">Agregar</button>
-            </div>
-          </article>
+      @if (loading) {
+        <app-loading-spinner [fullPage]="true" size="lg" label="Cargando productos"></app-loading-spinner>
+      } @else {
+        @if (error) {
+          <p>{{ error }}</p>
         }
-      </div>
-      @if (!loading && !error && productos.length === 0) {
-        <p>No hay productos para este filtro.</p>
+
+        <section class="menu-block">
+          <div class="menu-block__header menu-block__header--center">
+            <span class="menu-block__line"></span>
+            <h2>{{ sectionTitle }}</h2>
+            <span class="menu-block__line"></span>
+          </div>
+          <div class="menu-cards" #resultsStart>
+            @for (item of productos; track item.idProducto; let i = $index) {
+              <article class="menu-card card" [routerLink]="['/producto-detalle', item.idProducto, toSlug(item.nombre)]">
+                <div
+                  class="menu-card__media"
+                  [class.menu-card__media--sky]="toneFor(i) === 'sky'"
+                  [class.menu-card__media--beige]="toneFor(i) === 'beige'"
+                  [class.menu-card__media--mint]="toneFor(i) === 'mint'"
+                  [class.menu-card__media--sand]="toneFor(i) === 'sand'"
+                >
+                  @if (badgeFor(item)) {
+                    <span class="menu-card__badge">{{ badgeFor(item) }}</span>
+                  }
+                  @if (item.imagenUrl) {
+                    <img
+                      class="dish-photo dish-photo--real"
+                      [src]="resolveCardImageUrl(item.imagenUrl)"
+                      [alt]="item.nombre"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  } @else {
+                    <div class="dish-photo"></div>
+                  }
+                </div>
+                <div class="menu-card__body">
+                  <h3>{{ item.nombre }}</h3>
+                  <p>{{ item.descripcion || 'Producto del catálogo Bambino.' }}</p>
+                  <strong>S/ {{ item.precioBase }}</strong>
+                  <div class="menu-card__actions">
+                    <button class="btn menu-card__btn" type="button" (click)="onAgregarClick($event)">Agregar</button>
+                    <a class="btn menu-card__btn menu-card__btn--ghost" [routerLink]="['/producto-detalle', item.idProducto, toSlug(item.nombre)]" (click)="$event.stopPropagation()">
+                      Ver detalle
+                    </a>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+          @if (!error && productos.length === 0) {
+            <p>No hay productos para este filtro.</p>
+          }
+        </section>
       }
-    </section>
     </div>
   </main>
+
+  @if (showPlannedFeatureModal) {
+    <app-planned-feature-modal (close)="closePlannedFeatureModal()" />
+  }
 </div>

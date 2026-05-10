@@ -9,8 +9,8 @@
           mostros y fusion oriental para compartir en familia.
         </p>
         <div class="hero-actions">
-          <a class="btn-home btn-home--light" routerLink="/carta">Ver Carta</a>
-          <a class="btn-home btn-home--ghost" routerLink="/checkout">Pedir Ahora</a>
+          <a class="btn-home btn-home--light" href="#" (click)="openCartaPdf($event)">Ver Carta</a>
+          <a class="btn-home btn-home--ghost" href="#" (click)="onPedirAhoraClick($event)">Pedir Ahora</a>
         </div>
       </div>
 
@@ -52,48 +52,53 @@
   <section class="promos" id="promociones">
     <div class="container">
       <div class="section-head centered">
-        <span class="kicker">Para compartir</span>
-        <h2>PROMOCIONES</h2>
+        <div class="section-title-line" role="presentation">
+          <span class="section-title-line__line" aria-hidden="true"></span>
+          <h2>MÁS PEDIDOS</h2>
+          <span class="section-title-line__line" aria-hidden="true"></span>
+        </div>
       </div>
 
-      <div class="product-grid">
-        <article class="product-card">
-          <span class="badge">Mas pedido</span>
-          <img src="/diseno/pollo_cuarto.png" alt="1/4 de Pollo con papas, ensalada y cremas" />
-          <div class="product-body">
-            <h3>1/4 de Pollo</h3>
-            <p>Papas fritas + Ensalada clasica + Cremas</p>
-            <div class="product-actions">
-              <strong>S/ 16.00</strong>
-              <button class="btn-home btn-home--outline" type="button">Agregar</button>
-            </div>
+      @if (loadingMasPedidos) {
+        <div class="promos-loading">
+          <app-loading-spinner size="lg" label="Cargando más pedidos"></app-loading-spinner>
+        </div>
+      } @else {
+        <div class="promos-carousel">
+          <div class="product-grid">
+            @for (item of promocionesMasPedidos; track item.idProducto) {
+              <article class="product-card" [routerLink]="['/producto-detalle', item.idProducto, toSlug(item.nombre)]">
+                @if (isMasPedido(item.idProducto)) {
+                  <span class="badge">MÁS PEDIDOS</span>
+                }
+                @if (item.imagenUrl) {
+                  <img [src]="resolveCardImageUrl(item.imagenUrl)" [alt]="item.nombre" loading="lazy" decoding="async" />
+                } @else {
+                  <img src="/diseno/pollo_cuarto.png" [alt]="item.nombre" loading="lazy" decoding="async" />
+                }
+                <div class="product-body">
+                  <h3>{{ item.nombre }}</h3>
+                  <p>{{ item.descripcion || 'Producto del catálogo Bambino.' }}</p>
+                  <div class="product-actions">
+                    <strong>S/ {{ item.precioBase }}</strong>
+                    <a
+                      class="btn-home btn-home--outline"
+                      [routerLink]="['/producto-detalle', item.idProducto, toSlug(item.nombre)]"
+                      (click)="$event.stopPropagation()"
+                    >
+                      Ver detalle
+                    </a>
+                  </div>
+                </div>
+              </article>
+            }
           </div>
-        </article>
-
-        <article class="product-card">
-          <img src="/diseno/pollo_medio.png" alt="1/2 de Pollo con papas y ensalada" />
-          <div class="product-body">
-            <h3>1/2 de Pollo</h3>
-            <p>Porcion de papas + Ensalada grande + Cremas</p>
-            <div class="product-actions">
-              <strong>S/ 30.00</strong>
-              <button class="btn-home btn-home--outline" type="button">Agregar</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card">
-          <img src="/diseno/mostro.png" alt="El Mostro con pollo, arroz chaufa y papas fritas" />
-          <div class="product-body">
-            <h3>El Mostro</h3>
-            <p>1/8 de Pollo + Arroz Chaufa + Papas Fritas</p>
-            <div class="product-actions">
-              <strong>S/ 17.00</strong>
-              <button class="btn-home btn-home--outline" type="button">Agregar</button>
-            </div>
-          </div>
-        </article>
-      </div>
+        </div>
+      }
     </div>
   </section>
+
+  @if (showPlannedFeatureModal) {
+    <app-planned-feature-modal (close)="closePlannedFeatureModal()" />
+  }
 </div>

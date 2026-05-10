@@ -3,6 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, timeout } from 'rxjs';
+import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
+import { matchesSearchQuery } from '../../../../shared/utils/search-match.util';
 import { ToastService } from '../../../../shared/services/toast.service';
 
 type EstadoProducto = 'ACTIVO' | 'INACTIVO';
@@ -55,7 +57,7 @@ type ImagenUploadResponse = {
 @Component({
   selector: 'app-admin-comercial-productos-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './admin-comercial-productos.page.html',
   styleUrl: './admin-comercial-productos.page.scss'
 })
@@ -780,16 +782,13 @@ export class AdminComercialProductosPageComponent implements OnInit, OnDestroy {
   }
 
   private applyClientFilters(): void {
-    const q = this.searchQuery.trim().toLowerCase();
+    const q = this.searchQuery;
     if (!q) {
       this.productosFiltrados = [...this.productos];
       return;
     }
     this.productosFiltrados = this.productos.filter((p) => {
-      const nombre = p.nombre?.toLowerCase() ?? '';
-      const categoria = p.categoriaNombre?.toLowerCase() ?? '';
-      const estado = p.estado?.toLowerCase() ?? '';
-      return nombre.includes(q) || categoria.includes(q) || estado.includes(q);
+      return matchesSearchQuery(q, [p.nombre, p.categoriaNombre, p.estado]);
     });
   }
 }

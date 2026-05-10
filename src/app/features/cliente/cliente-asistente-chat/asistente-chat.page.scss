@@ -2,12 +2,43 @@
   display: block;
 }
 
-h2 {
-  margin: 0;
-  font-size: 1.25rem;
+.nosotros {
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
 }
 
-p {
+.nosotros__header h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: #111827;
+}
+
+.nosotros__header p {
+  margin: 0.5rem 0 0;
   color: #4b5563;
-  margin-top: 0.5rem;
+}
+
+.nosotros__card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.nosotros__card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.nosotros__card p {
+  margin: 0 0 0.75rem;
+  color: #374151;
+  line-height: 1.55;
+}
+
+.nosotros__card p:last-child {
+  margin-bottom: 0;
 }

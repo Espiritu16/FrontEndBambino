@@ -1,4 +1,132 @@
-<section>
-  <h2>Perfil</h2>
-  <p>Datos del cliente y documento.</p>
+<section class="perfil-page">
+  <aside class="perfil-sidebar">
+    <div class="perfil-user">
+      <div class="perfil-avatar-wrap">
+        <div class="perfil-avatar"></div>
+      </div>
+      <h3>{{ profileName || 'Cliente' }}</h3>
+      <p>{{ profileEmail }}</p>
+    </div>
+
+    <nav class="perfil-nav">
+      <button class="perfil-nav__item" [class.is-active]="activeSection === 'perfil'" type="button" (click)="goToProfile()"><span class="material-symbols-outlined">person</span>Mi perfil</button>
+      <button class="perfil-nav__item" type="button" (click)="goToAddresses()"><span class="material-symbols-outlined">location_on</span>Mis direcciones</button>
+      <button class="perfil-nav__item" [class.is-active]="activeSection === 'seguridad'" type="button" (click)="goToSecurity()"><span class="material-symbols-outlined">shield</span>Seguridad</button>
+      <button class="perfil-nav__item" type="button" (click)="goToOrders()"><span class="material-symbols-outlined">history</span>Historial de pedidos</button>
+    </nav>
+
+    <button class="perfil-logout" type="button" (click)="logout()">Cerrar sesión</button>
+  </aside>
+
+  <main class="perfil-main">
+    <h1>{{ activeSection === 'seguridad' ? 'Seguridad' : 'Mi perfil' }}</h1>
+    @if (error) {
+      <p class="perfil-error">{{ error }}</p>
+    }
+
+    @if (activeSection === 'perfil') {
+      <article class="perfil-card">
+        <header class="perfil-card__head">
+          <h2>Datos personales</h2>
+        </header>
+
+        <div class="perfil-grid">
+          <label>
+            <span>NOMBRES</span>
+            <input type="text" [(ngModel)]="profileFirstName" [disabled]="!isEditMode" [class.input-error]="!!fieldErrors['nombres']" />
+            @if (fieldErrors['nombres']) { <small class="field-error">{{ fieldErrors['nombres'] }}</small> }
+          </label>
+          <label>
+            <span>APELLIDOS</span>
+            <input type="text" [(ngModel)]="profileLastName" [disabled]="!isEditMode" [class.input-error]="!!fieldErrors['apellidos']" />
+            @if (fieldErrors['apellidos']) { <small class="field-error">{{ fieldErrors['apellidos'] }}</small> }
+          </label>
+          <label>
+            <span>NÚMERO DE CELULAR</span>
+            <input type="text" [(ngModel)]="profilePhone" placeholder="No disponible" [disabled]="!isEditMode" [class.input-error]="!!fieldErrors['telefono']" />
+            @if (fieldErrors['telefono']) { <small class="field-error">{{ fieldErrors['telefono'] }}</small> }
+          </label>
+          <label class="full">
+            <span>CORREO ELECTRÓNICO</span>
+            <input type="email" [value]="profileEmail" disabled />
+          </label>
+          <label>
+            <span>TIPO DOCUMENTO</span>
+            <select [(ngModel)]="docTipo" [disabled]="!isEditMode" [class.input-error]="!!fieldErrors['docTipo']">
+              <option value="DNI">DNI</option>
+              <option value="RUC">RUC</option>
+              <option value="CE">CE</option>
+            </select>
+            @if (fieldErrors['docTipo']) { <small class="field-error">{{ fieldErrors['docTipo'] }}</small> }
+          </label>
+          <label>
+            <span>NÚMERO DOCUMENTO</span>
+            <input type="text" [(ngModel)]="docNumero" [disabled]="!isEditMode" [class.input-error]="!!fieldErrors['docNumero']" />
+            @if (fieldErrors['docNumero']) { <small class="field-error">{{ fieldErrors['docNumero'] }}</small> }
+          </label>
+        </div>
+
+        <div class="perfil-card__actions">
+          @if (!isEditMode) {
+            <button class="btn-outline" type="button" (click)="enableEditMode()">Editar</button>
+          } @else {
+            <button class="btn-outline" type="button" (click)="cancelEditMode()">Cancelar</button>
+            <button class="btn-primary" type="button" (click)="saveProfile()" [disabled]="!isEditMode">Guardar cambios</button>
+          }
+        </div>
+      </article>
+    }
+
+    @if (activeSection === 'seguridad') {
+      <article class="perfil-card perfil-security">
+        <header class="perfil-card__head perfil-security__head">
+          <span class="perfil-security__icon material-symbols-outlined">lock</span>
+          <h2>Seguridad</h2>
+        </header>
+
+        <div class="perfil-security__grid">
+          <label>
+            <span>CONTRASEÑA ACTUAL</span>
+            <div class="perfil-security__field" [class.input-error]="!!securityErrors['passwordActual']">
+              <input [type]="showCurrentPassword ? 'text' : 'password'" [(ngModel)]="currentPassword" placeholder="••••••••" />
+              <button type="button" (click)="showCurrentPassword = !showCurrentPassword" aria-label="Mostrar contraseña actual">
+                <span class="material-symbols-outlined">{{ showCurrentPassword ? 'visibility' : 'visibility_off' }}</span>
+              </button>
+            </div>
+            @if (securityErrors['passwordActual']) { <small class="field-error">{{ securityErrors['passwordActual'] }}</small> }
+          </label>
+
+          <label>
+            <span>NUEVA CONTRASEÑA</span>
+            <div class="perfil-security__field" [class.input-error]="!!securityErrors['passwordNueva']">
+              <input [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="newPassword" placeholder="••••••••" />
+              <button type="button" (click)="showNewPassword = !showNewPassword" aria-label="Mostrar nueva contraseña">
+                <span class="material-symbols-outlined">{{ showNewPassword ? 'visibility' : 'visibility_off' }}</span>
+              </button>
+            </div>
+            @if (securityErrors['passwordNueva']) { <small class="field-error">{{ securityErrors['passwordNueva'] }}</small> }
+          </label>
+
+          <label>
+            <span>CONFIRMAR CONTRASEÑA</span>
+            <div class="perfil-security__field" [class.input-error]="!!securityErrors['passwordConfirmacion']">
+              <input [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword" placeholder="••••••••" />
+              <button type="button" (click)="showConfirmPassword = !showConfirmPassword" aria-label="Mostrar confirmar contraseña">
+                <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility' : 'visibility_off' }}</span>
+              </button>
+            </div>
+            @if (securityErrors['passwordConfirmacion']) { <small class="field-error">{{ securityErrors['passwordConfirmacion'] }}</small> }
+          </label>
+        </div>
+        @if (securityErrors['general']) { <p class="perfil-error">{{ securityErrors['general'] }}</p> }
+
+        <div class="perfil-card__actions">
+          <button class="btn-primary" type="button" (click)="updatePassword()" [disabled]="changingPassword">
+            {{ changingPassword ? 'Actualizando...' : 'Actualizar contraseña' }}
+          </button>
+        </div>
+      </article>
+    }
+
+  </main>
 </section>

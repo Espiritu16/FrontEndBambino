@@ -8,31 +8,25 @@
   </div>
 
   @if (loading) {
-    <p class="muted">Cargando configuración...</p>
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando configuración"></app-loading-spinner>
   } @else {
-    <div class="media-layout" [class.media-layout--pdf]="isPdfSection">
+    <div class="media-layout" [class.media-layout--pdf]="isPdfSection" [class.media-layout--inicio]="isInicioSection">
     @if (isInicioSection) {
       <div class="inicio-preview">
-        <div class="inicio-preview__layout">
-          <div class="inicio-preview__copy">
-            <span class="eyebrow">Sabor 100% peruano</span>
-            <h3>DISFRUTA EL<br />AUTÉNTICO<br />SABOR.</h3>
-            <p>Preview estático de Inicio para edición visual del banner.</p>
-          </div>
-          <button class="inicio-preview__hero" type="button" (click)="openImageEditorModal()">
-            @if (previewImageUrl) {
-              <img [src]="previewImageUrl" alt="Preview inicio" />
-            } @else {
-              <div class="inicio-preview__placeholder">Sin imagen</div>
-            }
-            <span class="inicio-preview__edit">{{ previewImageUrl ? 'Editar imagen' : 'Agregar imagen' }}</span>
-          </button>
-        </div>
-        @if (previewImageUrl) {
-          <div class="inicio-preview__actions">
+        <button class="inicio-preview__hero" type="button" (click)="openImageEditorModal()">
+          @if (previewImageUrl) {
+            <img [src]="previewImageUrl" alt="Preview inicio" />
+          } @else {
+            <div class="inicio-preview__placeholder">Sin imagen</div>
+          }
+          <span class="inicio-preview__edit">{{ previewImageUrl ? 'Editar imagen' : 'Agregar imagen' }}</span>
+        </button>
+        <div class="inicio-preview__actions">
+          <button type="button" class="btn-ghost" [disabled]="saving || uploading" (click)="openImageEditorModal()">Seleccionar imagen</button>
+          @if (previewImageUrl) {
             <button type="button" class="btn-ghost" [disabled]="saving || uploading" (click)="removeImage()">Quitar imagen</button>
-          </div>
-        }
+          }
+        </div>
       </div>
     }
     @if (isPdfSection) {

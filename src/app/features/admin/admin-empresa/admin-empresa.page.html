@@ -13,11 +13,16 @@
   }
 
   @if (loading) {
-    <p class="muted">Cargando empresa principal...</p>
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando empresa principal"></app-loading-spinner>
   } @else {
     <div class="form-shell">
       <div class="content-grid">
         <section class="panel panel--form">
+          @if (savingEmpresa) {
+            <div class="saving-overlay" aria-live="polite" aria-busy="true">
+              <app-loading-spinner size="md" label="Guardando empresa"></app-loading-spinner>
+            </div>
+          }
           <h3 class="panel-title">Información de Empresa</h3>
           <div class="form-grid">
             <label>
@@ -63,6 +68,11 @@
         </section>
 
         <section class="panel panel--map">
+          @if (savingUbicacion) {
+            <div class="saving-overlay" aria-live="polite" aria-busy="true">
+              <app-loading-spinner size="md" label="Guardando ubicación"></app-loading-spinner>
+            </div>
+          }
           <div class="location-block">
             <h3 class="panel-title">Ubicación Empresa</h3>
             <p>Define coordenadas exactas para ubicar la tienda en Google Maps.</p>

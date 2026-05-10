@@ -1,6 +1,6 @@
 <section class="carta-shell">
   @if (loading) {
-    <p>Cargando carta PDF...</p>
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando carta PDF"></app-loading-spinner>
   } @else if (error) {
     <p>{{ error }}</p>
     <div class="actions">

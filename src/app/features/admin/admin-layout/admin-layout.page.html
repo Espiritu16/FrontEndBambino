@@ -19,7 +19,7 @@
         <span>Dashboard</span>
       </a>
 
-      <div class="admin-nav__group" [class.admin-nav__group--open]="commercialOpen || isCommercialRoute()">
+      <div class="admin-nav__group" [class.admin-nav__group--open]="commercialOpen">
         <button class="admin-nav__item admin-nav__toggle" type="button" (click)="toggleCommercialMenu()">
           <span class="admin-nav__left">
             <span class="material-symbols-outlined">storefront</span>
@@ -28,7 +28,7 @@
           <span class="material-symbols-outlined admin-nav__chevron">expand_more</span>
         </button>
 
-        @if (commercialOpen || isCommercialRoute()) {
+        @if (commercialOpen) {
           <div class="admin-nav__submenu">
             <a
               routerLink="/admin/comercial/productos"
@@ -48,7 +48,7 @@
         }
       </div>
 
-      <div class="admin-nav__group" [class.admin-nav__group--open]="webOpen || isWebRoute()">
+      <div class="admin-nav__group" [class.admin-nav__group--open]="webOpen">
         <button class="admin-nav__item admin-nav__toggle" type="button" (click)="toggleWebMenu()">
           <span class="admin-nav__left">
             <span class="material-symbols-outlined">language</span>
@@ -57,7 +57,7 @@
           <span class="material-symbols-outlined admin-nav__chevron">expand_more</span>
         </button>
 
-        @if (webOpen || isWebRoute()) {
+        @if (webOpen) {
           <div class="admin-nav__submenu">
             <a
               routerLink="/admin/web/inicio"

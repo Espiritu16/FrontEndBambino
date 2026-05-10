@@ -53,24 +53,16 @@ export class AdminLayoutPageComponent implements OnInit {
         // noop
       }
     }
-    this.commercialOpen = this.isCommercialRoute();
-    this.webOpen = this.isWebRoute();
+    this.commercialOpen = this.router.url.startsWith('/admin/comercial');
+    this.webOpen = this.router.url.startsWith('/admin/web');
   }
 
   protected toggleCommercialMenu(): void {
     this.commercialOpen = !this.commercialOpen;
   }
 
-  protected isCommercialRoute(): boolean {
-    return this.router.url.startsWith('/admin/comercial');
-  }
-
   protected toggleWebMenu(): void {
     this.webOpen = !this.webOpen;
-  }
-
-  protected isWebRoute(): boolean {
-    return this.router.url.startsWith('/admin/web');
   }
 
   protected openConfirm(action: 'home' | 'logout'): void {

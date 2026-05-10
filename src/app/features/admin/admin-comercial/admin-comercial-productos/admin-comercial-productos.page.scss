@@ -15,9 +15,13 @@ select,input,textarea { border:1px solid #d0d7e2; border-radius:8px; padding:.45
 .upload-inline { display:grid; gap:.2rem; margin-top:.2rem; }
 .upload-inline input[type='file'] { padding:.2rem 0; border:0; background:transparent; }
 
-.btn-primary { border:1px solid #8d0a0a; background:#8d0a0a; color:#fff; border-radius:10px; min-height:38px; padding:0 .9rem; font-weight:700; }
-.btn-ghost { border:1px solid #d0d7e2; background:#fff; color:#445163; border-radius:10px; min-height:38px; padding:0 .9rem; font-weight:700; }
-.btn-link { border:0; background:transparent; color:#8d0a0a; font-weight:700; }
+.btn-primary { border:1px solid #8d0a0a; background:#8d0a0a; color:#fff; border-radius:10px; min-height:38px; padding:0 .9rem; font-weight:700; cursor:pointer; }
+.btn-ghost { border:1px solid #d0d7e2; background:#fff; color:#445163; border-radius:10px; min-height:38px; padding:0 .9rem; font-weight:700; cursor:pointer; }
+.btn-link { border:0; background:transparent; color:#8d0a0a; font-weight:700; cursor:pointer; }
+.btn-primary:disabled,
+.btn-ghost:disabled {
+  cursor: not-allowed;
+}
 
 .error { color:#d63e48; margin:.7rem 0 0; }
 .muted { color:#667085; margin:.7rem 0 0; }

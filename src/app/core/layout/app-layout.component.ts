@@ -1,9 +1,11 @@
 import { ChangeDetectorRef, Component, NgZone, OnInit, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
+import { PlannedFeatureModalComponent } from '../../shared/components/planned-feature-modal/planned-feature-modal.component';
+import { matchesSearchQuery } from '../../shared/utils/search-match.util';
 
 type RegisterFieldErrors = {
   email?: string;
@@ -21,10 +23,49 @@ type ConfiguracionMediaPublicResponse = {
   activa: boolean;
 };
 
+type ChatbotOpcion = {
+  codigo: string;
+  descripcion: string;
+};
+
+type ChatbotConsultaResponse = {
+  opcion: string;
+  mensaje: string;
+  data?: Record<string, unknown>;
+};
+
+type ChatbotMessage = {
+  role: 'user' | 'assistant';
+  text: string;
+  detail?: string;
+  isError?: boolean;
+  showCartaLink?: boolean;
+};
+
+type ProductoSearchItem = {
+  idProducto: number;
+  nombre: string;
+  descripcion: string | null;
+};
+
+type EmpresaPublicaResponse = {
+  idEmpresa: number;
+  direccionFiscal: string;
+  telefono: string | null;
+  activo: boolean;
+};
+
+type CategoriaPublicaResponse = {
+  idCategoria: number;
+  nombre: string;
+  activa: boolean;
+  ordenVisual: number;
+};
+
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, FormsModule, ConfirmModalComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, FormsModule, ConfirmModalComponent, PlannedFeatureModalComponent],
   templateUrl: './app-layout.component.html',
   styleUrl: './app-layout.component.scss'
 })
@@ -35,6 +76,7 @@ export class AppLayoutComponent implements OnInit {
   private readonly userRoleStorageKey = 'bambino_user_role';
   private readonly registerDraftStorageKey = 'bambino_register_draft';
   private readonly cartaPdfCacheKey = 'bambino_carta_pdf_url';
+  private readonly headerSearchStorageKey = 'bambino_header_search_query';
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly ngZone = inject(NgZone);
   private readonly http = inject(HttpClient);
@@ -44,8 +86,10 @@ export class AppLayoutComponent implements OnInit {
   protected isMobileMenuOpen = false;
   protected isLoginModalOpen = false;
   protected isLogoutConfirmOpen = false;
+  protected isMyOrderPlannedModalOpen = false;
   protected isAuthenticated = false;
   protected isAdmin = false;
+  protected currentRole = '';
   protected displayName = '';
   protected modalView: 'login' | 'forgot' | 'register' = 'login';
   protected forgotStep: 'request' | 'code' | 'reset' | 'done' = 'request';
@@ -84,19 +128,204 @@ export class AppLayoutComponent implements OnInit {
   protected registerSuccess = '';
   protected registerLoading = false;
   protected registerFieldErrors: RegisterFieldErrors = {};
+  protected isChatbotOpen = false;
+  protected chatbotLoading = false;
+  protected chatbotMessages: ChatbotMessage[] = [];
+  protected chatbotOpciones: ChatbotOpcion[] = [];
+  protected selectedChatbotOpcion = 'MENU';
+  protected chatbotPedidoInput = '';
+  protected headerSearchQuery = '';
+  protected headerSearchResults: ProductoSearchItem[] = [];
+  protected showHeaderSearchResults = false;
+  protected headerSearchLoading = false;
+  private headerSearchPool: ProductoSearchItem[] = [];
+  protected readonly chatbotLabelMap: Record<string, string> = {
+    MENU: 'MENÚ',
+    CATALOGO: 'CARTA',
+    OFERTAS: 'OFERTAS',
+    HORARIO: 'HORARIO',
+    COBERTURA_DELIVERY: 'COBERTURA',
+    MEDIOS_PAGO: 'MEDIOS DE PAGO',
+    ESTADO_PEDIDO: 'ESTADO DE PEDIDO',
+    HISTORIAL_PEDIDOS: 'MIS PEDIDOS'
+  };
+  protected footerMenuFilters: string[] = ['Pollo a la Brasa', 'Combos Familiares', 'Los Mostros', 'Platos a la Carta'];
+  protected footerDireccionFiscal = 'Av. Principal 123';
+  protected footerTelefono = '(01) 123-4567';
+  protected readonly footerCelular = '+51 987 654 321';
 
-  ngOnInit(): void { void this.restoreSessionState(); }
+  ngOnInit(): void {
+    this.restoreHeaderSearchQuery();
+    void this.restoreSessionState();
+    void this.cargarOpcionesChatbot();
+    void this.loadHeaderSearchPool();
+    void this.loadFooterCompanyData();
+    void this.loadFooterMenuFilters();
+  }
+
+  protected goToPromocionesConFiltro(filtro: string, event?: Event): void {
+    event?.preventDefault();
+    const filtroLimpio = (filtro ?? '').trim();
+    if (!filtroLimpio) {
+      void this.router.navigate(['/promociones']);
+      return;
+    }
+    void this.router.navigate(['/promociones'], { queryParams: { filtro: filtroLimpio } });
+  }
 
   protected openLoginModal(): void { this.isLoginModalOpen = true; this.modalView = 'login'; }
   protected closeLoginModal(): void { this.isLoginModalOpen = false; this.resetModalState(); }
   protected toggleMobileMenu(): void { this.isMobileMenuOpen = !this.isMobileMenuOpen; }
   protected closeMobileMenu(): void { this.isMobileMenuOpen = false; }
+  protected toggleChatbot(): void { this.isChatbotOpen = !this.isChatbotOpen; }
+  protected seleccionarOpcionChatbot(codigo: string): void { this.selectedChatbotOpcion = codigo; }
+  protected limpiarChatbot(): void {
+    this.chatbotMessages = [];
+    this.chatbotPedidoInput = '';
+  }
   protected openLogoutConfirm(): void { this.isLogoutConfirmOpen = true; }
   protected closeLogoutConfirm(): void { this.isLogoutConfirmOpen = false; }
 
   protected handleMyOrderClick(): void {
-    const authToken = localStorage.getItem(this.authStorageKey);
-    if (!authToken || !this.isAuthenticated) { this.openLoginModal(); return; }
+    if (!this.canShowMyOrder()) return;
+    this.isMyOrderPlannedModalOpen = true;
+  }
+
+  protected closeMyOrderPlannedModal(): void {
+    this.isMyOrderPlannedModalOpen = false;
+  }
+
+  protected canShowMyOrder(): boolean {
+    const role = (this.currentRole || '').trim().toUpperCase();
+    return !this.isRoleBlockedForMyOrder(role);
+  }
+
+  protected submitHeaderSearch(): void {
+    const first = this.headerSearchResults[0];
+    if (first) {
+      this.openHeaderSearchResult(first);
+      return;
+    }
+    this.showHeaderSearchResults = false;
+  }
+
+  protected onHeaderSearchInput(): void {
+    const q = this.headerSearchQuery.trim();
+    this.persistHeaderSearchQuery();
+    if (!q) {
+      this.headerSearchResults = [];
+      this.showHeaderSearchResults = false;
+      return;
+    }
+    this.headerSearchResults = this.headerSearchPool
+      .filter((item) => matchesSearchQuery(q, [item.nombre, item.descripcion]))
+      .slice(0, 7);
+    this.showHeaderSearchResults = true;
+  }
+
+  protected onHeaderSearchFocus(): void {
+    if (this.headerSearchQuery.trim()) {
+      this.onHeaderSearchInput();
+    }
+  }
+
+  protected onHeaderSearchBlur(): void {
+    // Permite que el click en un item de la lista ocurra antes de ocultarla.
+    setTimeout(() => {
+      this.showHeaderSearchResults = false;
+      this.syncUi();
+    }, 120);
+  }
+
+  protected openHeaderSearchResult(item: ProductoSearchItem): void {
+    const slug = this.toSlug(item.nombre);
+    this.showHeaderSearchResults = false;
+    this.headerSearchQuery = '';
+    this.headerSearchResults = [];
+    this.persistHeaderSearchQuery();
+    void this.router.navigate(['/producto-detalle', item.idProducto, slug]);
+  }
+
+  protected async consultarChatbot(): Promise<void> {
+    if (this.chatbotLoading) return;
+    this.chatbotLoading = true;
+    try {
+      const token = localStorage.getItem(this.authStorageKey)?.trim() ?? '';
+      const payload: { opcion: string; idPedido?: number; codigoPedido?: string } = {
+        opcion: this.selectedChatbotOpcion
+      };
+      const selectedOption = this.chatbotOpciones.find((item) => item.codigo === this.selectedChatbotOpcion);
+      const userText = selectedOption
+        ? `${this.chatbotLabelMap[selectedOption.codigo] || selectedOption.codigo} - ${selectedOption.descripcion}`
+        : (this.chatbotLabelMap[this.selectedChatbotOpcion] || this.selectedChatbotOpcion);
+      let userDetail = '';
+
+      if (this.selectedChatbotOpcion === 'CATALOGO') {
+        this.pushChatMessage({ role: 'user', text: userText });
+        this.pushChatMessage({ role: 'assistant', text: 'Click aquí para abrir la carta en PDF.', showCartaLink: true });
+        return;
+      }
+
+      if (this.selectedChatbotOpcion === 'OFERTAS') {
+        this.pushChatMessage({ role: 'user', text: userText });
+        this.pushChatMessage({ role: 'assistant', text: 'La sección de ofertas aún está en desarrollo.' });
+        return;
+      }
+
+      if (this.selectedChatbotOpcion === 'HORARIO') {
+        this.pushChatMessage({ role: 'user', text: userText });
+        this.pushChatMessage({ role: 'assistant', text: 'Atendemos de 3:00 PM a 11:00 PM.' });
+        return;
+      }
+
+      if (this.selectedChatbotOpcion === 'MEDIOS_PAGO') {
+        this.pushChatMessage({ role: 'user', text: userText });
+        this.pushChatMessage({ role: 'assistant', text: 'Puedes pagar en línea o contra entrega. Antes de finalizar tu compra, elige si deseas boleta o factura.' });
+        return;
+      }
+
+      if (this.selectedChatbotOpcion === 'COBERTURA_DELIVERY') {
+        this.pushChatMessage({ role: 'user', text: userText });
+        this.pushChatMessage({ role: 'assistant', text: 'Te llevo al apartado de cobertura para que revises el mapa y zonas disponibles.' });
+        void this.router.navigate(['/cobertura-delivery']);
+        return;
+      }
+
+      if (this.selectedChatbotOpcion === 'ESTADO_PEDIDO') {
+        const value = this.chatbotPedidoInput.trim();
+        if (!value) {
+          this.pushChatMessage({ role: 'assistant', text: 'Ingresa ID o código de pedido.', isError: true });
+          return;
+        }
+        if (/^\d+$/.test(value)) payload.idPedido = Number(value);
+        else payload.codigoPedido = value.toUpperCase();
+        userDetail = `Pedido: ${value}`;
+      }
+
+      this.pushChatMessage({ role: 'user', text: userText, detail: userDetail || undefined });
+
+      const headers = token ? new HttpHeaders({ Authorization: `Basic ${token}` }) : undefined;
+      const isClienteConsulta = token && (this.selectedChatbotOpcion === 'ESTADO_PEDIDO' || this.selectedChatbotOpcion === 'HISTORIAL_PEDIDOS');
+      const endpoint = isClienteConsulta
+        ? `${this.apiBaseUrl}/api/cliente/chatbot/consultar`
+        : `${this.apiBaseUrl}/api/public/chatbot/consultar`;
+
+      const response = await firstValueFrom(
+        this.http.post<ChatbotConsultaResponse>(endpoint, payload, headers ? { headers } : undefined).pipe(timeout(10000))
+      );
+      this.pushChatMessage({ role: 'assistant', text: this.formatChatbotResponse(response) });
+      this.chatbotPedidoInput = '';
+    } catch (error) {
+      const httpError = error as HttpErrorResponse;
+      this.pushChatMessage({
+        role: 'assistant',
+        text: httpError.error?.mensaje || 'No se pudo consultar el chatbot.',
+        isError: true
+      });
+    } finally {
+      this.chatbotLoading = false;
+      this.syncUi();
+    }
   }
 
   protected logout(): void {
@@ -105,14 +334,112 @@ export class AppLayoutComponent implements OnInit {
     localStorage.removeItem(this.userRoleStorageKey);
     this.isAuthenticated = false;
     this.isAdmin = false;
+    this.currentRole = '';
     this.displayName = '';
     this.isLogoutConfirmOpen = false;
     this.syncUi();
+    void this.router.navigate(['/inicio']);
   }
 
   protected goToAdminPanel(): void {
     if (!this.isAuthenticated || !this.isAdmin) return;
     void this.router.navigate(['/admin']);
+  }
+
+  protected goToCobertura(): void {
+    void this.router.navigate(['/cobertura-delivery']);
+  }
+
+  private async loadHeaderSearchPool(): Promise<void> {
+    this.headerSearchLoading = true;
+    try {
+      const data = await firstValueFrom(
+        this.http
+          .get<ProductoSearchItem[]>(`${this.apiBaseUrl}/api/public/catalogo/productos`)
+          .pipe(timeout(10000))
+      );
+      this.headerSearchPool = (data ?? []).map((p) => ({
+        idProducto: p.idProducto,
+        nombre: p.nombre,
+        descripcion: p.descripcion ?? null
+      }));
+    } catch {
+      this.headerSearchPool = [];
+    } finally {
+      this.headerSearchLoading = false;
+      this.syncUi();
+    }
+  }
+
+  private async loadFooterCompanyData(): Promise<void> {
+    try {
+      const empresas = await firstValueFrom(
+        this.http
+          .get<EmpresaPublicaResponse[]>(`${this.apiBaseUrl}/api/public/configuracion/empresas`)
+          .pipe(timeout(10000))
+      );
+      const empresa = (empresas ?? []).find((item) => item?.activo) ?? empresas?.[0];
+      if (!empresa) return;
+      const direccionFiscal = (empresa.direccionFiscal ?? '').trim();
+      const telefonoEmpresa = (empresa.telefono ?? '').trim();
+      if (direccionFiscal) {
+        this.footerDireccionFiscal = direccionFiscal;
+      }
+      if (telefonoEmpresa) {
+        this.footerTelefono = telefonoEmpresa;
+      }
+      this.syncUi();
+    } catch {
+      // Mantiene fallback hardcodeado cuando no hay datos públicos de empresa.
+    }
+  }
+
+  private async loadFooterMenuFilters(): Promise<void> {
+    try {
+      const categorias = await firstValueFrom(
+        this.http
+          .get<CategoriaPublicaResponse[]>(`${this.apiBaseUrl}/api/public/catalogo/categorias`)
+          .pipe(timeout(10000))
+      );
+      const top4 = (categorias ?? [])
+        .filter((c) => !!c?.activa && !!(c.nombre ?? '').trim())
+        .sort((a, b) => (a.ordenVisual ?? 0) - (b.ordenVisual ?? 0))
+        .map((c) => c.nombre.trim())
+        .slice(0, 4);
+      if (top4.length === 4) {
+        this.footerMenuFilters = top4;
+        this.syncUi();
+      }
+    } catch {
+      // Mantiene fallback de 4 filtros definidos.
+    }
+  }
+
+  private toSlug(nombre: string): string {
+    return (nombre ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  private persistHeaderSearchQuery(): void {
+    try {
+      const value = (this.headerSearchQuery ?? '').trim();
+      if (value) localStorage.setItem(this.headerSearchStorageKey, value);
+      else localStorage.removeItem(this.headerSearchStorageKey);
+    } catch {
+      // Ignora errores de storage.
+    }
+  }
+
+  private restoreHeaderSearchQuery(): void {
+    try {
+      this.headerSearchQuery = localStorage.getItem(this.headerSearchStorageKey)?.trim() || '';
+    } catch {
+      this.headerSearchQuery = '';
+    }
   }
 
   protected openForgotPassword(): void {
@@ -429,12 +756,44 @@ export class AppLayoutComponent implements OnInit {
     } catch { this.logout(); }
   }
 
+  private async cargarOpcionesChatbot(): Promise<void> {
+    try {
+      const opciones = await firstValueFrom(
+        this.http
+          .get<ChatbotOpcion[]>(`${this.apiBaseUrl}/api/public/chatbot/opciones`)
+          .pipe(timeout(10000))
+      );
+      this.chatbotOpciones = opciones.filter((item) => item.codigo !== 'MENU');
+      if (!this.chatbotOpciones.some((item) => item.codigo === this.selectedChatbotOpcion)) {
+        this.selectedChatbotOpcion = this.chatbotOpciones[0]?.codigo ?? 'CATALOGO';
+      }
+    } catch {
+      this.chatbotOpciones = [
+        { codigo: 'CATALOGO', descripcion: 'consultar productos activos' }
+      ];
+      this.selectedChatbotOpcion = 'CATALOGO';
+    } finally {
+      this.syncUi();
+    }
+  }
+
+  private formatChatbotResponse(response: ChatbotConsultaResponse): string {
+    const dataText = response.data ? JSON.stringify(response.data, null, 2) : '';
+    return `${response.mensaje}${dataText ? `\n\n${dataText}` : ''}`;
+  }
+
+  private pushChatMessage(message: ChatbotMessage): void {
+    this.chatbotMessages = [...this.chatbotMessages, message];
+  }
+
   private applyAuthenticatedSession(token: string, usuario: string, nombres?: string | null, apellidos?: string | null, role?: string | null): void {
     localStorage.setItem(this.authStorageKey, token);
     this.isAuthenticated = true;
     const normalizedRole = (role ?? '').trim().toUpperCase();
+    this.currentRole = normalizedRole;
     if (normalizedRole) localStorage.setItem(this.userRoleStorageKey, normalizedRole);
     const savedRole = localStorage.getItem(this.userRoleStorageKey)?.trim().toUpperCase();
+    if (!this.currentRole) this.currentRole = savedRole || '';
     this.isAdmin = this.isAdminRole(normalizedRole || savedRole || null);
     const savedName = localStorage.getItem(this.userNameStorageKey)?.trim();
     if (nombres || apellidos) { this.displayName = this.buildShortDisplayName(nombres ?? '', apellidos ?? ''); localStorage.setItem(this.userNameStorageKey, this.displayName); }
@@ -473,10 +832,7 @@ export class AppLayoutComponent implements OnInit {
   }
 
   private async redirectAfterLogin(role: string | null): Promise<void> {
-    if (this.isAdminRole(role)) {
-      await this.router.navigate(['/admin']);
-      return;
-    }
+    void role;
     await this.router.navigate(['/inicio']);
   }
 
@@ -487,6 +843,18 @@ export class AppLayoutComponent implements OnInit {
       || normalized === 'ROLE_ADMIN'
       || normalized === 'ADMINISTRADOR'
       || normalized.includes('ADMIN');
+  }
+
+  private isRoleBlockedForMyOrder(role: string): boolean {
+    if (!role) return false;
+    const normalized = role.trim().toUpperCase();
+    return normalized === 'ADMIN'
+      || normalized === 'ROLE_ADMIN'
+      || normalized === 'ADMINISTRADOR'
+      || normalized.includes('ADMIN')
+      || normalized === 'COCINA'
+      || normalized === 'ROLE_COCINA'
+      || normalized.includes('COCINA');
   }
 
   private handleRegisterHttpError(error: HttpErrorResponse): void {
