@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
+import { scheduleUiRefresh } from '../../../shared/utils/async-ui.util';
+import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../shared/services/toast.service';
 
 type PerfilResponse = {
@@ -16,17 +18,41 @@ type PerfilResponse = {
   docNumero: string;
 };
 
+type PerfilInternoResponse = {
+  idUsuario: number;
+  email?: string;
+  nombres?: string;
+  apellidos?: string;
+  telefono?: string | null;
+  rol?: string;
+  estado?: string;
+};
+
 type AuthYoResponse = {
   usuario?: string;
   nombres?: string;
   apellidos?: string;
   telefono?: string | null;
+  rol?: string;
+  role?: string;
+  roles?: Array<{ nombre?: string; role?: string } | string>;
 };
+
+type DocumentoResponse = {
+  idDocumento: number;
+  docTipo: string;
+  docNumero: string;
+  esPrincipal: boolean;
+  activo: boolean;
+};
+
+const DOC_TYPES = ['DNI', 'RUC', 'CE'] as const;
+type DocType = (typeof DOC_TYPES)[number];
 
 @Component({
   selector: 'app-perfil-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LoadingSpinnerComponent],
   templateUrl: './perfil.page.html',
   styleUrl: './perfil.page.scss'
 })
@@ -39,6 +65,8 @@ export class PerfilPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly toast = inject(ToastService);
+  private readonly ngZone = inject(NgZone);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   protected loading = false;
   protected error = '';
@@ -61,6 +89,11 @@ export class PerfilPageComponent implements OnInit {
   protected securityErrors: Record<string, string> = {};
   protected isEditMode = false;
   protected fieldErrors: Record<string, string> = {};
+  protected documentos: DocumentoResponse[] = [];
+  protected newDocTipo = 'DNI';
+  protected newDocNumero = '';
+  protected docActionLoading = false;
+  protected isAdminUser = false;
   private originalSnapshot = '';
 
   ngOnInit(): void {
@@ -72,12 +105,15 @@ export class PerfilPageComponent implements OnInit {
   }
 
   protected async loadAll(): Promise<void> {
+    const loadingStartedAt = Date.now();
     this.loading = true;
     this.error = '';
+    scheduleUiRefresh(this.ngZone, this.cdr);
     const headers = this.authHeaders();
     let authYo: AuthYoResponse | null = null;
     try {
       authYo = await firstValueFrom(this.http.get<AuthYoResponse>(`${this.apiBaseUrl}/api/auth/yo`, { headers }).pipe(timeout(10000)));
+      this.isAdminUser = this.resolveIsAdmin(authYo);
       const nombres = (authYo.nombres ?? '').trim();
       const apellidos = (authYo.apellidos ?? '').trim();
       const fullName = `${nombres} ${apellidos}`.trim();
@@ -88,24 +124,63 @@ export class PerfilPageComponent implements OnInit {
       this.profilePhone = authYo.telefono?.trim() || '';
     } catch {
       // Mantener datos desde sesión local si auth/yo falla.
+      this.isAdminUser = this.resolveIsAdmin();
+    }
+
+    if (this.isAdminUser) {
+      try {
+        const perfilInterno = await firstValueFrom(
+          this.http.get<PerfilInternoResponse>(`${this.apiBaseUrl}/api/seguridad/perfil`, { headers }).pipe(timeout(10000))
+        );
+        this.profileFirstName = (perfilInterno.nombres ?? this.profileFirstName ?? '').trim();
+        this.profileLastName = (perfilInterno.apellidos ?? this.profileLastName ?? '').trim();
+        this.profileEmail = (perfilInterno.email ?? this.profileEmail ?? '').trim();
+        this.profilePhone = (perfilInterno.telefono ?? this.profilePhone ?? '').trim();
+        const fullName = `${this.profileFirstName} ${this.profileLastName}`.trim();
+        this.profileName = fullName || this.profileName;
+        this.documentos = [];
+        this.docTipo = 'DNI';
+        this.docNumero = '';
+        this.originalSnapshot = this.buildSnapshot();
+        this.fieldErrors = {};
+      } catch {
+        this.error = 'No se pudo cargar la información del perfil.';
+      } finally {
+        this.loading = false;
+        if (Date.now() - loadingStartedAt > 12000 && !this.error) {
+          this.error = 'La carga demoró demasiado. Intenta nuevamente.';
+        }
+        scheduleUiRefresh(this.ngZone, this.cdr);
+      }
+      return;
     }
 
     try {
-      const perfil = await firstValueFrom(this.http.get<PerfilResponse>(`${this.apiBaseUrl}/api/cliente/perfil`, { headers }).pipe(timeout(10000)));
+      const [perfil, docs] = await Promise.all([
+        firstValueFrom(this.http.get<PerfilResponse>(`${this.apiBaseUrl}/api/cliente/perfil`, { headers }).pipe(timeout(10000))),
+        this.fetchDocumentos()
+      ]);
       this.profileFirstName = (perfil.nombres ?? this.profileFirstName ?? '').trim();
       this.profileLastName = (perfil.apellidos ?? this.profileLastName ?? '').trim();
       const fullName = `${this.profileFirstName} ${this.profileLastName}`.trim();
       this.profileName = fullName || this.profileName;
       this.profileEmail = (perfil.correo ?? this.profileEmail ?? '').trim();
       this.profilePhone = (perfil.telefono ?? this.profilePhone ?? '').trim();
-      this.docTipo = (perfil.docTipo || 'DNI').toUpperCase();
-      this.docNumero = perfil.docNumero || '';
+      this.documentos = docs ?? [];
+      this.syncNewDocumentoTipo();
+      const principal = this.documentos.find((d) => d.esPrincipal);
+      this.docTipo = (principal?.docTipo || perfil.docTipo || 'DNI').toUpperCase();
+      this.docNumero = principal?.docNumero || perfil.docNumero || '';
       this.originalSnapshot = this.buildSnapshot();
       this.fieldErrors = {};
     } catch {
       this.error = 'No se pudo cargar la información del perfil.';
     } finally {
       this.loading = false;
+      if (Date.now() - loadingStartedAt > 12000 && !this.error) {
+        this.error = 'La carga demoró demasiado. Intenta nuevamente.';
+      }
+      scheduleUiRefresh(this.ngZone, this.cdr);
     }
   }
 
@@ -126,20 +201,35 @@ export class PerfilPageComponent implements OnInit {
       return;
     }
     try {
-      await firstValueFrom(
-        this.http.patch(
-          `${this.apiBaseUrl}/api/cliente/perfil/datos-personales`,
-          { nombres: this.profileFirstName, apellidos: this.profileLastName, telefono: this.profilePhone },
-          { headers: this.authHeaders() }
-        ).pipe(timeout(10000))
-      );
-      await firstValueFrom(
-        this.http.patch<PerfilResponse>(
-          `${this.apiBaseUrl}/api/cliente/perfil/documento`,
-          { docTipo: this.docTipo, docNumero: this.docNumero },
-          { headers: this.authHeaders() }
-        ).pipe(timeout(10000))
-      );
+      if (this.isAdminUser) {
+        await firstValueFrom(
+          this.http.patch<PerfilInternoResponse>(
+            `${this.apiBaseUrl}/api/seguridad/perfil/datos-personales`,
+            {
+              email: this.profileEmail,
+              nombres: this.profileFirstName,
+              apellidos: this.profileLastName,
+              telefono: this.profilePhone
+            },
+            { headers: this.authHeaders() }
+          ).pipe(timeout(10000))
+        );
+      } else {
+        await firstValueFrom(
+          this.http.patch(
+            `${this.apiBaseUrl}/api/cliente/perfil/datos-personales`,
+            { nombres: this.profileFirstName, apellidos: this.profileLastName, telefono: this.profilePhone },
+            { headers: this.authHeaders() }
+          ).pipe(timeout(10000))
+        );
+        await firstValueFrom(
+          this.http.patch<PerfilResponse>(
+            `${this.apiBaseUrl}/api/cliente/perfil/documento`,
+            { docTipo: this.docTipo, docNumero: this.docNumero },
+            { headers: this.authHeaders() }
+          ).pipe(timeout(10000))
+        );
+      }
       const fullName = `${this.profileFirstName ?? ''} ${this.profileLastName ?? ''}`.trim();
       this.profileName = fullName || this.profileName;
       localStorage.setItem('bambino_user_name', this.profileName);
@@ -169,6 +259,7 @@ export class PerfilPageComponent implements OnInit {
   }
 
   protected goToAddresses(): void {
+    if (this.isAdminUser) return;
     void this.router.navigate(['/direcciones']);
   }
 
@@ -178,6 +269,7 @@ export class PerfilPageComponent implements OnInit {
   }
 
   protected goToOrders(): void {
+    if (this.isAdminUser) return;
     void this.router.navigate(['/mis-pedidos']);
   }
 
@@ -200,9 +292,12 @@ export class PerfilPageComponent implements OnInit {
 
     this.changingPassword = true;
     try {
+      const endpoint = this.isAdminUser
+        ? `${this.apiBaseUrl}/api/seguridad/perfil/password`
+        : `${this.apiBaseUrl}/api/cliente/perfil/password`;
       const response = await firstValueFrom(
         this.http.patch(
-          `${this.apiBaseUrl}/api/cliente/perfil/password`,
+          endpoint,
           {
             passwordActual: this.currentPassword,
             passwordNueva: this.newPassword,
@@ -233,6 +328,77 @@ export class PerfilPageComponent implements OnInit {
     }
   }
 
+  protected async addDocumento(): Promise<void> {
+    const docTipo = (this.newDocTipo || '').trim().toUpperCase();
+    const docNumero = (this.newDocNumero || '').trim().toUpperCase();
+    if (this.existsDocTipoActivo(docTipo)) {
+      this.toast.warning(`Ya tienes un documento de tipo ${docTipo}.`);
+      return;
+    }
+    const error = this.validateDocByType(docTipo, docNumero);
+    if (error) {
+      this.toast.warning(error);
+      return;
+    }
+    this.docActionLoading = true;
+    try {
+      await firstValueFrom(
+        this.http.post<DocumentoResponse>(
+          `${this.apiBaseUrl}/api/cliente/perfil/documentos`,
+          { docTipo, docNumero },
+          { headers: this.authHeaders() }
+        ).pipe(timeout(10000))
+      );
+      this.newDocNumero = '';
+      await this.loadDocumentos();
+      this.toast.success('Documento agregado.');
+    } catch (errorResponse) {
+      const msg = (errorResponse as HttpErrorResponse)?.error?.mensaje || 'No se pudo agregar el documento.';
+      this.toast.error(msg);
+    } finally {
+      this.docActionLoading = false;
+    }
+  }
+
+  protected async setDocumentoPrincipal(idDocumento: number): Promise<void> {
+    this.docActionLoading = true;
+    try {
+      await firstValueFrom(
+        this.http.patch<DocumentoResponse>(
+          `${this.apiBaseUrl}/api/cliente/perfil/documentos/${idDocumento}/principal`,
+          {},
+          { headers: this.authHeaders() }
+        ).pipe(timeout(10000))
+      );
+      await this.loadAll();
+      this.toast.success('Documento principal actualizado.');
+    } catch (errorResponse) {
+      const msg = (errorResponse as HttpErrorResponse)?.error?.mensaje || 'No se pudo actualizar el documento principal.';
+      this.toast.error(msg);
+    } finally {
+      this.docActionLoading = false;
+    }
+  }
+
+  protected async removeDocumento(idDocumento: number): Promise<void> {
+    this.docActionLoading = true;
+    try {
+      await firstValueFrom(
+        this.http.delete(
+          `${this.apiBaseUrl}/api/cliente/perfil/documentos/${idDocumento}`,
+          { headers: this.authHeaders() }
+        ).pipe(timeout(10000))
+      );
+      await this.loadAll();
+      this.toast.success('Documento eliminado.');
+    } catch (errorResponse) {
+      const msg = (errorResponse as HttpErrorResponse)?.error?.mensaje || 'No se pudo eliminar el documento.';
+      this.toast.error(msg);
+    } finally {
+      this.docActionLoading = false;
+    }
+  }
+
   private authHeaders(): HttpHeaders {
     const token = localStorage.getItem(this.authStorageKey)?.trim() ?? '';
     return new HttpHeaders({ Authorization: `Basic ${token}` });
@@ -246,6 +412,14 @@ export class PerfilPageComponent implements OnInit {
   }
 
   private buildSnapshot(): string {
+    if (this.isAdminUser) {
+      return JSON.stringify({
+        email: (this.profileEmail || '').trim().toLowerCase(),
+        nombres: (this.profileFirstName || '').trim(),
+        apellidos: (this.profileLastName || '').trim(),
+        telefono: (this.profilePhone || '').trim()
+      });
+    }
     return JSON.stringify({
       nombres: (this.profileFirstName || '').trim(),
       apellidos: (this.profileLastName || '').trim(),
@@ -256,11 +430,22 @@ export class PerfilPageComponent implements OnInit {
   }
 
   private validateForm(): string | null {
+    const email = (this.profileEmail || '').trim();
     const nombres = (this.profileFirstName || '').trim();
     const apellidos = (this.profileLastName || '').trim();
     const telefono = (this.profilePhone || '').trim();
     const docNumero = (this.docNumero || '').trim();
     const docTipo = (this.docTipo || '').trim().toUpperCase();
+
+    if (this.isAdminUser) {
+      if (!email) {
+        this.fieldErrors['email'] = 'Correo es obligatorio.';
+      } else if (email.length > 190) {
+        this.fieldErrors['email'] = 'Correo excede longitud.';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        this.fieldErrors['email'] = 'Correo inválido.';
+      }
+    }
 
     if (!nombres) {
       this.fieldErrors['nombres'] = 'Nombres es obligatorio.';
@@ -278,14 +463,24 @@ export class PerfilPageComponent implements OnInit {
       this.fieldErrors['telefono'] = 'Teléfono inválido.';
     }
 
-    if (!docNumero) {
-      this.fieldErrors['docNumero'] = 'Número de documento es obligatorio.';
-    } else if (docTipo === 'DNI' && !/^\d{8}$/.test(docNumero)) {
-      this.fieldErrors['docNumero'] = 'DNI debe tener 8 dígitos.';
-    } else if (docTipo === 'RUC' && !/^\d{11}$/.test(docNumero)) {
-      this.fieldErrors['docNumero'] = 'RUC debe tener 11 dígitos.';
-    } else if (docTipo === 'CE' && docNumero.length < 6) {
-      this.fieldErrors['docNumero'] = 'CE debe tener al menos 6 caracteres.';
+    if (!this.isAdminUser) {
+      if (!docNumero) {
+        this.fieldErrors['docNumero'] = 'Número de documento es obligatorio.';
+      } else {
+        const docError = this.validateDocByType(docTipo, docNumero);
+        if (docError) {
+          this.fieldErrors['docNumero'] = docError;
+        } else {
+          const principalActual = this.documentos.find((d) => d.esPrincipal);
+          const editandoMismoPrincipal =
+            !!principalActual &&
+            (principalActual.docTipo || '').toUpperCase() === docTipo &&
+            (principalActual.docNumero || '').toUpperCase() === docNumero.toUpperCase();
+          if (!editandoMismoPrincipal && this.existsDocTipoActivo(docTipo)) {
+            this.fieldErrors['docTipo'] = `Ya existe un documento ${docTipo} para tu perfil.`;
+          }
+        }
+      }
     }
 
     return Object.values(this.fieldErrors)[0] ?? null;
@@ -352,5 +547,86 @@ export class PerfilPageComponent implements OnInit {
     }
 
     this.securityErrors['general'] = 'No se pudo actualizar la contraseña.';
+  }
+
+  private async loadDocumentos(): Promise<void> {
+    try {
+      const docs = await this.fetchDocumentos();
+      this.documentos = docs ?? [];
+      this.syncNewDocumentoTipo();
+      const principal = this.documentos.find((d) => d.esPrincipal);
+      if (principal && !this.isEditMode) {
+        this.docTipo = (principal.docTipo || this.docTipo || 'DNI').toUpperCase();
+        this.docNumero = principal.docNumero || '';
+        this.originalSnapshot = this.buildSnapshot();
+      }
+    } catch {
+      this.documentos = [];
+      this.syncNewDocumentoTipo();
+      scheduleUiRefresh(this.ngZone, this.cdr);
+    }
+  }
+
+  private async fetchDocumentos(): Promise<DocumentoResponse[]> {
+    return await firstValueFrom(
+      this.http.get<DocumentoResponse[]>(
+        `${this.apiBaseUrl}/api/cliente/perfil/documentos`,
+        { headers: this.authHeaders() }
+      ).pipe(timeout(10000))
+    );
+  }
+
+  private validateDocByType(docTipo: string, docNumero: string): string | null {
+    if (docTipo === 'DNI' && !/^\d{8}$/.test(docNumero)) return 'DNI debe tener 8 dígitos.';
+    if (docTipo === 'RUC' && !/^\d{11}$/.test(docNumero)) return 'RUC debe tener 11 dígitos.';
+    if (docTipo === 'CE' && !/^[A-Za-z0-9]{9,12}$/.test(docNumero)) return 'CE debe tener entre 9 y 12 caracteres.';
+    return null;
+  }
+
+  protected existsDocTipoActivo(docTipo: string): boolean {
+    const normalized = (docTipo || '').trim().toUpperCase();
+    return this.documentos.some((d) => (d.docTipo || '').trim().toUpperCase() === normalized && d.activo);
+  }
+
+  protected get canAddMoreDocumentos(): boolean {
+    return this.availableDocTypes.length > 0;
+  }
+
+  protected get availableDocTypes(): DocType[] {
+    return DOC_TYPES.filter((type) => !this.existsDocTipoActivo(type));
+  }
+
+  private syncNewDocumentoTipo(): void {
+    const available = this.availableDocTypes;
+    if (available.length === 0) return;
+    if (!available.includes((this.newDocTipo || '').toUpperCase() as DocType)) {
+      this.newDocTipo = available[0];
+    }
+  }
+
+  private resolveIsAdmin(authYo?: AuthYoResponse | null): boolean {
+    const fromStorage = localStorage.getItem(this.userRoleStorageKey);
+    const directRole = (authYo?.rol ?? authYo?.role ?? '').toString().trim().toUpperCase();
+    if (this.isAdminRole(directRole)) return true;
+
+    const roles = authYo?.roles;
+    if (Array.isArray(roles)) {
+      for (const role of roles) {
+        const value = (typeof role === 'string' ? role : role?.nombre ?? role?.role ?? '').toString().trim().toUpperCase();
+        if (this.isAdminRole(value)) return true;
+      }
+    }
+    return this.isAdminRole((fromStorage ?? '').trim().toUpperCase());
+  }
+
+  private isAdminRole(role: string): boolean {
+    if (!role) return false;
+    return role === 'ADMIN'
+      || role === 'ROLE_COCINA'
+      || role === 'COCINA'
+      || role === 'ROLE_ADMIN'
+      || role === 'ADMINISTRADOR'
+      || role.includes('ADMIN')
+      || role.includes('COCINA');
   }
 }

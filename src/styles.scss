@@ -30,13 +30,32 @@ body {
   font-family: 'Barlow', sans-serif;
   color: var(--color-ink);
   background: var(--color-paper);
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 960px) {
+  .footer__legal {
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom));
+  }
+
+  .footer__legal-links {
+    flex-wrap: wrap;
+    row-gap: 0.45rem;
+    column-gap: 0.9rem;
+    padding-inline: 0.8rem;
+  }
+
+  .footer__bottom {
+    padding-bottom: calc(1.3rem + env(safe-area-inset-bottom));
+  }
 }
 
 h1,
 h2,
 h3,
 .brand-title {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Barlow', sans-serif;
   letter-spacing: 0.04em;
 }
 
