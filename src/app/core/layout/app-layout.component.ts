@@ -656,11 +656,43 @@ export class AppLayoutComponent implements OnInit {
   protected preventInvalidEmailLocalKey(event: KeyboardEvent): void { if (!event) return; if (event.ctrlKey || event.metaKey || event.altKey) return; const key = event.key ?? ''; if (key.length !== 1) return; if (!/^[A-Za-z0-9._%+\-]$/.test(key)) event.preventDefault(); }
   protected handleEmailLocalPaste(event: ClipboardEvent): void { event.preventDefault(); this.registerEmailLocal = (event.clipboardData?.getData('text') ?? '').replace(/[^A-Za-z0-9._%+\-]/g, '').slice(0, 64); this.persistRegisterDraft(); }
   protected onDocTypeChange(): void { this.sanitizeDocInput(); this.persistRegisterDraft(); }
-  protected getDocMaxLength(): number { if (this.registerDocTipo === 'DNI') return 8; if (this.registerDocTipo === 'CE') return 12; return 12; }
-  protected sanitizeDocInput(): void { const value = this.registerDocNumero ?? ''; const clean = this.registerDocTipo === 'DNI' ? value.replace(/[^0-9]/g, '') : value.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); this.registerDocNumero = clean.slice(0, this.getDocMaxLength()); this.persistRegisterDraft(); }
-  protected preventDocBeforeInput(event: InputEvent): void { const data = event.data ?? ''; if (!data) return; const pattern = this.registerDocTipo === 'DNI' ? /^[0-9]+$/ : /^[A-Za-z0-9]+$/; if (!pattern.test(data)) event.preventDefault(); }
-  protected preventInvalidDocKey(event: KeyboardEvent): void { if (!event) return; if (event.ctrlKey || event.metaKey || event.altKey) return; const key = event.key ?? ''; if (key.length !== 1) return; const pattern = this.registerDocTipo === 'DNI' ? /^[0-9]$/ : /^[A-Za-z0-9]$/; if (!pattern.test(key)) event.preventDefault(); }
-  protected handleDocPaste(event: ClipboardEvent): void { event.preventDefault(); const pasted = event.clipboardData?.getData('text') ?? ''; const clean = this.registerDocTipo === 'DNI' ? pasted.replace(/[^0-9]/g, '') : pasted.replace(/[^A-Za-z0-9]/g, '').toUpperCase(); this.registerDocNumero = clean.slice(0, this.getDocMaxLength()); this.persistRegisterDraft(); }
+  protected getDocMaxLength(): number {
+    if (this.registerDocTipo === 'DNI') return 8;
+    if (this.registerDocTipo === 'RUC') return 11;
+    if (this.registerDocTipo === 'CE') return 12;
+    return 12;
+  }
+  protected sanitizeDocInput(): void {
+    const value = this.registerDocNumero ?? '';
+    const clean = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC')
+      ? value.replace(/[^0-9]/g, '')
+      : value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    this.registerDocNumero = clean.slice(0, this.getDocMaxLength());
+    this.persistRegisterDraft();
+  }
+  protected preventDocBeforeInput(event: InputEvent): void {
+    const data = event.data ?? '';
+    if (!data) return;
+    const pattern = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC') ? /^[0-9]+$/ : /^[A-Za-z0-9]+$/;
+    if (!pattern.test(data)) event.preventDefault();
+  }
+  protected preventInvalidDocKey(event: KeyboardEvent): void {
+    if (!event) return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const key = event.key ?? '';
+    if (key.length !== 1) return;
+    const pattern = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC') ? /^[0-9]$/ : /^[A-Za-z0-9]$/;
+    if (!pattern.test(key)) event.preventDefault();
+  }
+  protected handleDocPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    const pasted = event.clipboardData?.getData('text') ?? '';
+    const clean = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC')
+      ? pasted.replace(/[^0-9]/g, '')
+      : pasted.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    this.registerDocNumero = clean.slice(0, this.getDocMaxLength());
+    this.persistRegisterDraft();
+  }
   protected persistRegisterDraft(): void { try { localStorage.setItem(this.registerDraftStorageKey, JSON.stringify({ registerEmailLocal: this.registerEmailLocal, registerEmailDomain: this.registerEmailDomain, registerNombres: this.registerNombres, registerApellidos: this.registerApellidos, registerTelefono: this.registerTelefono, registerDocTipo: this.registerDocTipo, registerDocNumero: this.registerDocNumero, registerPassword: this.registerPassword, registerConfirmPassword: this.registerConfirmPassword })); } catch {} }
 
   protected loadRegisterDraft(): void {
@@ -673,7 +705,7 @@ export class AppLayoutComponent implements OnInit {
       this.registerNombres = this.sanitizePersonName(draft['registerNombres'] ?? this.registerNombres);
       this.registerApellidos = this.sanitizePersonName(draft['registerApellidos'] ?? this.registerApellidos);
       this.registerTelefono = (draft['registerTelefono'] ?? this.registerTelefono).replace(/[^0-9]/g, '').slice(0, 9);
-      this.registerDocTipo = (draft['registerDocTipo'] as 'DNI' | 'CE' | 'PASAPORTE') ?? this.registerDocTipo;
+      this.registerDocTipo = (draft['registerDocTipo'] as 'DNI' | 'RUC' | 'CE') ?? this.registerDocTipo;
       this.registerDocNumero = draft['registerDocNumero'] ?? this.registerDocNumero;
       this.registerPassword = draft['registerPassword'] ?? this.registerPassword;
       this.registerConfirmPassword = draft['registerConfirmPassword'] ?? this.registerConfirmPassword;
@@ -705,8 +737,8 @@ export class AppLayoutComponent implements OnInit {
     else if (!nameRegex.test(apellidos)) this.registerFieldErrors.apellidos = 'Los apellidos no deben contener números.';
     if (!docNumero) this.registerFieldErrors.docNumero = 'El número de documento es obligatorio.';
     else if (this.registerDocTipo === 'DNI' && !/^\d{8}$/.test(docNumero)) this.registerFieldErrors.docNumero = 'El DNI debe tener 8 dígitos.';
+    else if (this.registerDocTipo === 'RUC' && !/^\d{11}$/.test(docNumero)) this.registerFieldErrors.docNumero = 'El RUC debe tener 11 dígitos.';
     else if (this.registerDocTipo === 'CE' && !/^[A-Za-z0-9]{9,12}$/.test(docNumero)) this.registerFieldErrors.docNumero = 'El CE debe tener entre 9 y 12 caracteres.';
-    else if (this.registerDocTipo === 'PASAPORTE' && !/^[A-Za-z0-9]{6,12}$/.test(docNumero)) this.registerFieldErrors.docNumero = 'El pasaporte debe tener entre 6 y 12 caracteres.';
     if (telefono && !/^9\d{8}$/.test(telefono)) this.registerFieldErrors.telefono = 'Ingresa un celular válido (9 dígitos iniciando en 9).';
     if (!this.registerPassword) this.registerFieldErrors.password = 'La contraseña es obligatoria.';
     else if (this.registerPassword.length < 8) this.registerFieldErrors.password = 'La contraseña debe tener al menos 8 caracteres.';
