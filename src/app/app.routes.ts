@@ -33,7 +33,11 @@ export const routes: Routes = [
       { path: 'pago-pedido', canActivate: [authGuard], loadChildren: () => import('./features/cliente/cliente-pago-pedido/pago-pedido.routes').then((m) => m.pagopedidoRoutes) },
       { path: 'comprobante-pedido', canActivate: [authGuard], loadChildren: () => import('./features/cliente/cliente-comprobante-pedido/comprobante-pedido.routes').then((m) => m.comprobantepedidoRoutes) },
       { path: 'cobertura-delivery', loadChildren: () => import('./features/cliente/cliente-cobertura-delivery/cobertura-delivery.routes').then((m) => m.coberturadeliveryRoutes) },
-      { path: 'asistente-chat', loadChildren: () => import('./features/cliente/cliente-asistente-chat/asistente-chat.routes').then((m) => m.asistentechatRoutes) },
+      { path: 'nosotros', loadChildren: () => import('./features/cliente/cliente-nosotros/nosotros.routes').then((m) => m.nosotrosRoutes) },
+      { path: 'terminos-condiciones', loadChildren: () => import('./features/cliente/cliente-terminos-condiciones/terminos-condiciones.routes').then((m) => m.terminosCondicionesRoutes) },
+      { path: 'politica-privacidad', loadChildren: () => import('./features/cliente/cliente-politica-privacidad/politica-privacidad.routes').then((m) => m.politicaPrivacidadRoutes) },
+      { path: 'libro-reclamaciones', loadChildren: () => import('./features/cliente/cliente-libro-reclamaciones/libro-reclamaciones.routes').then((m) => m.libroReclamacionesRoutes) },
+      { path: 'asistente-chat', pathMatch: 'full', redirectTo: 'nosotros' },
       { path: 'cocina-panel', canActivate: [authGuard], loadChildren: () => import('./features/cocina/cocina-panel/cocina-panel.routes').then((m) => m.cocinapanelRoutes) }
     ]
   },

@@ -4,7 +4,7 @@
       <span class="eyebrow">Mapa en tiempo real</span>
       <h2>Cobertura Chorrillos</h2>
       <p>
-        Zona única de reparto en Chorrillos. Haz click en el mapa para colocar tu punto y validar visualmente.
+        Zona única de reparto en Chorrillos. Dale click al botón rojo para consultar si tu ubicación actual tiene cobertura.
       </p>
     </div>
     <div class="cobertura-page__badges">
@@ -18,7 +18,7 @@
       <span class="material-symbols-outlined">my_location</span>
       {{ consultandoUbicacion ? 'Consultando ubicación...' : 'Consultar cobertura con mi ubicación' }}
     </button>
-    <span class="helper-text">Usa GPS del dispositivo para validar cobertura exacta</span>
+    <span class="helper-text">Usaremos el GPS de tu dispositivo para validar cobertura exacta.</span>
   </div>
 
   <div class="cobertura-map-wrap">
@@ -31,8 +31,4 @@
     </div>
   </div>
 
-  <div class="cobertura-page__hint" [class.cobertura-page__hint--ok]="estadoCobertura === 'dentro'" [class.cobertura-page__hint--bad]="estadoCobertura === 'fuera'">
-    <span class="material-symbols-outlined">place</span>
-    <p>{{ puntoSeleccionadoTexto }}</p>
-  </div>
 </section>

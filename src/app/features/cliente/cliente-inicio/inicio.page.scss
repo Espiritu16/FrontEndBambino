@@ -10,12 +10,12 @@
   background: #97040b;
   color: #fff;
   overflow: hidden;
-  height: calc(100dvh - 146px);
+  min-height: 0;
 }
 
 .hero-grid {
   min-height: 0;
-  height: 100%;
+  height: clamp(640px, 85vh, 900px);
   display: grid;
   grid-template-columns: 47% 53%;
   align-items: stretch;
@@ -367,6 +367,7 @@
   .hero-copy {
     order: 1;
     padding: 42px 0 20px;
+    text-align: center;
   }
 
   .hero-copy::after {
@@ -408,6 +409,7 @@
   }
 
   .hero-actions {
+    justify-content: center;
     flex-wrap: nowrap;
     gap: 0.65rem;
   }

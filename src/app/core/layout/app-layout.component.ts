@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NgZone, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -15,6 +15,11 @@ type RegisterFieldErrors = {
   telefono?: string;
   password?: string;
   confirmPassword?: string;
+};
+
+type RegisterDocumento = {
+  docTipo: 'DNI' | 'RUC' | 'CE';
+  docNumero: string;
 };
 
 type ConfiguracionMediaPublicResponse = {
@@ -69,7 +74,7 @@ type CategoriaPublicaResponse = {
   templateUrl: './app-layout.component.html',
   styleUrl: './app-layout.component.scss'
 })
-export class AppLayoutComponent implements OnInit {
+export class AppLayoutComponent implements OnInit, OnDestroy {
   private readonly apiBaseUrl = 'http://localhost:8080';
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly userNameStorageKey = 'bambino_user_name';
@@ -120,8 +125,7 @@ export class AppLayoutComponent implements OnInit {
   protected registerNombres = '';
   protected registerApellidos = '';
   protected registerTelefono = '';
-  protected registerDocTipo = 'DNI';
-  protected registerDocNumero = '';
+  protected registerDocumentos: RegisterDocumento[] = [{ docTipo: 'DNI', docNumero: '' }];
   protected showRegisterPassword = false;
   protected showRegisterConfirmPassword = false;
   protected registerError = '';
@@ -163,6 +167,10 @@ export class AppLayoutComponent implements OnInit {
     void this.loadFooterMenuFilters();
   }
 
+  ngOnDestroy(): void {
+    document.body.style.overflow = '';
+  }
+
   protected goToPromocionesConFiltro(filtro: string, event?: Event): void {
     event?.preventDefault();
     const filtroLimpio = (filtro ?? '').trim();
@@ -173,8 +181,16 @@ export class AppLayoutComponent implements OnInit {
     void this.router.navigate(['/promociones'], { queryParams: { filtro: filtroLimpio } });
   }
 
-  protected openLoginModal(): void { this.isLoginModalOpen = true; this.modalView = 'login'; }
-  protected closeLoginModal(): void { this.isLoginModalOpen = false; this.resetModalState(); }
+  protected openLoginModal(): void {
+    this.isLoginModalOpen = true;
+    this.modalView = 'login';
+    this.syncBodyScrollLock();
+  }
+  protected closeLoginModal(): void {
+    this.isLoginModalOpen = false;
+    this.resetModalState();
+    this.syncBodyScrollLock();
+  }
   protected toggleMobileMenu(): void { this.isMobileMenuOpen = !this.isMobileMenuOpen; }
   protected closeMobileMenu(): void { this.isMobileMenuOpen = false; }
   protected toggleChatbot(): void { this.isChatbotOpen = !this.isChatbotOpen; }
@@ -350,6 +366,14 @@ export class AppLayoutComponent implements OnInit {
     void this.router.navigate(['/cobertura-delivery']);
   }
 
+  protected goToNosotros(event?: Event, closeMobile = false): void {
+    event?.preventDefault();
+    if (closeMobile) {
+      this.closeMobileMenu();
+    }
+    void this.router.navigate(['/nosotros']);
+  }
+
   private async loadHeaderSearchPool(): Promise<void> {
     this.headerSearchLoading = true;
     try {
@@ -453,6 +477,10 @@ export class AppLayoutComponent implements OnInit {
     this.forgotNewPassword = '';
     this.forgotConfirmPassword = '';
     this.forgotEmail = this.loginEmail || this.forgotEmail;
+  }
+
+  private syncBodyScrollLock(): void {
+    document.body.style.overflow = this.isLoginModalOpen ? 'hidden' : '';
   }
 
   protected openRegister(): void {
@@ -630,7 +658,10 @@ export class AppLayoutComponent implements OnInit {
     try {
       const registerResponse = await firstValueFrom(this.http.post<{ estado?: number; mensaje?: string; detalles?: Array<{ campo?: string; mensaje?: string }> }>(`${this.apiBaseUrl}/api/auth/registro`, {
         email: this.buildRegisterEmail(), password: this.registerPassword, nombres: this.registerNombres, apellidos: this.registerApellidos,
-        telefono: this.registerTelefono || null, docTipo: this.registerDocTipo, docNumero: this.registerDocNumero
+        telefono: this.registerTelefono || null,
+        docTipo: this.registerDocumentos[0]?.docTipo || 'DNI',
+        docNumero: this.registerDocumentos[0]?.docNumero || '',
+        documentos: this.registerDocumentos.map((d) => ({ docTipo: d.docTipo, docNumero: d.docNumero }))
       }));
       if (registerResponse?.estado && registerResponse.estado >= 400) { this.handleRegisterBusinessError(registerResponse); this.syncUi(); return; }
       const createdEmail = this.buildRegisterEmail();
@@ -655,62 +686,108 @@ export class AppLayoutComponent implements OnInit {
   protected preventEmailLocalBeforeInput(event: InputEvent): void { const data = event.data ?? ''; if (data && !/^[A-Za-z0-9._%+\-]+$/.test(data)) event.preventDefault(); }
   protected preventInvalidEmailLocalKey(event: KeyboardEvent): void { if (!event) return; if (event.ctrlKey || event.metaKey || event.altKey) return; const key = event.key ?? ''; if (key.length !== 1) return; if (!/^[A-Za-z0-9._%+\-]$/.test(key)) event.preventDefault(); }
   protected handleEmailLocalPaste(event: ClipboardEvent): void { event.preventDefault(); this.registerEmailLocal = (event.clipboardData?.getData('text') ?? '').replace(/[^A-Za-z0-9._%+\-]/g, '').slice(0, 64); this.persistRegisterDraft(); }
-  protected onDocTypeChange(): void { this.sanitizeDocInput(); this.persistRegisterDraft(); }
-  protected getDocMaxLength(): number {
-    if (this.registerDocTipo === 'DNI') return 8;
-    if (this.registerDocTipo === 'RUC') return 11;
-    if (this.registerDocTipo === 'CE') return 12;
+  protected onDocTypeChange(index: number): void { this.sanitizeDocInput(index); this.persistRegisterDraft(); }
+  protected getDocMaxLength(docTipo: 'DNI' | 'RUC' | 'CE'): number {
+    if (docTipo === 'DNI') return 8;
+    if (docTipo === 'RUC') return 11;
+    if (docTipo === 'CE') return 12;
     return 12;
   }
-  protected sanitizeDocInput(): void {
-    const value = this.registerDocNumero ?? '';
-    const clean = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC')
+  protected sanitizeDocInput(index: number): void {
+    const item = this.registerDocumentos[index];
+    if (!item) return;
+    const value = item.docNumero ?? '';
+    const clean = (item.docTipo === 'DNI' || item.docTipo === 'RUC')
       ? value.replace(/[^0-9]/g, '')
       : value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    this.registerDocNumero = clean.slice(0, this.getDocMaxLength());
+    item.docNumero = clean.slice(0, this.getDocMaxLength(item.docTipo));
     this.persistRegisterDraft();
   }
-  protected preventDocBeforeInput(event: InputEvent): void {
+  protected preventDocBeforeInput(event: InputEvent, index: number): void {
+    const item = this.registerDocumentos[index];
+    if (!item) return;
     const data = event.data ?? '';
     if (!data) return;
-    const pattern = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC') ? /^[0-9]+$/ : /^[A-Za-z0-9]+$/;
+    const pattern = (item.docTipo === 'DNI' || item.docTipo === 'RUC') ? /^[0-9]+$/ : /^[A-Za-z0-9]+$/;
     if (!pattern.test(data)) event.preventDefault();
   }
-  protected preventInvalidDocKey(event: KeyboardEvent): void {
+  protected preventInvalidDocKey(event: KeyboardEvent, index: number): void {
+    const item = this.registerDocumentos[index];
+    if (!item) return;
     if (!event) return;
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     const key = event.key ?? '';
     if (key.length !== 1) return;
-    const pattern = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC') ? /^[0-9]$/ : /^[A-Za-z0-9]$/;
+    const pattern = (item.docTipo === 'DNI' || item.docTipo === 'RUC') ? /^[0-9]$/ : /^[A-Za-z0-9]$/;
     if (!pattern.test(key)) event.preventDefault();
   }
-  protected handleDocPaste(event: ClipboardEvent): void {
+  protected handleDocPaste(event: ClipboardEvent, index: number): void {
+    const item = this.registerDocumentos[index];
+    if (!item) return;
     event.preventDefault();
     const pasted = event.clipboardData?.getData('text') ?? '';
-    const clean = (this.registerDocTipo === 'DNI' || this.registerDocTipo === 'RUC')
+    const clean = (item.docTipo === 'DNI' || item.docTipo === 'RUC')
       ? pasted.replace(/[^0-9]/g, '')
       : pasted.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    this.registerDocNumero = clean.slice(0, this.getDocMaxLength());
+    item.docNumero = clean.slice(0, this.getDocMaxLength(item.docTipo));
     this.persistRegisterDraft();
   }
-  protected persistRegisterDraft(): void { try { localStorage.setItem(this.registerDraftStorageKey, JSON.stringify({ registerEmailLocal: this.registerEmailLocal, registerEmailDomain: this.registerEmailDomain, registerNombres: this.registerNombres, registerApellidos: this.registerApellidos, registerTelefono: this.registerTelefono, registerDocTipo: this.registerDocTipo, registerDocNumero: this.registerDocNumero, registerPassword: this.registerPassword, registerConfirmPassword: this.registerConfirmPassword })); } catch {} }
+  protected getDocInputMode(docTipo: 'DNI' | 'RUC' | 'CE'): 'numeric' | 'text' {
+    return docTipo === 'DNI' || docTipo === 'RUC' ? 'numeric' : 'text';
+  }
+  protected canAddAnotherDocumento(): boolean {
+    return this.registerDocumentos.length < 3;
+  }
+  protected addRegisterDocumento(): void {
+    if (!this.canAddAnotherDocumento()) return;
+    const usados = new Set(this.registerDocumentos.map((d) => d.docTipo));
+    const siguiente = (['DNI', 'RUC', 'CE'] as const).find((tipo) => !usados.has(tipo));
+    if (!siguiente) return;
+    this.registerDocumentos.push({ docTipo: siguiente, docNumero: '' });
+    this.persistRegisterDraft();
+  }
+  protected removeRegisterDocumento(index: number): void {
+    if (this.registerDocumentos.length <= 1) return;
+    this.registerDocumentos.splice(index, 1);
+    this.persistRegisterDraft();
+  }
+  protected isDocTypeUsedByOther(index: number, tipo: 'DNI' | 'RUC' | 'CE'): boolean {
+    return this.registerDocumentos.some((doc, i) => i !== index && doc.docTipo === tipo);
+  }
+  protected persistRegisterDraft(): void {
+    try {
+      localStorage.setItem(this.registerDraftStorageKey, JSON.stringify({
+        registerEmailLocal: this.registerEmailLocal,
+        registerEmailDomain: this.registerEmailDomain,
+        registerNombres: this.registerNombres,
+        registerApellidos: this.registerApellidos,
+        registerTelefono: this.registerTelefono,
+        registerDocumentos: this.registerDocumentos
+      }));
+    } catch {}
+  }
 
   protected loadRegisterDraft(): void {
     try {
       const raw = localStorage.getItem(this.registerDraftStorageKey);
       if (!raw) return;
-      const draft = JSON.parse(raw) as Partial<Record<string, string>>;
-      this.registerEmailLocal = draft['registerEmailLocal'] ?? this.registerEmailLocal;
-      this.registerEmailDomain = draft['registerEmailDomain'] ?? this.registerEmailDomain;
-      this.registerNombres = this.sanitizePersonName(draft['registerNombres'] ?? this.registerNombres);
-      this.registerApellidos = this.sanitizePersonName(draft['registerApellidos'] ?? this.registerApellidos);
-      this.registerTelefono = (draft['registerTelefono'] ?? this.registerTelefono).replace(/[^0-9]/g, '').slice(0, 9);
-      this.registerDocTipo = (draft['registerDocTipo'] as 'DNI' | 'RUC' | 'CE') ?? this.registerDocTipo;
-      this.registerDocNumero = draft['registerDocNumero'] ?? this.registerDocNumero;
-      this.registerPassword = draft['registerPassword'] ?? this.registerPassword;
-      this.registerConfirmPassword = draft['registerConfirmPassword'] ?? this.registerConfirmPassword;
+      const draft = JSON.parse(raw) as Partial<Record<string, unknown>>;
+      this.registerEmailLocal = (draft['registerEmailLocal'] ?? this.registerEmailLocal).toString();
+      this.registerEmailDomain = (draft['registerEmailDomain'] ?? this.registerEmailDomain).toString();
+      this.registerNombres = this.sanitizePersonName((draft['registerNombres'] ?? this.registerNombres).toString());
+      this.registerApellidos = this.sanitizePersonName((draft['registerApellidos'] ?? this.registerApellidos).toString());
+      this.registerTelefono = (draft['registerTelefono'] ?? this.registerTelefono).toString().replace(/[^0-9]/g, '').slice(0, 9);
+      const draftDocumentos = Array.isArray(draft['registerDocumentos']) ? draft['registerDocumentos'] : [];
+      const parsed = draftDocumentos
+        .map((item) => item as Partial<RegisterDocumento>)
+        .filter((item) => item.docTipo === 'DNI' || item.docTipo === 'RUC' || item.docTipo === 'CE')
+        .map((item) => ({ docTipo: item.docTipo as 'DNI' | 'RUC' | 'CE', docNumero: (item.docNumero ?? '').toString() }))
+        .slice(0, 3);
+      this.registerDocumentos = parsed.length > 0 ? parsed : this.registerDocumentos;
+      this.registerPassword = '';
+      this.registerConfirmPassword = '';
       this.sanitizeEmailLocalInput();
-      this.sanitizeDocInput();
+      this.registerDocumentos.forEach((_, idx) => this.sanitizeDocInput(idx));
     } catch {}
   }
 
@@ -719,13 +796,14 @@ export class AppLayoutComponent implements OnInit {
     this.forgotError = ''; this.forgotSuccess = ''; this.forgotCode = ''; this.forgotNewPassword = ''; this.forgotConfirmPassword = '';
     this.showForgotNewPassword = false; this.showForgotConfirmPassword = false; this.isRecoveryCodeValidated = false;
     this.registerError = ''; this.registerSuccess = ''; this.registerFieldErrors = {}; this.showRegisterPassword = false; this.showRegisterConfirmPassword = false;
+    this.registerDocumentos = [{ docTipo: 'DNI', docNumero: '' }];
   }
 
   private validateRegisterForm(): boolean {
     this.sanitizeEmailLocalInput();
     const emailLocal = this.registerEmailLocal.trim().toLowerCase(); this.registerEmailLocal = emailLocal;
     const nombres = this.registerNombres.trim(); const apellidos = this.registerApellidos.trim();
-    this.sanitizeDocInput(); const docNumero = this.registerDocNumero.trim();
+    this.registerDocumentos.forEach((_, idx) => this.sanitizeDocInput(idx));
     const telefono = this.registerTelefono.trim().replace(/[^0-9]/g, '').slice(0, 9); this.registerTelefono = telefono;
     const nameRegex = /^[A-Za-zÁÉÍÓÚÑáéíóúñ\s'-]+$/; const emailLocalRegex = /^[A-Za-z0-9._%+-]+$/;
     if (!emailLocal) this.registerFieldErrors.email = 'Ingresa tu correo.';
@@ -735,10 +813,22 @@ export class AppLayoutComponent implements OnInit {
     else if (!nameRegex.test(nombres)) this.registerFieldErrors.nombres = 'Los nombres no deben contener números.';
     if (!apellidos) this.registerFieldErrors.apellidos = 'Los apellidos son obligatorios.';
     else if (!nameRegex.test(apellidos)) this.registerFieldErrors.apellidos = 'Los apellidos no deben contener números.';
-    if (!docNumero) this.registerFieldErrors.docNumero = 'El número de documento es obligatorio.';
-    else if (this.registerDocTipo === 'DNI' && !/^\d{8}$/.test(docNumero)) this.registerFieldErrors.docNumero = 'El DNI debe tener 8 dígitos.';
-    else if (this.registerDocTipo === 'RUC' && !/^\d{11}$/.test(docNumero)) this.registerFieldErrors.docNumero = 'El RUC debe tener 11 dígitos.';
-    else if (this.registerDocTipo === 'CE' && !/^[A-Za-z0-9]{9,12}$/.test(docNumero)) this.registerFieldErrors.docNumero = 'El CE debe tener entre 9 y 12 caracteres.';
+    const tipos = new Set<string>();
+    for (const doc of this.registerDocumentos) {
+      const docNumero = (doc.docNumero || '').trim();
+      if (!docNumero) {
+        this.registerFieldErrors.docNumero = 'Todos los documentos deben tener número.';
+        break;
+      }
+      if (tipos.has(doc.docTipo)) {
+        this.registerFieldErrors.docNumero = 'No puedes repetir tipo de documento.';
+        break;
+      }
+      tipos.add(doc.docTipo);
+      if (doc.docTipo === 'DNI' && !/^\d{8}$/.test(docNumero)) { this.registerFieldErrors.docNumero = 'El DNI debe tener 8 dígitos.'; break; }
+      if (doc.docTipo === 'RUC' && !/^\d{11}$/.test(docNumero)) { this.registerFieldErrors.docNumero = 'El RUC debe tener 11 dígitos.'; break; }
+      if (doc.docTipo === 'CE' && !/^[A-Za-z0-9]{9,12}$/.test(docNumero)) { this.registerFieldErrors.docNumero = 'El CE debe tener entre 9 y 12 caracteres.'; break; }
+    }
     if (telefono && !/^9\d{8}$/.test(telefono)) this.registerFieldErrors.telefono = 'Ingresa un celular válido (9 dígitos iniciando en 9).';
     if (!this.registerPassword) this.registerFieldErrors.password = 'La contraseña es obligatoria.';
     else if (this.registerPassword.length < 8) this.registerFieldErrors.password = 'La contraseña debe tener al menos 8 caracteres.';

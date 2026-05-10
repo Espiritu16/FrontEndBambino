@@ -1,4 +1,5 @@
 import { AfterViewInit, ChangeDetectorRef, Component, NgZone, OnDestroy, inject } from '@angular/core';
+import { ToastService } from '../../../shared/services/toast.service';
 
 type LngLat = [number, number];
 type Ring = LngLat[];
@@ -35,8 +36,7 @@ type UbicacionRestauranteResponse = {
 export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy {
   private readonly ngZone = inject(NgZone);
   private readonly cdr = inject(ChangeDetectorRef);
-  protected puntoSeleccionadoTexto = 'Haz click en el mapa para validar un punto.';
-  protected estadoCobertura: 'sin-seleccion' | 'dentro' | 'fuera' = 'sin-seleccion';
+  private readonly toast = inject(ToastService);
   protected consultandoUbicacion = false;
 
   private readonly apiBaseUrl = 'http://localhost:8080';
@@ -94,10 +94,11 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
       const dentroCobertura = this.featureChorrillos
         ? this.estaDentroGeometria(lat, lng, this.featureChorrillos.geometry)
         : false;
-      this.estadoCobertura = dentroCobertura ? 'dentro' : 'fuera';
-      this.puntoSeleccionadoTexto = `Punto seleccionado: lat ${lat.toFixed(6)}, lng ${lng.toFixed(6)} - ${
-        dentroCobertura ? 'Dentro de cobertura Chorrillos' : 'Fuera de cobertura Chorrillos'
-      }.`;
+      if (dentroCobertura) {
+        this.toast.success('Tu punto está dentro de cobertura Chorrillos.');
+      } else {
+        this.toast.warning('Tu punto está fuera de cobertura Chorrillos.');
+      }
     });
   }
 
@@ -135,8 +136,7 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
       return;
     }
     if (!navigator.geolocation) {
-      this.estadoCobertura = 'fuera';
-      this.puntoSeleccionadoTexto = 'Tu navegador no soporta geolocalización.';
+      this.toast.error('Tu navegador no soporta geolocalización.');
       return;
     }
     if (!this.map || !this.leafletRef) {
@@ -152,8 +152,7 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
             const lng = position.coords.longitude;
             this.colocarUbicacionCliente(lat, lng);
           } catch {
-            this.estadoCobertura = 'fuera';
-            this.puntoSeleccionadoTexto = 'Se obtuvo tu ubicación, pero no se pudo actualizar el mapa.';
+            this.toast.error('Se obtuvo tu ubicación, pero no se pudo actualizar el mapa.');
           } finally {
             this.finalizarConsultaUbicacion();
           }
@@ -162,12 +161,11 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
       (error) => {
         this.ngZone.run(() => {
           try {
-            this.estadoCobertura = 'fuera';
             if (error.code === error.PERMISSION_DENIED) {
-              this.puntoSeleccionadoTexto = 'Permiso de ubicación denegado. Habilítalo para consultar cobertura.';
+              this.toast.warning('Permiso de ubicación denegado. Habilítalo para consultar cobertura.');
               return;
             }
-            this.puntoSeleccionadoTexto = 'No se pudo obtener tu ubicación actual.';
+            this.toast.error('No se pudo obtener tu ubicación actual.');
           } finally {
             this.finalizarConsultaUbicacion();
           }
@@ -223,10 +221,11 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
     const dentroCobertura = this.featureChorrillos
       ? this.estaDentroGeometria(lat, lng, this.featureChorrillos.geometry)
       : false;
-    this.estadoCobertura = dentroCobertura ? 'dentro' : 'fuera';
-    this.puntoSeleccionadoTexto = dentroCobertura
-      ? `Tu ubicación actual está dentro de cobertura. Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}.`
-      : `No hay cobertura para tu ubicación actual. Lat ${lat.toFixed(6)}, Lng ${lng.toFixed(6)}.`;
+    if (dentroCobertura) {
+      this.toast.success('Tu ubicación actual sí tiene cobertura de delivery.');
+    } else {
+      this.toast.warning('Tu ubicación actual está fuera de cobertura.');
+    }
     this.clienteMarker.bindPopup(`Tu ubicación actual<br/>Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`).openPopup();
     this.map.setView([lat, lng], 15);
   }

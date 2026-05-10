@@ -7,7 +7,6 @@
 .page-shell {
   background: #e8ddc0;
   min-height: calc(100vh - 78px);
-  border-top: 8px solid #e8ddc0;
 }
 
 .home {
@@ -130,7 +129,7 @@
   font: inherit;
 }
 
-.header-search-box { position: relative; z-index: 220; }
+.header-search-box{ position: relative; z-index: 220; }
 .header-search-results {
   position: absolute;
   top: calc(100% + 0.35rem);
@@ -398,7 +397,6 @@
 .footer h4 {
   color: var(--color-white);
   margin: 0 0 0.85rem;
-  letter-spacing: 0.03em;
 }
 
 .footer h4 {
@@ -409,6 +407,7 @@
 }
 
 .footer .brand-title {
+  font-family: 'Bebas Neue', sans-serif;
   font-size: 3.2rem;
 }
 
@@ -848,6 +847,24 @@
   padding: 1.15rem 0 1.4rem;
 }
 
+.footer__legal {
+  background: var(--color-brand-900);
+  padding: 0 0 0.9rem;
+}
+
+.footer__legal-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.footer__legal-links a {
+  color: #f0b768;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
 .footer__bottom p {
   margin: 0;
   text-align: center;
@@ -856,6 +873,10 @@
 }
 
 @media (max-width: 960px) {
+  .footer__legal-links a {
+    font-size: 0.88rem;
+  }
+
   .footer__bottom p {
     font-size: 0.88rem;
   }
@@ -864,9 +885,9 @@
 .login-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 26, 35, 0.26);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -883,6 +904,14 @@
   box-shadow: 0 20px 44px rgba(10, 15, 30, 0.22);
   padding: 1.35rem 1.35rem 0;
   overflow: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.login-modal::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .login-modal__close {
@@ -1044,6 +1073,17 @@
   font-size: 0.79rem;
 }
 
+.login-modal__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.login-modal__label-row > label {
+  margin: 0;
+}
+
 .login-modal__row-two {
   display: grid;
   grid-template-columns: 104px 1fr;
@@ -1062,6 +1102,39 @@
 
 .login-modal__row-two--email {
   grid-template-columns: 1fr 142px;
+}
+
+.login-modal__row-two--doc {
+  grid-template-columns: 104px 1fr auto;
+}
+
+.login-modal__actions-inline {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.35rem;
+}
+
+.btn-chip {
+  height: 30px;
+  border: 1px solid #d5d9e0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #374151;
+  padding: 0 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-chip--danger {
+  border-color: #efc2c7;
+  color: #b4232f;
+  background: #fff5f6;
 }
 
 .login-modal__done {
