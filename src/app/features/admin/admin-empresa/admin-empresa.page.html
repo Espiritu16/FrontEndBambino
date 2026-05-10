@@ -5,9 +5,7 @@
       <h2>Empresa Principal</h2>
       <p>Gestiona los datos fiscales y comerciales del emisor principal de comprobantes.</p>
     </div>
-    @if (!hasEmpresaPrincipal) {
-      <button class="btn-primary" type="button" (click)="openCreate()">Registrar empresa principal</button>
-    }
+    <span class="chip chip--type">PRINCIPAL</span>
   </div>
 
   @if (error) {
@@ -15,100 +13,108 @@
   }
 
   @if (loading) {
-    <p class="muted">Cargando empresas...</p>
+    <p class="muted">Cargando empresa principal...</p>
   } @else {
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>RUC</th>
-            <th>Razón social</th>
-            <th>Nombre comercial</th>
-            <th>Dirección fiscal</th>
-            <th>Teléfono</th>
-            <th>Correo</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of empresas; track item.idEmpresa) {
-            <tr>
-              <td>{{ item.ruc }}</td>
-              <td>{{ item.razonSocial }}</td>
-              <td>{{ item.nombreComercial || '-' }}</td>
-              <td>{{ item.direccionFiscal }}</td>
-              <td>{{ item.telefono || '-' }}</td>
-              <td>{{ item.correo || '-' }}</td>
-              <td><span class="chip">PRINCIPAL</span></td>
-              <td>
-                <span class="chip" [class.chip--off]="!item.activo">{{ item.activo ? 'ACTIVA' : 'INACTIVA' }}</span>
-              </td>
-              <td>
-                <button class="btn-link" type="button" (click)="openEdit(item)">Editar</button>
-              </td>
-            </tr>
-          }
-          @if (empresas.length === 0) {
-            <tr>
-              <td colspan="9" class="empty-row">No hay empresa principal registrada.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="form-shell">
+      <div class="content-grid">
+        <section class="panel panel--form">
+          <h3 class="panel-title">Información de Empresa</h3>
+          <div class="form-grid">
+            <label>
+              RUC *
+              <input type="text" [(ngModel)]="form.ruc" maxlength="20" />
+            </label>
+
+            <label>
+              Razón social *
+              <input type="text" [(ngModel)]="form.razonSocial" maxlength="220" />
+            </label>
+
+            <label>
+              Nombre comercial
+              <input type="text" [(ngModel)]="form.nombreComercial" maxlength="220" />
+            </label>
+
+            <label>
+              Dirección fiscal *
+              <input type="text" [(ngModel)]="form.direccionFiscal" maxlength="300" />
+            </label>
+
+            <label>
+              Teléfono
+              <input type="text" [(ngModel)]="form.telefono" maxlength="30" />
+            </label>
+
+            <label>
+              Correo
+              <input type="email" [(ngModel)]="form.correo" maxlength="190" />
+            </label>
+
+            <label class="check-row full">
+              <input type="checkbox" [(ngModel)]="form.activo" />
+              Empresa activa
+            </label>
+          </div>
+          <div class="panel-actions">
+            <button type="button" class="btn-primary" [disabled]="savingEmpresa" (click)="saveEmpresa()">
+              {{ savingEmpresa ? 'Guardando...' : 'Guardar empresa' }}
+            </button>
+          </div>
+        </section>
+
+        <section class="panel panel--map">
+          <div class="location-block">
+            <h3 class="panel-title">Ubicación Empresa</h3>
+            <p>Define coordenadas exactas para ubicar la tienda en Google Maps.</p>
+            <div class="location-grid">
+              <label>
+                Latitud
+                <input type="text" [(ngModel)]="form.latitud" readonly />
+              </label>
+              <label>
+                Longitud
+                <input type="text" [(ngModel)]="form.longitud" readonly />
+              </label>
+            </div>
+            <label class="embed-url-field">
+              URL de mapa embebido (iframe src)
+              @if (!editandoMapaUrl) {
+                <input type="text" [value]="form.mapaEmbedUrl || ''" readonly />
+              } @else {
+                <input
+                  type="text"
+                  [(ngModel)]="mapaEmbedUrlDraft"
+                  (ngModelChange)="onUbicacionInputChange()"
+                  placeholder="<iframe ...> o https://www.google.com/maps/embed?pb=..."
+                />
+              }
+            </label>
+            <div class="map-wrap">
+              <iframe
+                [src]="mapEmbedUrl"
+                title="Ubicación empresa en mapa"
+                allowfullscreen
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            </div>
+            <div class="panel-actions panel-actions--right">
+              @if (!editandoMapaUrl) {
+                <button type="button" class="btn-ghost" (click)="iniciarEdicionMapaUrl()">
+                  Editar URL
+                </button>
+              } @else {
+                <button type="button" class="btn-ghost" (click)="cancelarEdicionMapaUrl()">
+                  Cancelar edición URL
+                </button>
+              }
+              <button type="button" class="btn-primary" [disabled]="savingUbicacion" (click)="saveUbicacion()">
+                {{ savingUbicacion ? 'Guardando...' : 'Guardar ubicación' }}
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   }
 </section>
-
-@if (showForm) {
-  <div class="modal-backdrop">
-    <section class="modal-card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <h3>{{ editingId ? 'Editar empresa' : 'Nueva empresa' }}</h3>
-
-      <div class="form-grid">
-        <label>
-          RUC *
-          <input type="text" [(ngModel)]="form.ruc" maxlength="20" />
-        </label>
-
-        <label>
-          Razón social *
-          <input type="text" [(ngModel)]="form.razonSocial" maxlength="220" />
-        </label>
-
-        <label>
-          Nombre comercial
-          <input type="text" [(ngModel)]="form.nombreComercial" maxlength="220" />
-        </label>
-
-        <label>
-          Dirección fiscal *
-          <input type="text" [(ngModel)]="form.direccionFiscal" maxlength="300" />
-        </label>
-
-        <label>
-          Teléfono
-          <input type="text" [(ngModel)]="form.telefono" maxlength="30" />
-        </label>
-
-        <label>
-          Correo
-          <input type="email" [(ngModel)]="form.correo" maxlength="190" />
-        </label>
-
-        <label class="check-row full">
-          <input type="checkbox" [(ngModel)]="form.activo" />
-          Empresa activa
-        </label>
-      </div>
-
-      <div class="actions">
-        <button type="button" class="btn-ghost" (click)="closeForm()">Cancelar</button>
-        <button type="button" class="btn-primary" [disabled]="saving" (click)="save()">
-          {{ saving ? 'Guardando...' : 'Guardar' }}
-        </button>
-      </div>
-    </section>
-  </div>
-}
