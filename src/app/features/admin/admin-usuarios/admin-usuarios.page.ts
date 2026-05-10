@@ -41,7 +41,7 @@ export class AdminUsuariosPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiBase = 'http://localhost:8080/api/admin/seguridad/usuarios';
+  private readonly apiBase = 'https://backendbambino.onrender.com/api/admin/seguridad/usuarios';
   private readonly authStorageKey = 'bambino_basic_auth';
 
   protected loading = false;

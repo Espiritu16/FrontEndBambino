@@ -42,7 +42,7 @@ export class OfertasPageComponent {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly zone = inject(NgZone);
   private readonly route = inject(ActivatedRoute);
-  private readonly apiBase = 'http://localhost:8080/api/public/catalogo';
+  private readonly apiBase = 'https://backendbambino.onrender.com/api/public/catalogo';
   private readonly tones = ['beige', 'mint', 'sky', 'sand'] as const;
   @ViewChild('resultsStart') private resultsStartEl?: ElementRef<HTMLElement>;
 

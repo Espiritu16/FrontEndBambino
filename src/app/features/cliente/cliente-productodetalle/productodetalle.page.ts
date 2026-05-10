@@ -43,7 +43,7 @@ export class ProductoDetallePageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiBase = 'http://localhost:8080/api/public/catalogo';
+  private readonly apiBase = 'https://backendbambino.onrender.com/api/public/catalogo';
 
   protected loading = true;
   protected error = '';

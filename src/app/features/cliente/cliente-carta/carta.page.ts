@@ -22,7 +22,7 @@ type ConfiguracionMediaPublicResponse = {
 export class CartaPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly apiBase = 'http://localhost:8080/api/public/configuracion/media';
+  private readonly apiBase = 'https://backendbambino.onrender.com/api/public/configuracion/media';
   private readonly cartaPdfCacheKey = 'bambino_carta_pdf_url';
 
   protected loading = true;
