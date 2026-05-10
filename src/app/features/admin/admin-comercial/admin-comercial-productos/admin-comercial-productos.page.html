@@ -63,15 +63,15 @@
         </thead>
         <tbody>
           @for (item of productosFiltrados; track item.idProducto) {
-            <tr>
-              <td>{{ item.nombre }}</td>
-              <td>{{ item.categoriaNombre || '-' }}</td>
-              <td>S/ {{ item.precioBase }}</td>
-              <td>{{ item.visibleWeb ? 'Sí' : 'No' }}</td>
-              <td>{{ item.disponible ? 'Sí' : 'No' }}</td>
-              <td><span class="chip" [class.chip--off]="item.estado === 'INACTIVO'">{{ item.estado }}</span></td>
-              <td>{{ item.ordenVisual }}</td>
-              <td><button class="btn-link" type="button" (click)="openEdit(item)">Editar</button></td>
+            <tr class="clickable-row">
+              <td (click)="openEdit(item)">{{ item.nombre }}</td>
+              <td (click)="openEdit(item)">{{ item.categoriaNombre || '-' }}</td>
+              <td (click)="openEdit(item)">S/ {{ item.precioBase }}</td>
+              <td (click)="openEdit(item)">{{ item.visibleWeb ? 'Sí' : 'No' }}</td>
+              <td (click)="openEdit(item)">{{ item.disponible ? 'Sí' : 'No' }}</td>
+              <td (click)="openEdit(item)"><span class="chip" [class.chip--off]="item.estado === 'INACTIVO'">{{ item.estado }}</span></td>
+              <td (click)="openEdit(item)">{{ item.ordenVisual }}</td>
+              <td><button class="btn-link" type="button" (click)="$event.stopPropagation(); openEdit(item)">Editar</button></td>
             </tr>
           }
           @if (productosFiltrados.length === 0) {

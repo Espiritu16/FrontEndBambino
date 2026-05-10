@@ -37,6 +37,8 @@ th { color:#667085; background:#f9fafb; }
   z-index: 1;
 }
 .empty-row { text-align:center; color:#667085; }
+.clickable-row td { cursor: pointer; }
+.clickable-row:hover td { background: #f9fafb !important; }
 
 .chip { background:#d6f5e4; color:#067647; border-radius:999px; padding:.16rem .55rem; font-size:.72rem; font-weight:700; }
 .chip--off { background:#fee4e2; color:#b42318; }
