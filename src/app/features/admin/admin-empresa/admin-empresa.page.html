@@ -2,10 +2,12 @@
   <div class="admin-module__head">
     <div>
       <p class="overline">Módulo Admin</p>
-      <h2>Empresa</h2>
-      <p>Gestiona los datos fiscales y comerciales del emisor de comprobantes.</p>
+      <h2>Empresa Principal</h2>
+      <p>Gestiona los datos fiscales y comerciales del emisor principal de comprobantes.</p>
     </div>
-    <button class="btn-primary" type="button" (click)="openCreate()">Nueva empresa</button>
+    @if (!hasEmpresaPrincipal) {
+      <button class="btn-primary" type="button" (click)="openCreate()">Registrar empresa principal</button>
+    }
   </div>
 
   @if (error) {
@@ -25,6 +27,7 @@
             <th>Dirección fiscal</th>
             <th>Teléfono</th>
             <th>Correo</th>
+            <th>Tipo</th>
             <th>Estado</th>
             <th></th>
           </tr>
@@ -38,6 +41,7 @@
               <td>{{ item.direccionFiscal }}</td>
               <td>{{ item.telefono || '-' }}</td>
               <td>{{ item.correo || '-' }}</td>
+              <td><span class="chip">PRINCIPAL</span></td>
               <td>
                 <span class="chip" [class.chip--off]="!item.activo">{{ item.activo ? 'ACTIVA' : 'INACTIVA' }}</span>
               </td>
@@ -48,7 +52,7 @@
           }
           @if (empresas.length === 0) {
             <tr>
-              <td colspan="8" class="empty-row">No hay empresas registradas.</td>
+              <td colspan="9" class="empty-row">No hay empresa principal registrada.</td>
             </tr>
           }
         </tbody>

@@ -49,6 +49,9 @@ export class AdminEmpresaPageComponent implements OnInit {
   protected editingId: number | null = null;
 
   protected form: EmpresaForm = this.emptyForm();
+  protected get hasEmpresaPrincipal(): boolean {
+    return this.empresas.length > 0;
+  }
 
   ngOnInit(): void {
     void this.loadEmpresas();
@@ -72,6 +75,10 @@ export class AdminEmpresaPageComponent implements OnInit {
   }
 
   protected openCreate(): void {
+    if (this.hasEmpresaPrincipal) {
+      this.toast.warning('Solo se permite una empresa principal. Edita la existente.');
+      return;
+    }
     this.editingId = null;
     this.form = this.emptyForm();
     this.showForm = true;
