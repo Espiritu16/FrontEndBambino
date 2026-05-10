@@ -10,7 +10,10 @@
     "lint": "ng lint"
   },
   "private": true,
-  "packageManager": "npm@11.6.0",
+  "engines": {
+    "node": "20.x",
+    "npm": "10.x"
+  },
   "dependencies": {
     "@angular/cdk": "^21.2.10",
     "@angular/common": "^21.2.0",
