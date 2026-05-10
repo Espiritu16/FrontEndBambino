@@ -51,7 +51,8 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
   private consultaUbicacionTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   async ngAfterViewInit(): Promise<void> {
-    const L = await import('leaflet');
+    const leafletModule: any = await import('leaflet');
+    const L = leafletModule?.default ?? leafletModule;
     this.leafletRef = L;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',

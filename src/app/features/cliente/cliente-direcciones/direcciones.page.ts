@@ -377,7 +377,8 @@ export class DireccionesPageComponent implements OnInit {
     const mapEl = document.getElementById(this.mapElementId);
     if (!mapEl) return;
 
-    const L = await import('leaflet');
+    const leafletModule: any = await import('leaflet');
+    const L = leafletModule?.default ?? leafletModule;
     this.leafletRef = L;
 
     this.map = L.map(this.mapElementId, { zoomControl: true }).setView([this.defaultLat, this.defaultLng], 13);
