@@ -405,7 +405,8 @@ export class DireccionesPageComponent implements OnInit {
     });
 
     try {
-      const featureData = await fetch('/geo/chorrillos.geojson').then((response) => response.json());
+      const geoUrl = new URL('geo/chorrillos.geojson', document.baseURI).toString();
+      const featureData = await fetch(geoUrl).then((response) => response.json());
       this.chorrillosFeature = featureData as GeoDistritoFeature;
       this.mapLayer = L.geoJSON(featureData, {
         style: {

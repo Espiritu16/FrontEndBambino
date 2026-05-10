@@ -68,7 +68,8 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
       attribution: '&copy; OpenStreetMap'
     }).addTo(this.map);
 
-    const featureData = await fetch('/geo/chorrillos.geojson').then((response) => response.json()) as DistritoFeature;
+    const geoUrl = new URL('geo/chorrillos.geojson', document.baseURI).toString();
+    const featureData = await fetch(geoUrl).then((response) => response.json()) as DistritoFeature;
     this.featureChorrillos = featureData;
 
     const coberturaChorrillos = L.geoJSON(featureData as GeoJSON.GeoJsonObject, {
