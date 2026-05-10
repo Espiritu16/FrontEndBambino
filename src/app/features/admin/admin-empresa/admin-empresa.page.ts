@@ -82,6 +82,10 @@ export class AdminEmpresaPageComponent implements OnInit {
     return this.editingId !== null;
   }
 
+  protected get saving(): boolean {
+    return this.savingEmpresa || this.savingUbicacion;
+  }
+
   ngOnInit(): void {
     void this.loadEmpresaPrincipal();
   }
