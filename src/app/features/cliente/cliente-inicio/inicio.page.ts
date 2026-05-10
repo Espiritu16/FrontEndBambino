@@ -23,7 +23,7 @@ export class InicioPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiBase = 'https://backendbambino.onrender.com/api/public/configuracion/media';
+  private readonly apiBase = 'http://localhost:8080/api/public/configuracion/media';
   private readonly heroCacheKey = 'HOME_HERO_BANNER_URL';
 
   protected heroImageUrl = '';

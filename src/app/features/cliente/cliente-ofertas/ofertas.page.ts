@@ -33,7 +33,7 @@ type ProductoResponse = {
 export class OfertasPageComponent {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiBase = 'https://backendbambino.onrender.com/api/public/catalogo';
+  private readonly apiBase = 'http://localhost:8080/api/public/catalogo';
   private readonly tones = ['beige', 'mint', 'sky', 'sand'] as const;
 
   protected categories: string[] = ['Todo', 'Más pedidos'];

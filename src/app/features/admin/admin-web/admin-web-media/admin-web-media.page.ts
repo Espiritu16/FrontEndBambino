@@ -33,7 +33,7 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly enforceExactDimensions = false;
-  private readonly apiBase = 'https://backendbambino.onrender.com/api/admin/configuracion/media';
+  private readonly apiBase = 'http://localhost:8080/api/admin/configuracion/media';
   private readonly authStorageKey = 'bambino_basic_auth';
 
   protected loading = false;
