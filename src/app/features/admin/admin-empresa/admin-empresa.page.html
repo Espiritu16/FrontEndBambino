@@ -1,0 +1,110 @@
+<section class="admin-module card">
+  <div class="admin-module__head">
+    <div>
+      <p class="overline">Módulo Admin</p>
+      <h2>Empresa</h2>
+      <p>Gestiona los datos fiscales y comerciales del emisor de comprobantes.</p>
+    </div>
+    <button class="btn-primary" type="button" (click)="openCreate()">Nueva empresa</button>
+  </div>
+
+  @if (error) {
+    <p class="error">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <p class="muted">Cargando empresas...</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>RUC</th>
+            <th>Razón social</th>
+            <th>Nombre comercial</th>
+            <th>Dirección fiscal</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of empresas; track item.idEmpresa) {
+            <tr>
+              <td>{{ item.ruc }}</td>
+              <td>{{ item.razonSocial }}</td>
+              <td>{{ item.nombreComercial || '-' }}</td>
+              <td>{{ item.direccionFiscal }}</td>
+              <td>{{ item.telefono || '-' }}</td>
+              <td>{{ item.correo || '-' }}</td>
+              <td>
+                <span class="chip" [class.chip--off]="!item.activo">{{ item.activo ? 'ACTIVA' : 'INACTIVA' }}</span>
+              </td>
+              <td>
+                <button class="btn-link" type="button" (click)="openEdit(item)">Editar</button>
+              </td>
+            </tr>
+          }
+          @if (empresas.length === 0) {
+            <tr>
+              <td colspan="8" class="empty-row">No hay empresas registradas.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (showForm) {
+  <div class="modal-backdrop">
+    <section class="modal-card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3>{{ editingId ? 'Editar empresa' : 'Nueva empresa' }}</h3>
+
+      <div class="form-grid">
+        <label>
+          RUC *
+          <input type="text" [(ngModel)]="form.ruc" maxlength="20" />
+        </label>
+
+        <label>
+          Razón social *
+          <input type="text" [(ngModel)]="form.razonSocial" maxlength="220" />
+        </label>
+
+        <label>
+          Nombre comercial
+          <input type="text" [(ngModel)]="form.nombreComercial" maxlength="220" />
+        </label>
+
+        <label>
+          Dirección fiscal *
+          <input type="text" [(ngModel)]="form.direccionFiscal" maxlength="300" />
+        </label>
+
+        <label>
+          Teléfono
+          <input type="text" [(ngModel)]="form.telefono" maxlength="30" />
+        </label>
+
+        <label>
+          Correo
+          <input type="email" [(ngModel)]="form.correo" maxlength="190" />
+        </label>
+
+        <label class="check-row full">
+          <input type="checkbox" [(ngModel)]="form.activo" />
+          Empresa activa
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-ghost" (click)="closeForm()">Cancelar</button>
+        <button type="button" class="btn-primary" [disabled]="saving" (click)="save()">
+          {{ saving ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

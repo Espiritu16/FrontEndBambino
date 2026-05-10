@@ -33,6 +33,7 @@ export class AdminLayoutPageComponent implements OnInit {
     { label: 'Pedidos', icon: 'receipt_long', to: '/admin/pedidos' },
     { label: 'Pagos', icon: 'payments', to: '/admin/pagos' },
     { label: 'Comprobantes', icon: 'description', to: '/admin/comprobantes' },
+    { label: 'Empresa', icon: 'apartment', to: '/admin/empresa' },
     { label: 'Configuración', icon: 'tune', to: '/admin/configuracion' },
     { label: 'Usuarios y Roles', icon: 'group', to: '/admin/usuarios' },
     { label: 'Auditoría', icon: 'policy', to: '/admin/auditoria' }

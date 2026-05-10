@@ -16,6 +16,7 @@ export const adminRoutes: Routes = [
       { path: 'pedidos', loadChildren: () => import('./admin-pedidos/admin-pedidos.routes').then((m) => m.adminpedidosRoutes) },
       { path: 'pagos', component: AdminPagosPageComponent },
       { path: 'comprobantes', component: AdminComprobantesPageComponent },
+      { path: 'empresa', loadChildren: () => import('./admin-empresa/admin-empresa.routes').then((m) => m.adminempresaRoutes) },
       { path: 'configuracion', loadChildren: () => import('./admin-configuracion/admin-configuracion.routes').then((m) => m.adminconfiguracionRoutes) },
       { path: 'usuarios', loadChildren: () => import('./admin-usuarios/admin-usuarios.routes').then((m) => m.adminusuariosRoutes) },
       { path: 'auditoria', loadChildren: () => import('./admin-auditoria/admin-auditoria.routes').then((m) => m.adminauditoriaRoutes) }
