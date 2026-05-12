@@ -1,14 +1,38 @@
-# 🗃️ Diccionario de Datos - BambinoChicken (estado real en BD)
+# Diccionario de Datos - BambinoChicken
 
 > Nota: Inventario técnico de tablas y relaciones actuales en MySQL.
 > Regla funcional asociada: para cliente_documento, no se deben permitir duplicados por cliente con la misma combinación tipo+número.
 
 ## 🗂️ Índice
 - [📌 Convenciones](#convenciones)
-- [🧾 Tabla cliente_perfil](#tabla-cliente_perfil)
-- [🧾 Tabla cliente_documento](#tabla-cliente_documento)
-- [🧾 Tabla comprobante](#tabla-comprobante)
-- [🧾 Resto de tablas operativas](#tabla-auditoria_evento)
+- [🧾 Tabla `auditoria_evento`](#tabla-auditoria_evento)
+- [🧾 Tabla `carrito`](#tabla-carrito)
+- [🧾 Tabla `carrito_item`](#tabla-carrito_item)
+- [🧾 Tabla `categoria_producto`](#tabla-categoria_producto)
+- [🧾 Tabla `cliente_direccion`](#tabla-cliente_direccion)
+- [🧾 Tabla `cliente_perfil`](#tabla-cliente_perfil)
+- [🧾 Tabla `cliente_documento`](#tabla-cliente_documento)
+- [🧾 Tabla `comprobante`](#tabla-comprobante)
+- [🧾 Tabla `comprobante_detalle`](#tabla-comprobante_detalle)
+- [🧾 Tabla `configuracion_global`](#tabla-configuracion_global)
+- [🧾 Tabla `configuracion_media` (nueva aprobada para assets web)](#tabla-configuracion_media-nueva-aprobada-para-assets-web)
+- [🧾 Tabla `empresa`](#tabla-empresa)
+- [🧾 Tabla `libro_reclamaciones`](#tabla-libro_reclamaciones)
+- [🧾 Tabla `oferta`](#tabla-oferta)
+- [🧾 Tabla `oferta_producto`](#tabla-oferta_producto)
+- [🧾 Tabla `pago`](#tabla-pago)
+- [🧾 Tabla `pedido`](#tabla-pedido)
+- [🧾 Tabla `pedido_asignacion_cocina`](#tabla-pedido_asignacion_cocina)
+- [🧾 Tabla `pedido_cocina_incidencia`](#tabla-pedido_cocina_incidencia)
+- [🧾 Tabla `pedido_estado_historial`](#tabla-pedido_estado_historial)
+- [🧾 Tabla `pedido_estado_transicion_permitida`](#tabla-pedido_estado_transicion_permitida)
+- [🧾 Tabla `pedido_item`](#tabla-pedido_item)
+- [🧾 Tabla `producto`](#tabla-producto)
+- [🧾 Tabla `recuperacion_password_codigo`](#tabla-recuperacion_password_codigo)
+- [🧾 Tabla `rol`](#tabla-rol)
+- [🧾 Tabla `serie_comprobante`](#tabla-serie_comprobante)
+- [🧾 Tabla `usuario`](#tabla-usuario)
+- [🧾 Tabla `zona_delivery`](#tabla-zona_delivery)
 
 Base consultada directamente: `bambino_db` (MySQL).
 Este diccionario refleja el estado actual de tablas, columnas y relaciones en la base real.

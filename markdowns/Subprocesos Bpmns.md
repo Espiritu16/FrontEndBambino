@@ -1,4 +1,4 @@
-# 🧩 Pasos Detallados BPMN v2 (Dividido por Subprocesos)
+# Subprocesos de los roles
 
 > Nota: Versión segmentada por subprocesos para facilitar diseño, lectura y mantenimiento.
 
