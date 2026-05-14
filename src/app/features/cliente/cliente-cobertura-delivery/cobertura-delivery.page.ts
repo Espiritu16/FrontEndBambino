@@ -39,7 +39,7 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
   private readonly toast = inject(ToastService);
   protected consultandoUbicacion = false;
 
-  private readonly apiBaseUrl = 'https://backendbambino.onrender.com';
+  private readonly apiBaseUrl = 'http://localhost:8080';
   private readonly fallbackRestauranteLat = -12.1847986;
   private readonly fallbackRestauranteLng = -76.998044;
   private map: any;

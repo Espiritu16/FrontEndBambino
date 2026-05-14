@@ -2,13 +2,18 @@
 
 # Compiled output
 /dist
+/build
 /tmp
 /out-tsc
 /bazel-out
 
 # Node
 /node_modules
+.npm/
+.pnpm-store/
 npm-debug.log
+npm-debug.log*
+yarn-debug.log*
 yarn-error.log
 pnpm-debug.log*
 lerna-debug.log*
@@ -33,6 +38,10 @@ lerna-debug.log*
 
 # Miscellaneous
 /.angular/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
 .sass-cache/
 /connect.lock
 /coverage
@@ -40,6 +49,8 @@ lerna-debug.log*
 testem.log
 /typings
 __screenshots__/
+playwright-report/
+test-results/
 *.log
 *.tmp
 *.temp
@@ -48,12 +59,22 @@ __screenshots__/
 
 # System files
 .DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
 
 # Environment files (keep only examples in repo)
 .env
 .env.local
 .env.*.local
+!.env.example
+!.env.*.example
 
 # Local tooling/session folders
 .sixth/
+.tmp_worktrees/
+
+# Deployment metadata
+.vercel/
+.netlify/
+.firebase/

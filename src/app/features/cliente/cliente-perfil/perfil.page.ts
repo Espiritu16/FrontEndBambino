@@ -57,7 +57,7 @@ type DocType = (typeof DOC_TYPES)[number];
   styleUrl: './perfil.page.scss'
 })
 export class PerfilPageComponent implements OnInit {
-  private readonly apiBaseUrl = 'https://backendbambino.onrender.com';
+  private readonly apiBaseUrl = 'http://localhost:8080';
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly userNameStorageKey = 'bambino_user_name';
   private readonly userRoleStorageKey = 'bambino_user_role';

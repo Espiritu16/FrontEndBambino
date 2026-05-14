@@ -64,8 +64,8 @@ export class AdminEmpresaPageComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly apiBase = 'https://backendbambino.onrender.com/api/admin/configuracion/empresas';
-  private readonly zonasApiBase = 'https://backendbambino.onrender.com/api/admin/configuracion/zonas-delivery';
+  private readonly apiBase = 'http://localhost:8080/api/admin/configuracion/empresas';
+  private readonly zonasApiBase = 'http://localhost:8080/api/admin/configuracion/zonas-delivery';
   private readonly authStorageKey = 'bambino_basic_auth';
 
   protected loading = false;
