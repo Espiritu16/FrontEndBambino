@@ -297,10 +297,11 @@
 .product-card img {
   width: 100%;
   aspect-ratio: 16 / 9;
-  height: auto;
-  object-fit: contain;
+  height: clamp(145px, 10vw, 165px);
+  object-fit: cover;
+  object-position: center;
   display: block;
-  background: #050505;
+  background: #eef1f7;
 }
 
 .product-body {
@@ -426,6 +427,6 @@
   }
 
   .product-card img {
-    aspect-ratio: 16 / 9;
+    height: clamp(170px, 52vw, 210px);
   }
 }
