@@ -1,0 +1,32 @@
+import { environment } from '../../../environments/environment';
+
+export const API_BASE_URL = environment.apiBaseUrl;
+
+export const API_ENDPOINTS = {
+  auth: `${API_BASE_URL}/api/auth`,
+  seguridad: {
+    perfil: `${API_BASE_URL}/api/seguridad/perfil`
+  },
+  public: {
+    catalogo: `${API_BASE_URL}/api/public/catalogo`,
+    chatbot: `${API_BASE_URL}/api/public/chatbot`,
+    configuracion: `${API_BASE_URL}/api/public/configuracion`,
+    configuracionMedia: `${API_BASE_URL}/api/public/configuracion/media`,
+    delivery: `${API_BASE_URL}/api/public/delivery`,
+    libroReclamaciones: `${API_BASE_URL}/api/public/libro-reclamaciones`
+  },
+  cliente: {
+    chatbot: `${API_BASE_URL}/api/cliente/chatbot`,
+    perfil: `${API_BASE_URL}/api/cliente/perfil`,
+    direcciones: `${API_BASE_URL}/api/cliente/direcciones`,
+    pedidos: `${API_BASE_URL}/api/cliente/pedidos`,
+    libroReclamaciones: `${API_BASE_URL}/api/cliente/libro-reclamaciones`
+  },
+  admin: {
+    catalogo: `${API_BASE_URL}/api/admin/catalogo`,
+    configuracionEmpresas: `${API_BASE_URL}/api/admin/configuracion/empresas`,
+    configuracionMedia: `${API_BASE_URL}/api/admin/configuracion/media`,
+    seguridadUsuarios: `${API_BASE_URL}/api/admin/seguridad/usuarios`,
+    zonasDelivery: `${API_BASE_URL}/api/admin/configuracion/zonas-delivery`
+  }
+} as const;

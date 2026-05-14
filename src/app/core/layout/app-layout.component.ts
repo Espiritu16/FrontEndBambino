@@ -6,6 +6,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { ConfirmModalComponent } from '../../shared/components/confirm-modal/confirm-modal.component';
 import { PlannedFeatureModalComponent } from '../../shared/components/planned-feature-modal/planned-feature-modal.component';
 import { matchesSearchQuery } from '../../shared/utils/search-match.util';
+import { API_BASE_URL } from '../http/api-endpoints';
 
 type RegisterFieldErrors = {
   email?: string;
@@ -75,7 +76,7 @@ type CategoriaPublicaResponse = {
   styleUrl: './app-layout.component.scss'
 })
 export class AppLayoutComponent implements OnInit, OnDestroy {
-  private readonly apiBaseUrl = 'http://localhost:8080';
+  private readonly apiBaseUrl = API_BASE_URL;
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly userNameStorageKey = 'bambino_user_name';
   private readonly userRoleStorageKey = 'bambino_user_role';

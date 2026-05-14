@@ -7,6 +7,7 @@ import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { API_ENDPOINTS } from '../../../../core/http/api-endpoints';
 
 type ConfiguracionMediaResponse = {
   idMedia: number;
@@ -34,7 +35,7 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly enforceExactDimensions = false;
-  private readonly apiBase = 'http://localhost:8080/api/admin/configuracion/media';
+  private readonly apiBase = API_ENDPOINTS.admin.configuracionMedia;
   private readonly authStorageKey = 'bambino_basic_auth';
 
   protected loading = false;

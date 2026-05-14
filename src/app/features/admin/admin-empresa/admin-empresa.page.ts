@@ -6,6 +6,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../shared/services/toast.service';
+import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 
 type EmpresaResponse = {
   idEmpresa: number;
@@ -64,8 +65,8 @@ export class AdminEmpresaPageComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly apiBase = 'http://localhost:8080/api/admin/configuracion/empresas';
-  private readonly zonasApiBase = 'http://localhost:8080/api/admin/configuracion/zonas-delivery';
+  private readonly apiBase = API_ENDPOINTS.admin.configuracionEmpresas;
+  private readonly zonasApiBase = API_ENDPOINTS.admin.zonasDelivery;
   private readonly authStorageKey = 'bambino_basic_auth';
 
   protected loading = false;

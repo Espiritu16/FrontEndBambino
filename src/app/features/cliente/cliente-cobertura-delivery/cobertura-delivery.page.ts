@@ -1,5 +1,6 @@
 import { AfterViewInit, ChangeDetectorRef, Component, NgZone, OnDestroy, inject } from '@angular/core';
 import { ToastService } from '../../../shared/services/toast.service';
+import { API_BASE_URL } from '../../../core/http/api-endpoints';
 
 type LngLat = [number, number];
 type Ring = LngLat[];
@@ -39,7 +40,7 @@ export class CoberturaDeliveryPageComponent implements AfterViewInit, OnDestroy 
   private readonly toast = inject(ToastService);
   protected consultandoUbicacion = false;
 
-  private readonly apiBaseUrl = 'http://localhost:8080';
+  private readonly apiBaseUrl = API_BASE_URL;
   private readonly fallbackRestauranteLat = -12.1847986;
   private readonly fallbackRestauranteLng = -76.998044;
   private map: any;

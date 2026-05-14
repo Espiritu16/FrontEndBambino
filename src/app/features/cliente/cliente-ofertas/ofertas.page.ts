@@ -7,6 +7,7 @@ import { PlannedFeatureModalComponent } from '../../../shared/components/planned
 import { withCacheOptions } from '../../../core/http/cache-context.helpers';
 import { runWithUiRefresh, scheduleUiRefresh } from '../../../shared/utils/async-ui.util';
 import { matchesSearchQuery } from '../../../shared/utils/search-match.util';
+import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 
 type CategoriaResponse = {
   idCategoria: number;
@@ -42,7 +43,7 @@ export class OfertasPageComponent {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly zone = inject(NgZone);
   private readonly route = inject(ActivatedRoute);
-  private readonly apiBase = 'http://localhost:8080/api/public/catalogo';
+  private readonly apiBase = API_ENDPOINTS.public.catalogo;
   private readonly tones = ['beige', 'mint', 'sky', 'sand'] as const;
   @ViewChild('resultsStart') private resultsStartEl?: ElementRef<HTMLElement>;
 

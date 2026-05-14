@@ -8,6 +8,7 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
 import { ConfirmModalComponent } from '../../../shared/components/confirm-modal/confirm-modal.component';
 import { PlannedFeatureModalComponent } from '../../../shared/components/planned-feature-modal/planned-feature-modal.component';
 import { withoutCache } from '../../../core/http/cache-context.helpers';
+import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 
 type ProductoResponse = {
   idProducto: number;
@@ -43,7 +44,7 @@ export class ProductoDetallePageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiBase = 'http://localhost:8080/api/public/catalogo';
+  private readonly apiBase = API_ENDPOINTS.public.catalogo;
 
   protected loading = true;
   protected error = '';
