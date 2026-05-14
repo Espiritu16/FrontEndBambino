@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
 import { scheduleUiRefresh } from '../../../shared/utils/async-ui.util';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
+import { API_BASE_URL } from '../../../core/http/api-endpoints';
 
 type AuthYoResponse = {
   usuario?: string;
@@ -60,7 +61,7 @@ type GeoDistritoFeature = {
   styleUrl: './direcciones.page.scss'
 })
 export class DireccionesPageComponent implements OnInit {
-  private readonly apiBaseUrl = 'http://localhost:8080';
+  private readonly apiBaseUrl = API_BASE_URL;
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly userNameStorageKey = 'bambino_user_name';
   private readonly userRoleStorageKey = 'bambino_user_role';

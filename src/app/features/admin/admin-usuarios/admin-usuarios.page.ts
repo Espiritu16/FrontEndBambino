@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../shared/services/toast.service';
+import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 
 type UsuarioResponse = {
   idUsuario: number;
@@ -41,7 +42,7 @@ export class AdminUsuariosPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiBase = 'http://localhost:8080/api/admin/seguridad/usuarios';
+  private readonly apiBase = API_ENDPOINTS.admin.seguridadUsuarios;
   private readonly authStorageKey = 'bambino_basic_auth';
 
   protected loading = false;

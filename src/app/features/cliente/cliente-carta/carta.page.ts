@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { withCacheOptions } from '../../../core/http/cache-context.helpers';
+import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 
 type ConfiguracionMediaPublicResponse = {
   clave: string;
@@ -22,7 +23,7 @@ type ConfiguracionMediaPublicResponse = {
 export class CartaPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly sanitizer = inject(DomSanitizer);
-  private readonly apiBase = 'http://localhost:8080/api/public/configuracion/media';
+  private readonly apiBase = API_ENDPOINTS.public.configuracionMedia;
   private readonly cartaPdfCacheKey = 'bambino_carta_pdf_url';
 
   protected loading = true;

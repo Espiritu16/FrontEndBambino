@@ -7,6 +7,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { scheduleUiRefresh } from '../../../shared/utils/async-ui.util';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../shared/services/toast.service';
+import { API_BASE_URL } from '../../../core/http/api-endpoints';
 
 type PerfilResponse = {
   idCliente: number;
@@ -57,7 +58,7 @@ type DocType = (typeof DOC_TYPES)[number];
   styleUrl: './perfil.page.scss'
 })
 export class PerfilPageComponent implements OnInit {
-  private readonly apiBaseUrl = 'http://localhost:8080';
+  private readonly apiBaseUrl = API_BASE_URL;
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly userNameStorageKey = 'bambino_user_name';
   private readonly userRoleStorageKey = 'bambino_user_role';

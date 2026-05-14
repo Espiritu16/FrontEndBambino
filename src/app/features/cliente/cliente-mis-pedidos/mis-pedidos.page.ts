@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
+import { API_BASE_URL } from '../../../core/http/api-endpoints';
 
 type AuthYoResponse = {
   usuario?: string;
@@ -26,7 +27,7 @@ type PedidoResponse = {
   styleUrl: './mis-pedidos.page.scss'
 })
 export class MisPedidosPageComponent implements OnInit {
-  private readonly apiBaseUrl = 'http://localhost:8080';
+  private readonly apiBaseUrl = API_BASE_URL;
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly userNameStorageKey = 'bambino_user_name';
   private readonly userRoleStorageKey = 'bambino_user_role';

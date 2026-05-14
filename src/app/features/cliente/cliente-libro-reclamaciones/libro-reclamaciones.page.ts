@@ -7,6 +7,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { runWithUiRefresh } from '../../../shared/utils/async-ui.util';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../shared/services/toast.service';
+import { API_BASE_URL } from '../../../core/http/api-endpoints';
 
 type EmpresaResponse = {
   idEmpresa: number;
@@ -71,7 +72,7 @@ type LibroReclamoResponse = {
   styleUrl: './libro-reclamaciones.page.scss'
 })
 export class LibroReclamacionesPageComponent implements OnInit {
-  private readonly apiBaseUrl = 'http://localhost:8080';
+  private readonly apiBaseUrl = API_BASE_URL;
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);

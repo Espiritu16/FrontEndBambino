@@ -7,6 +7,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { withCacheOptions } from '../../../core/http/cache-context.helpers';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { PlannedFeatureModalComponent } from '../../../shared/components/planned-feature-modal/planned-feature-modal.component';
+import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 
 type ConfiguracionMediaResponse = {
   clave: string;
@@ -40,8 +41,8 @@ export class InicioPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly apiBase = 'http://localhost:8080/api/public/configuracion/media';
-  private readonly catalogoApiBase = 'http://localhost:8080/api/public/catalogo';
+  private readonly apiBase = API_ENDPOINTS.public.configuracionMedia;
+  private readonly catalogoApiBase = API_ENDPOINTS.public.catalogo;
   private readonly heroCacheKey = 'HOME_HERO_BANNER_URL';
   private readonly cartaPdfCacheKey = 'bambino_carta_pdf_url';
 

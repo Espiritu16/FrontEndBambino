@@ -6,6 +6,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { matchesSearchQuery } from '../../../../shared/utils/search-match.util';
 import { ToastService } from '../../../../shared/services/toast.service';
+import { API_ENDPOINTS } from '../../../../core/http/api-endpoints';
 
 type EstadoProducto = 'ACTIVO' | 'INACTIVO';
 
@@ -66,7 +67,7 @@ export class AdminComercialProductosPageComponent implements OnInit, OnDestroy {
   private readonly toast = inject(ToastService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly enforceExactDimensions = false;
-  private readonly apiBase = 'http://localhost:8080/api/admin/catalogo';
+  private readonly apiBase = API_ENDPOINTS.admin.catalogo;
   private readonly authStorageKey = 'bambino_basic_auth';
   private loadingInProgress = false;
 
