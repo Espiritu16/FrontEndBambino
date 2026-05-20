@@ -78,3 +78,8 @@ Thumbs.db
 .vercel/
 .netlify/
 .firebase/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
