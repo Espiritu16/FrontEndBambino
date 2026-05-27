@@ -9,6 +9,7 @@ import { ConfirmModalComponent } from '../../../shared/components/confirm-modal/
 import { PlannedFeatureModalComponent } from '../../../shared/components/planned-feature-modal/planned-feature-modal.component';
 import { withoutCache } from '../../../core/http/cache-context.helpers';
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
+import { resolveBackendAssetUrl } from '../../../shared/utils/media-url.util';
 
 type ProductoResponse = {
   idProducto: number;
@@ -146,7 +147,7 @@ export class ProductoDetallePageComponent implements OnInit {
   }
 
   protected resolveCardImageUrl(rawUrl: string | null): string {
-    const source = (rawUrl ?? '').trim();
+    const source = resolveBackendAssetUrl(rawUrl);
     if (!source) return '';
     try {
       const parsed = new URL(source);

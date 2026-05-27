@@ -103,7 +103,7 @@
             >
               <div class="product-order-card__media">
                 @if (item.imagenUrl) {
-                  <img [src]="item.imagenUrl" [alt]="item.nombre" />
+                  <img [src]="resolveImageUrl(item.imagenUrl)" [alt]="item.nombre" />
                 } @else {
                   <div class="product-order-card__placeholder">Sin imagen</div>
                 }

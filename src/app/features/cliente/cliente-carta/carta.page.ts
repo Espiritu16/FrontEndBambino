@@ -6,6 +6,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { withCacheOptions } from '../../../core/http/cache-context.helpers';
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
+import { resolveBackendAssetUrl } from '../../../shared/utils/media-url.util';
 
 type ConfiguracionMediaPublicResponse = {
   clave: string;
@@ -52,7 +53,7 @@ export class CartaPageComponent implements OnInit {
           })
           .pipe(timeout(10000))
       );
-      this.pdfUrl = data?.activa ? (data.url?.trim() || '') : '';
+      this.pdfUrl = data?.activa ? resolveBackendAssetUrl(data.url?.trim() || '') : '';
       if (this.pdfUrl) {
         localStorage.setItem(this.cartaPdfCacheKey, this.pdfUrl);
       }
@@ -62,7 +63,7 @@ export class CartaPageComponent implements OnInit {
         this.viewerUrl = this.buildViewerUrl(this.pdfUrl);
       }
     } catch {
-      this.pdfUrl = localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '';
+      this.pdfUrl = resolveBackendAssetUrl(localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '');
       if (!this.pdfUrl) {
         this.error = 'No se pudo cargar la carta PDF.';
       } else {

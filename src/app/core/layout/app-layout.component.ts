@@ -7,6 +7,7 @@ import { ConfirmModalComponent } from '../../shared/components/confirm-modal/con
 import { PlannedFeatureModalComponent } from '../../shared/components/planned-feature-modal/planned-feature-modal.component';
 import { matchesSearchQuery } from '../../shared/utils/search-match.util';
 import { API_BASE_URL } from '../http/api-endpoints';
+import { resolveBackendAssetUrl } from '../../shared/utils/media-url.util';
 
 type RegisterFieldErrors = {
   email?: string;
@@ -502,12 +503,12 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
           .get<ConfiguracionMediaPublicResponse>(`${this.apiBaseUrl}/api/public/configuracion/media/CARTA_PDF`)
           .pipe(timeout(10000))
       );
-      targetUrl = data?.activa ? (data.url?.trim() || '') : '';
+      targetUrl = data?.activa ? resolveBackendAssetUrl(data.url?.trim() || '', this.apiBaseUrl) : '';
       if (targetUrl) {
         localStorage.setItem(this.cartaPdfCacheKey, targetUrl);
       }
     } catch {
-      targetUrl = localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '';
+      targetUrl = resolveBackendAssetUrl(localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '', this.apiBaseUrl);
     }
 
     if (!targetUrl) {

@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { matchesSearchQuery } from '../../../../shared/utils/search-match.util';
+import { resolveBackendAssetUrl } from '../../../../shared/utils/media-url.util';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { API_ENDPOINTS } from '../../../../core/http/api-endpoints';
 
@@ -152,6 +153,10 @@ export class AdminComercialProductosPageComponent implements OnInit, OnDestroy {
 
   protected onSearchChange(): void {
     this.applyClientFilters();
+  }
+
+  protected resolveImageUrl(rawUrl: string | null): string {
+    return resolveBackendAssetUrl(rawUrl);
   }
 
   protected openCreate(): void {
