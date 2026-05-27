@@ -1,14 +1,13 @@
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs/operators';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom, timeout } from 'rxjs';
 import { withCacheOptions } from '../../../core/http/cache-context.helpers';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { PlannedFeatureModalComponent } from '../../../shared/components/planned-feature-modal/planned-feature-modal.component';
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 import { resolveBackendAssetUrl } from '../../../shared/utils/media-url.util';
+import { InicioDataCacheService } from './inicio-data-cache.service';
 
 type ConfiguracionMediaResponse = {
   clave: string;
@@ -40,8 +39,8 @@ type ProductoResponse = {
 })
 export class InicioPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly inicioCache = inject(InicioDataCacheService);
   private readonly apiBase = API_ENDPOINTS.public.configuracionMedia;
   private readonly catalogoApiBase = API_ENDPOINTS.public.catalogo;
   private readonly heroCacheKey = 'HOME_HERO_BANNER_URL';
@@ -55,21 +54,21 @@ export class InicioPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.restoreCachedHeroImage();
+    this.restoreCachedMasPedidos();
     void this.loadHeroImage();
     void this.loadPromocionesMasPedidos();
-    this.router.events
-      .pipe(
-        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-        filter((event) => event.urlAfterRedirects.startsWith('/inicio')),
-        takeUntilDestroyed()
-      )
-      .subscribe(() => {
-        void this.loadHeroImage();
-        void this.loadPromocionesMasPedidos();
-      });
   }
 
   private async loadPromocionesMasPedidos(): Promise<void> {
+    const cached = this.inicioCache.getMasPedidos();
+    if (cached) {
+      this.promocionesMasPedidos = cached;
+      this.masPedidosIds = new Set(cached.map((p) => p.idProducto));
+      this.loadingMasPedidos = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.loadingMasPedidos = true;
     this.cdr.detectChanges();
     try {
@@ -81,6 +80,7 @@ export class InicioPageComponent implements OnInit {
           .pipe(timeout(10000))
       );
       this.promocionesMasPedidos = (data ?? []).slice(0, 4);
+      this.inicioCache.setMasPedidos(this.promocionesMasPedidos);
       this.masPedidosIds = new Set(this.promocionesMasPedidos.map((p) => p.idProducto));
       this.cdr.detectChanges();
     } catch {
@@ -93,6 +93,13 @@ export class InicioPageComponent implements OnInit {
   }
 
   private async loadHeroImage(): Promise<void> {
+    const cachedHero = this.inicioCache.getHeroImageUrl();
+    if (cachedHero) {
+      this.heroImageUrl = cachedHero;
+      this.cdr.detectChanges();
+      return;
+    }
+
     try {
       const data = await firstValueFrom(
         this.http
@@ -103,6 +110,9 @@ export class InicioPageComponent implements OnInit {
       );
       const resolvedUrl = data?.activa ? this.buildRenderableUrl(data.url?.trim() || '', data.versionTag ?? null) : '';
       this.heroImageUrl = resolvedUrl;
+      if (resolvedUrl) {
+        this.inicioCache.setHeroImageUrl(resolvedUrl);
+      }
       this.cacheHeroImageUrl(resolvedUrl);
       this.cdr.detectChanges();
     } catch {
@@ -113,6 +123,7 @@ export class InicioPageComponent implements OnInit {
 
   protected onHeroImageError(): void {
     this.heroImageUrl = '';
+    this.inicioCache.clearHeroImageUrl();
     this.cacheHeroImageUrl('');
     this.cdr.detectChanges();
   }
@@ -145,11 +156,27 @@ export class InicioPageComponent implements OnInit {
   }
 
   private restoreCachedHeroImage(): void {
+    const cachedHero = this.inicioCache.getHeroImageUrl();
+    if (cachedHero) {
+      this.heroImageUrl = cachedHero;
+      return;
+    }
     try {
       this.heroImageUrl = localStorage.getItem(this.heroCacheKey)?.trim() || '';
+      if (this.heroImageUrl) {
+        this.inicioCache.setHeroImageUrl(this.heroImageUrl);
+      }
     } catch {
       this.heroImageUrl = '';
     }
+  }
+
+  private restoreCachedMasPedidos(): void {
+    const cached = this.inicioCache.getMasPedidos();
+    if (!cached) return;
+    this.promocionesMasPedidos = cached;
+    this.masPedidosIds = new Set(cached.map((p) => p.idProducto));
+    this.loadingMasPedidos = false;
   }
 
   private cacheHeroImageUrl(value: string): void {
@@ -167,8 +194,11 @@ export class InicioPageComponent implements OnInit {
   private buildRenderableUrl(url: string, versionTag: string | null): string {
     const resolved = resolveBackendAssetUrl(url);
     if (!resolved) return '';
+    const token = versionTag?.trim() || '';
+    if (!token) {
+      return resolved;
+    }
     const separator = resolved.includes('?') ? '&' : '?';
-    const token = versionTag?.trim() || Date.now().toString();
     return `${resolved}${separator}cb=${encodeURIComponent(token)}`;
   }
 
