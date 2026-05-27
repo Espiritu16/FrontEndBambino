@@ -8,7 +8,7 @@
     <nav class="topbar__nav">
       <a routerLink="/inicio">Inicio</a>
       <a routerLink="/promociones">Promociones</a>
-      <a href="#" (click)="openCartaPdf($event)">Carta</a>
+      <a href="#" [attr.aria-busy]="cartaLoading" (click)="openCartaPdf($event)">{{ cartaLoading ? 'Cargando carta...' : 'Carta' }}</a>
       <a href="#" (click)="goToNosotros($event)">Nosotros</a>
     </nav>
     <div class="topbar__tools">
@@ -351,7 +351,7 @@
       <nav class="mobile-drawer__nav" aria-label="Navegación principal móvil">
         <a routerLink="/inicio" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobileMenu()">Inicio</a>
         <a routerLink="/promociones" routerLinkActive="is-active" (click)="closeMobileMenu()">Promociones</a>
-        <a href="#" (click)="closeMobileMenu(); openCartaPdf($event)">Carta</a>
+        <a href="#" [attr.aria-busy]="cartaLoading" (click)="closeMobileMenu(); openCartaPdf($event)">{{ cartaLoading ? 'Cargando carta...' : 'Carta' }}</a>
         <a href="#" (click)="goToNosotros($event, true)">Nosotros</a>
       </nav>
     </aside>
@@ -385,7 +385,7 @@
               }
               @if (message.showCartaLink) {
                 <button type="button" class="chatbot-panel__link-carta" (click)="openCartaPdf()">
-                  Click aquí para abrir la carta
+                  {{ cartaLoading ? 'Cargando carta...' : 'Click aquí para abrir la carta' }}
                 </button>
               }
             </div>

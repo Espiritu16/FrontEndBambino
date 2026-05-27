@@ -151,8 +151,7 @@ export class InicioPageComponent implements OnInit {
       return;
     }
 
-    const viewerUrl = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(targetUrl)}`;
-    window.open(viewerUrl, '_blank', 'noopener,noreferrer');
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
   }
 
   private restoreCachedHeroImage(): void {
