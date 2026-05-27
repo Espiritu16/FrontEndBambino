@@ -10,7 +10,7 @@ COPY pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN pnpm run build -- --configuration production
+RUN pnpm run build:production
 
 FROM nginx:1.27-alpine AS runtime
 

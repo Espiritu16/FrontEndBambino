@@ -1,12 +1,7 @@
 packages:
   - '.'
-onlyBuiltDependencies:
-  - esbuild
-  - '@parcel/watcher'
-  - lmdb
-  - msgpackr-extract
 allowBuilds:
-  '@parcel/watcher': set this to true or false
-  esbuild: set this to true or false
-  lmdb: set this to true or false
-  msgpackr-extract: set this to true or false
+  esbuild: true
+  '@parcel/watcher': true
+  lmdb: true
+  msgpackr-extract: true
