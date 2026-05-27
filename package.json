@@ -4,17 +4,19 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --port 5173",
-    "build": "ng build",
+    "build": "node scripts/build.mjs",
+    "build:production": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "deploy": "npm run build && wrangler deploy",
-    "preview": "npm run build && wrangler dev"
+    "deploy": "pnpm run build && wrangler deploy",
+    "preview": "pnpm run build && wrangler dev"
   },
   "private": true,
+  "packageManager": "pnpm@11.4.0",
   "engines": {
     "node": "24.x",
-    "npm": "10.x"
+    "pnpm": "11.x"
   },
   "dependencies": {
     "@angular/cdk": "^21.2.10",
