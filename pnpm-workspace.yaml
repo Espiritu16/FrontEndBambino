@@ -4,4 +4,3 @@ allowBuilds:
   lmdb: true
   msgpackr-extract: true
   sharp: true
-  workerd: true
