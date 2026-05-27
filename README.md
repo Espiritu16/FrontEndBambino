@@ -63,7 +63,7 @@ El frontend de Bambino tiene como objetivos principales:
 Según `package.json`:
 
 - `Node.js 24.x`
-- `npm 10.x`
+- `pnpm 11.x`
 
 Recomendación práctica:
 
@@ -71,7 +71,7 @@ Recomendación práctica:
 
 ```bash
 node -v
-npm -v
+pnpm -v
 ```
 
 ## Puesta en marcha local
@@ -80,11 +80,11 @@ Desde la carpeta del frontend:
 
 ```bash
 cd FrontEndBambino
-npm install
-npm start
+pnpm install
+pnpm start
 ```
 
-El comando `npm start` ejecuta:
+El comando `pnpm start` ejecuta:
 
 - `ng serve --port 5173`
 
@@ -94,11 +94,12 @@ URL local esperada:
 
 ## Scripts disponibles
 
-- `npm start`: levanta servidor de desarrollo en puerto `5173`.
-- `npm run build`: genera build de producción.
-- `npm run watch`: build en modo desarrollo con watch.
-- `npm test`: ejecuta pruebas unitarias.
-- `npm run lint`: ejecuta lint del proyecto.
+- `pnpm start`: levanta servidor de desarrollo en puerto `5173`.
+- `pnpm run build`: genera build de producción.
+- `pnpm run build -- --configuration production`: build explícito en modo producción.
+- `pnpm run watch`: build en modo desarrollo con watch.
+- `pnpm test`: ejecuta pruebas unitarias.
+- `pnpm run lint`: ejecuta lint del proyecto.
 
 ## Arquitectura frontend
 
@@ -223,9 +224,9 @@ Referencia oficial de esta convención:
 Ejecutar en local:
 
 ```bash
-npm run lint
-npm test
-npm run build
+pnpm run lint
+pnpm test
+pnpm run build
 ```
 
 ### Checklist recomendado previo a merge
@@ -241,12 +242,12 @@ npm run build
 
 ### La app no levanta en local
 
-- Verificar versiones `node`/`npm` requeridas.
+- Verificar versiones `node`/`pnpm` requeridas.
 - Reinstalar dependencias:
 
 ```bash
-rm -rf node_modules package-lock.json
-npm install
+rm -rf node_modules pnpm-lock.yaml
+pnpm install
 ```
 
 ### Puerto ocupado (`5173`)
