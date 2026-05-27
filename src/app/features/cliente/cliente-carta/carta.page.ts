@@ -75,7 +75,6 @@ export class CartaPageComponent implements OnInit {
   }
 
   private buildViewerUrl(url: string): SafeResourceUrl {
-    const googleViewer = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(url)}`;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(googleViewer);
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`${url}#toolbar=1&view=FitH`);
   }
 }

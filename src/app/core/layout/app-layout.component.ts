@@ -144,6 +144,8 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   protected headerSearchResults: ProductoSearchItem[] = [];
   protected showHeaderSearchResults = false;
   protected headerSearchLoading = false;
+  protected cartaLoading = false;
+  protected cartaError = '';
   private headerSearchPool: ProductoSearchItem[] = [];
   protected readonly chatbotLabelMap: Record<string, string> = {
     MENU: 'MENÚ',
@@ -496,27 +498,36 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
 
   protected async openCartaPdf(event?: Event): Promise<void> {
     event?.preventDefault();
-    let targetUrl = '';
+    if (this.cartaLoading) return;
+    this.cartaLoading = true;
+    this.cartaError = '';
     try {
-      const data = await firstValueFrom(
-        this.http
-          .get<ConfiguracionMediaPublicResponse>(`${this.apiBaseUrl}/api/public/configuracion/media/CARTA_PDF`)
-          .pipe(timeout(10000))
-      );
-      targetUrl = data?.activa ? resolveBackendAssetUrl(data.url?.trim() || '', this.apiBaseUrl) : '';
-      if (targetUrl) {
-        localStorage.setItem(this.cartaPdfCacheKey, targetUrl);
+      let targetUrl = '';
+      try {
+        const data = await firstValueFrom(
+          this.http
+            .get<ConfiguracionMediaPublicResponse>(`${this.apiBaseUrl}/api/public/configuracion/media/CARTA_PDF`)
+            .pipe(timeout(10000))
+        );
+        targetUrl = data?.activa ? resolveBackendAssetUrl(data.url?.trim() || '', this.apiBaseUrl) : '';
+        if (targetUrl) {
+          localStorage.setItem(this.cartaPdfCacheKey, targetUrl);
+        }
+      } catch {
+        targetUrl = resolveBackendAssetUrl(localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '', this.apiBaseUrl);
       }
-    } catch {
-      targetUrl = resolveBackendAssetUrl(localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '', this.apiBaseUrl);
-    }
 
-    if (!targetUrl) {
-      return;
-    }
+      if (!targetUrl) {
+        this.cartaError = 'No se pudo obtener la carta. Intenta nuevamente.';
+        window.alert(this.cartaError);
+        return;
+      }
 
-    const viewerUrl = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(targetUrl)}`;
-    window.open(viewerUrl, '_blank', 'noopener,noreferrer');
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    } finally {
+      this.cartaLoading = false;
+      this.syncUi();
+    }
   }
 
   protected async submitLogin(): Promise<void> {
