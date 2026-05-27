@@ -16,7 +16,7 @@
 
       <div class="hero-media">
         @if (heroImageUrl) {
-          <img [src]="heroImageUrl" alt="Banner principal de inicio" (error)="onHeroImageError()" />
+          <img [src]="heroImageUrl" alt="Banner principal de inicio" loading="eager" decoding="async" fetchpriority="high" (error)="onHeroImageError()" />
         } @else {
           <div class="hero-media__placeholder">Sin imagen</div>
         }
