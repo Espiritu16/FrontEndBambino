@@ -8,6 +8,7 @@ import { withCacheOptions } from '../../../core/http/cache-context.helpers';
 import { runWithUiRefresh, scheduleUiRefresh } from '../../../shared/utils/async-ui.util';
 import { matchesSearchQuery } from '../../../shared/utils/search-match.util';
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
+import { resolveBackendAssetUrl } from '../../../shared/utils/media-url.util';
 
 type CategoriaResponse = {
   idCategoria: number;
@@ -114,7 +115,7 @@ export class OfertasPageComponent {
   }
 
   protected resolveCardImageUrl(rawUrl: string | null): string {
-    const source = (rawUrl ?? '').trim();
+    const source = resolveBackendAssetUrl(rawUrl);
     if (!source) return '';
     try {
       const parsed = new URL(source);

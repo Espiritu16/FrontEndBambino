@@ -8,6 +8,7 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { API_ENDPOINTS } from '../../../../core/http/api-endpoints';
+import { resolveBackendAssetUrl } from '../../../../shared/utils/media-url.util';
 
 type ConfiguracionMediaResponse = {
   idMedia: number;
@@ -263,7 +264,7 @@ export class AdminWebMediaPageComponent implements OnInit, OnDestroy {
   }
 
   protected get previewImageUrl(): string {
-    return this.localPreviewUrl || (this.form.url ?? '');
+    return this.localPreviewUrl || resolveBackendAssetUrl(this.form.url ?? '');
   }
 
   protected get isPdfSection(): boolean {

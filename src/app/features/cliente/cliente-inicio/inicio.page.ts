@@ -8,6 +8,7 @@ import { withCacheOptions } from '../../../core/http/cache-context.helpers';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { PlannedFeatureModalComponent } from '../../../shared/components/planned-feature-modal/planned-feature-modal.component';
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
+import { resolveBackendAssetUrl } from '../../../shared/utils/media-url.util';
 
 type ConfiguracionMediaResponse = {
   clave: string;
@@ -127,12 +128,12 @@ export class InicioPageComponent implements OnInit {
           })
           .pipe(timeout(10000))
       );
-      targetUrl = data?.activa ? (data.url?.trim() || '') : '';
+      targetUrl = data?.activa ? resolveBackendAssetUrl(data.url?.trim() || '') : '';
       if (targetUrl) {
         localStorage.setItem(this.cartaPdfCacheKey, targetUrl);
       }
     } catch {
-      targetUrl = localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '';
+      targetUrl = resolveBackendAssetUrl(localStorage.getItem(this.cartaPdfCacheKey)?.trim() || '');
     }
 
     if (!targetUrl) {
@@ -164,10 +165,11 @@ export class InicioPageComponent implements OnInit {
   }
 
   private buildRenderableUrl(url: string, versionTag: string | null): string {
-    if (!url) return '';
-    const separator = url.includes('?') ? '&' : '?';
+    const resolved = resolveBackendAssetUrl(url);
+    if (!resolved) return '';
+    const separator = resolved.includes('?') ? '&' : '?';
     const token = versionTag?.trim() || Date.now().toString();
-    return `${url}${separator}cb=${encodeURIComponent(token)}`;
+    return `${resolved}${separator}cb=${encodeURIComponent(token)}`;
   }
 
   protected toSlug(nombre: string): string {
@@ -184,7 +186,7 @@ export class InicioPageComponent implements OnInit {
   }
 
   protected resolveCardImageUrl(rawUrl: string | null): string {
-    const source = (rawUrl ?? '').trim();
+    const source = resolveBackendAssetUrl(rawUrl);
     if (!source) return '';
     try {
       const parsed = new URL(source);
