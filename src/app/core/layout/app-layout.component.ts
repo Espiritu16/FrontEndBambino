@@ -158,9 +158,9 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     HISTORIAL_PEDIDOS: 'MIS PEDIDOS'
   };
   protected footerMenuFilters: string[] = ['Pollo a la Brasa', 'Combos Familiares', 'Los Mostros', 'Platos a la Carta'];
-  protected footerDireccionFiscal = 'Av. Principal 123';
-  protected footerTelefono = '(01) 123-4567';
-  protected readonly footerCelular = '+51 987 654 321';
+  protected footerDireccionFiscal = 'Proximamente';
+  protected footerTelefono = 'Proximamente';
+  protected readonly footerCelular = 'Proximamente';
 
   ngOnInit(): void {
     this.restoreHeaderSearchQuery();
