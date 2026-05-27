@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /admin/
+Disallow: /login
+Disallow: /registro
+Disallow: /recuperacion-clave
+Disallow: /carrito
+Disallow: /checkout
+Disallow: /mis-pedidos
+Disallow: /detalle-pedido
+Disallow: /perfil
+Disallow: /direcciones
+Disallow: /pago-pedido
+Disallow: /comprobante-pedido
+Disallow: /cocina-panel
+Disallow: /producto-detalle/
+
+Sitemap: https://bambino.proyectoutp.com/sitemap.xml

@@ -13,4 +13,13 @@ const result = spawnSync('./node_modules/.bin/ng', args, {
   shell: process.platform === 'win32'
 });
 
-process.exit(result.status ?? 1);
+if ((result.status ?? 1) !== 0) {
+  process.exit(result.status ?? 1);
+}
+
+const seoResult = spawnSync('node', ['./scripts/generate-static-seo-pages.mjs'], {
+  stdio: 'inherit',
+  shell: process.platform === 'win32'
+});
+
+process.exit(seoResult.status ?? 1);
