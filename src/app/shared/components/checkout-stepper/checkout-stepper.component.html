@@ -1,0 +1,23 @@
+<nav class="checkout-stepper" aria-label="Progreso del pedido">
+  <ol>
+    @for (step of steps; track step.key; let index = $index) {
+      <li [class]="'is-' + stateFor(index)" [attr.aria-current]="stateFor(index) === 'current' ? 'step' : null">
+        <span class="checkout-stepper__marker">
+          @if (stateFor(index) === 'complete') {
+            <span class="material-symbols-outlined" aria-hidden="true">check</span>
+          } @else {
+            {{ index + 1 }}
+          }
+        </span>
+        <span>{{ step.label }}</span>
+      </li>
+    }
+  </ol>
+  <div class="checkout-stepper__mobile">
+    <span>Paso {{ currentIndex + 1 }} de {{ steps.length }}</span>
+    <strong>{{ steps[currentIndex].label }}</strong>
+    <div>
+      <span [style.width.%]="((currentIndex + 1) / steps.length) * 100"></span>
+    </div>
+  </div>
+</nav>

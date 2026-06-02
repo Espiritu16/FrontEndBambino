@@ -1,4 +1,218 @@
-<section>
-  <h2>Checkout</h2>
-  <p>Validación y confirmación del pedido.</p>
+<section class="checkout-page">
+  <app-checkout-stepper current="checkout"></app-checkout-stepper>
+
+  <header class="checkout-hero">
+    <div>
+      <span class="checkout-eyebrow">Pedido online</span>
+      <h1>Checkout</h1>
+      <p>Confirma entrega, comprobante y total antes de crear tu pedido.</p>
+    </div>
+    <a class="checkout-link" routerLink="/carrito">
+      <span class="material-symbols-outlined">shopping_cart</span>
+      Volver al carrito
+    </a>
+  </header>
+
+  @if (loading) {
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando checkout"></app-loading-spinner>
+  } @else {
+    @if (error) {
+      <p class="checkout-error">{{ error }}</p>
+    }
+    @if (formError) {
+      <p class="checkout-error">{{ formError }}</p>
+    }
+
+    @if (!hasItems) {
+      <section class="checkout-empty">
+        <span class="material-symbols-outlined">shopping_bag</span>
+        <h2>Tu carrito está vacío</h2>
+        <p>Agrega productos antes de continuar con checkout.</p>
+        <a class="checkout-action checkout-action--primary" routerLink="/promociones">Ver promociones</a>
+      </section>
+    } @else {
+      <div class="checkout-layout">
+        <main class="checkout-main">
+          <section class="checkout-card">
+            <h2>Modalidad</h2>
+            <div class="checkout-segment">
+              <label [class.is-active]="form.modalidad === 'RECOJO'">
+                <input type="radio" name="modalidad" value="RECOJO" [(ngModel)]="form.modalidad" (change)="onCheckoutOptionChange()" />
+                <span class="material-symbols-outlined">storefront</span>
+                Recojo en tienda
+              </label>
+              <label [class.is-active]="form.modalidad === 'DELIVERY'">
+                <input type="radio" name="modalidad" value="DELIVERY" [(ngModel)]="form.modalidad" (change)="onCheckoutOptionChange()" />
+                <span class="material-symbols-outlined">delivery_truck_speed</span>
+                Delivery
+              </label>
+            </div>
+          </section>
+
+          @if (form.modalidad === 'DELIVERY') {
+            <section class="checkout-card">
+              <div class="checkout-card__head">
+                <h2>Dirección de entrega</h2>
+                <a routerLink="/direcciones">Gestionar direcciones</a>
+              </div>
+
+              @if (direcciones.length === 0) {
+                <section class="checkout-address-empty">
+                  <p>No tienes direcciones activas para delivery.</p>
+                  <a class="checkout-action checkout-action--primary" routerLink="/direcciones">Agregar dirección</a>
+                </section>
+              } @else {
+                <div class="address-options">
+                  @for (address of direcciones; track address.idDireccion) {
+                    <label class="address-option" [class.is-active]="form.idDireccion === address.idDireccion">
+                      <input type="radio" name="direccion" [value]="address.idDireccion" [(ngModel)]="form.idDireccion" (ngModelChange)="onCheckoutDataChange()" />
+                      <span class="material-symbols-outlined">{{ address.esPrincipal ? 'home' : 'location_on' }}</span>
+                      <strong>{{ address.direccionLinea1 }}</strong>
+                      <small>{{ address.distrito || '-' }} · {{ address.ciudad || 'Lima' }}</small>
+                      @if (address.referencia) {
+                        <small>{{ address.referencia }}</small>
+                      }
+                      @if (address.esPrincipal) {
+                        <em>Principal</em>
+                      }
+                    </label>
+                  }
+                </div>
+              }
+            </section>
+          }
+
+          <section class="checkout-card">
+            <h2>Comprobante</h2>
+            <div class="checkout-segment">
+              <label [class.is-active]="form.tipoComprobante === 'BOLETA'">
+                <input type="radio" name="tipoComprobante" value="BOLETA" [(ngModel)]="form.tipoComprobante" (change)="onCheckoutOptionChange()" />
+                <span class="material-symbols-outlined">receipt_long</span>
+                Boleta
+              </label>
+              <label [class.is-active]="form.tipoComprobante === 'FACTURA'">
+                <input type="radio" name="tipoComprobante" value="FACTURA" [(ngModel)]="form.tipoComprobante" (change)="onCheckoutOptionChange()" />
+                <span class="material-symbols-outlined">request_quote</span>
+                Factura
+              </label>
+            </div>
+
+            <div class="checkout-document">
+              @if (form.tipoComprobante === 'BOLETA') {
+                @if (documentoBoleta) {
+                  <div class="checkout-document__value">
+                    <span class="material-symbols-outlined">badge</span>
+                    <div>
+                      <small>Documento para boleta</small>
+                      <strong>{{ documentoBoleta.docTipo }} {{ documentoBoleta.docNumero }}</strong>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="checkout-document__missing">
+                    <span class="material-symbols-outlined">warning</span>
+                    <div>
+                      <strong>Falta documento para boleta</strong>
+                      <p>Completa tu DNI o RUC en tu perfil antes de crear el pedido.</p>
+                      <a routerLink="/perfil">Ir a perfil</a>
+                    </div>
+                  </div>
+                }
+              } @else {
+                @if (documentoFactura) {
+                  <div class="checkout-document__value">
+                    <span class="material-symbols-outlined">request_quote</span>
+                    <div>
+                      <small>RUC para factura</small>
+                      <strong>{{ documentoFactura.docNumero }}</strong>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="checkout-document__missing">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    <div>
+                      <strong>Registra tu RUC</strong>
+                      <p>Lo guardaremos en tu perfil y lo usaremos para esta factura.</p>
+                    </div>
+                    <label>
+                      <span>RUC</span>
+                      <input
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="11"
+                        [(ngModel)]="rucRegistroNumero"
+                        placeholder="11 dígitos"
+                      />
+                    </label>
+                    <button class="checkout-action checkout-action--ghost" type="button" (click)="registrarRucFactura()" [disabled]="registeringRuc">
+                      {{ registeringRuc ? 'Registrando...' : 'Registrar RUC' }}
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+
+            @if (form.tipoComprobante === 'FACTURA') {
+              <div class="checkout-form">
+                <label>
+                  <span>Razón social</span>
+                  <input type="text" maxlength="180" [(ngModel)]="form.razonSocial" (ngModelChange)="onCheckoutDataChange()" placeholder="Razón social" />
+                </label>
+                <label class="checkout-form__full">
+                  <span>Dirección fiscal</span>
+                  <input type="text" maxlength="220" [(ngModel)]="form.direccionFiscal" (ngModelChange)="onCheckoutDataChange()" placeholder="Dirección fiscal" />
+                </label>
+              </div>
+            }
+          </section>
+        </main>
+
+        <aside class="checkout-summary">
+          <h2>Resumen</h2>
+          <div class="checkout-summary__items">
+            @for (item of items; track item.idCarritoItem) {
+              <div>
+                <span>{{ item.cantidad | number: '1.0-0' }} x {{ item.nombreProducto }}</span>
+                <strong>{{ formatMoney(item.subtotal) }}</strong>
+              </div>
+            }
+          </div>
+
+          <dl>
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(resumen?.subtotal) }}</dd>
+            </div>
+            @if ((resumen?.descuentoTotal ?? 0) > 0) {
+              <div>
+                <dt>Descuento</dt>
+                <dd>-{{ formatMoney(resumen?.descuentoTotal) }}</dd>
+              </div>
+            }
+            <div>
+              <dt>IGV</dt>
+              <dd>{{ formatMoney(resumen?.impuestoTotal) }}</dd>
+            </div>
+            <div>
+              <dt>Delivery</dt>
+              <dd>{{ formatMoney(resumen?.costoDelivery) }}</dd>
+            </div>
+            <div class="checkout-summary__total">
+              <dt>Total</dt>
+              <dd>{{ formatMoney(resumen?.total) }}</dd>
+            </div>
+          </dl>
+
+          <a class="checkout-action checkout-action--ghost" routerLink="/carrito">
+            Volver al carrito
+          </a>
+          <button class="checkout-action checkout-action--ghost" type="button" (click)="validarPedido()" [disabled]="validating || submitting">
+            {{ validating ? 'Validando...' : 'Validar checkout' }}
+          </button>
+          <button class="checkout-action checkout-action--primary" type="button" (click)="confirmarPedido()" [disabled]="!canCreatePedido">
+            {{ submitting ? 'Preparando pago...' : 'Continuar al pago' }}
+          </button>
+        </aside>
+      </div>
+    }
+  }
 </section>
