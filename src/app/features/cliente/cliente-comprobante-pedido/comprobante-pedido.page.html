@@ -1,4 +1,64 @@
-<section>
-  <h2>Comprobante</h2>
-  <p>Comprobante del pedido emitido.</p>
+<section class="receipt-page">
+  <app-checkout-stepper current="confirmacion"></app-checkout-stepper>
+
+  @if (loading) {
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando comprobante"></app-loading-spinner>
+  } @else {
+    @if (error) {
+      <section class="receipt-card receipt-card--center">
+        <span class="material-symbols-outlined">error</span>
+        <h1>No pudimos cargar el pedido</h1>
+        <p>{{ error }}</p>
+        <a class="receipt-action receipt-action--primary" routerLink="/mis-pedidos">Ver mis pedidos</a>
+      </section>
+    } @else if (pedido) {
+      <section class="receipt-card">
+        <span class="receipt-eyebrow">Pago confirmado</span>
+        <h1>{{ pedido.codigoPedido }}</h1>
+        <p>Tu pago fue confirmado y el pedido ya fue registrado para ser atendido por el equipo de Bambino Chicken.</p>
+
+        <dl>
+          <div>
+            <dt>Estado</dt>
+            <dd>{{ pedido.estadoActual }}</dd>
+          </div>
+          <div>
+            <dt>Modalidad</dt>
+            <dd>{{ pedido.modalidad }}</dd>
+          </div>
+          <div>
+            <dt>Comprobante</dt>
+            <dd>{{ pedido.tipoComprobante }}</dd>
+          </div>
+          <div>
+            <dt>Fecha</dt>
+            <dd>{{ formatDate(pedido.fechaCreacion) }}</dd>
+          </div>
+          <div>
+            <dt>Subtotal</dt>
+            <dd>{{ formatMoney(pedido.subtotal) }}</dd>
+          </div>
+          @if (pedido.descuentoTotal > 0) {
+            <div>
+              <dt>Descuento</dt>
+              <dd>-{{ formatMoney(pedido.descuentoTotal) }}</dd>
+            </div>
+          }
+          <div>
+            <dt>IGV</dt>
+            <dd>{{ formatMoney(pedido.impuestoTotal) }}</dd>
+          </div>
+          <div class="receipt-total">
+            <dt>Total</dt>
+            <dd>{{ formatMoney(pedido.total) }}</dd>
+          </div>
+        </dl>
+
+        <div class="receipt-actions">
+          <a class="receipt-action receipt-action--primary" routerLink="/mis-pedidos">Ver mis pedidos</a>
+          <a class="receipt-action receipt-action--ghost" routerLink="/promociones">Seguir comprando</a>
+        </div>
+      </section>
+    }
+  }
 </section>

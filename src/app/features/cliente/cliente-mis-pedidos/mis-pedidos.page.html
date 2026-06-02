@@ -23,18 +23,23 @@
         <h2>Mis pedidos</h2>
       </header>
       <div class="orders-list">
-        @if (orders.length === 0) {
+        @if (loading) {
+          <p class="orders-empty">Cargando tus pedidos...</p>
+        } @else if (orders.length === 0) {
           <p class="orders-empty">No hay pedidos registrados.</p>
         } @else {
           @for (order of orders; track order.idPedido) {
-            <div class="order-item">
-              <div>
+            <div class="order-item" [class.order-item--canceled]="order.estadoActual === 'CANCELADO'">
+              <div class="order-item__main">
                 <strong>{{ order.codigoPedido }}</strong>
-                <p>{{ order.estadoActual }}</p>
+                <span [class]="estadoClass(order.estadoActual)">{{ estadoLabel(order.estadoActual) }}</span>
               </div>
               <div class="order-item__right">
                 <strong>S/ {{ order.total }}</strong>
                 <p>{{ order.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</p>
+                @if (canCancel(order)) {
+                  <button class="order-cancel-btn" type="button" (click)="openCancelModal(order)">Cancelar pedido</button>
+                }
               </div>
             </div>
           }
@@ -43,3 +48,14 @@
     </article>
   </main>
 </section>
+
+@if (cancelTarget) {
+  <app-confirm-modal
+    title="Cancelar pedido"
+    message="¿Deseas cancelar este pedido? Se conservará en tu historial como cancelado."
+    cancelText="Volver"
+    [confirmText]="canceling ? 'Cancelando...' : 'Sí, cancelar'"
+    (cancel)="closeCancelModal()"
+    (confirm)="confirmCancelOrder()"
+  />
+}

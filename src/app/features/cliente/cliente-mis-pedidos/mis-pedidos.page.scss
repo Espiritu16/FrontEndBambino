@@ -38,13 +38,83 @@
 
 .orders-list { margin-top: 0.7rem; display: grid; gap: 0.55rem; }
 .orders-empty { margin: 0; color: #6b7280; }
-.order-item { border: 1px solid #eadfce; border-radius: 10px; padding: 0.65rem 0.8rem; display: flex; align-items: flex-start; justify-content: space-between; }
+.order-item { border: 1px solid #eadfce; border-radius: 10px; padding: 0.75rem 0.85rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.order-item--canceled { background: #fff7f7; border-color: #f0c8c8; }
+.order-item__main { display: grid; gap: 0.4rem; }
 .order-item p,
 .order-item strong { margin: 0; }
 .order-item p { color: #6b7280; font-size: 0.84rem; }
-.order-item__right { text-align: right; }
+.order-item__right { display: grid; gap: 0.35rem; justify-items: end; text-align: right; }
+
+.order-status {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 0.74rem;
+  font-weight: 800;
+  min-height: 1.55rem;
+  padding: 0.25rem 0.65rem;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.order-status--creado,
+.order-status--pago-pendiente {
+  background: #fff4d7;
+  color: #7a4b00;
+}
+
+.order-status--cancelado,
+.order-status--anulado,
+.order-status--pago-rechazado {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.order-status--confirmado,
+.order-status--en-preparacion,
+.order-status--listo-recojo,
+.order-status--listo-despacho,
+.order-status--en-camino {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.order-status--entregado,
+.order-status--pago-aprobado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.order-cancel-btn {
+  background: #fff;
+  border: 1px solid #f0b4b8;
+  border-radius: 999px;
+  color: #9f1820;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+}
+
+.order-cancel-btn:hover {
+  background: #fff5f5;
+}
 
 @media (max-width: 960px) {
   :host { min-height: auto; }
   .perfil-page { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .order-item {
+    display: grid;
+  }
+
+  .order-item__right {
+    justify-items: start;
+    text-align: left;
+  }
 }
