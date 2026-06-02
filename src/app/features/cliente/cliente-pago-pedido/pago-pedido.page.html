@@ -1,4 +1,95 @@
-<section>
-  <h2>Pago del Pedido</h2>
-  <p>Inicio/consulta de pago de un pedido.</p>
+<section class="payment-page">
+  <app-checkout-stepper current="pago"></app-checkout-stepper>
+
+  @if (loading) {
+    <app-loading-spinner [fullPage]="true" size="lg" label="Preparando pago"></app-loading-spinner>
+  } @else {
+    @if (error && !draft) {
+      <section class="payment-empty">
+        <span class="material-symbols-outlined">error</span>
+        <h1>No hay checkout pendiente</h1>
+        <p>{{ error }}</p>
+        <a class="payment-action payment-action--primary" routerLink="/carrito">Volver al carrito</a>
+      </section>
+    } @else if (draft) {
+      <header class="payment-header">
+        <span>Pago</span>
+        <h1>Confirma tu pago</h1>
+        <p>Tu pedido se creará cuando el pago quede confirmado.</p>
+      </header>
+
+      <div class="payment-grid">
+        <section class="payment-panel">
+          <h2>Pago con Culqi</h2>
+          @if (submitting) {
+            <div class="payment-confirming" aria-live="polite" aria-busy="true">
+              <app-loading-spinner size="sm" label="Confirmando pago"></app-loading-spinner>
+              <div>
+                <strong>Confirmando pago</strong>
+                <p>Estamos validando la respuesta de Culqi y registrando tu pedido. Esto puede tardar unos segundos.</p>
+              </div>
+            </div>
+          }
+          <div class="payment-provider">
+            <span class="material-symbols-outlined">credit_card</span>
+            <div>
+              <strong>Tarjeta, Yape u otros métodos habilitados</strong>
+              <p>El pedido se creará solo si Culqi confirma el pago aprobado.</p>
+            </div>
+          </div>
+
+          <div class="payment-note">
+            <span class="material-symbols-outlined">info</span>
+            <p>
+              Pruebas Culqi: para Yape usa el celular <strong>900000001</strong> y cualquier código de 6 dígitos.
+              Para tarjeta exitosa usa <strong>4111 1111 1111 1111</strong>, vencimiento <strong>09/30</strong> y CVV <strong>123</strong>.
+            </p>
+          </div>
+        </section>
+
+        <aside class="payment-summary">
+          <h2>Resumen</h2>
+          <dl>
+            <div>
+              <dt>Modalidad</dt>
+              <dd>{{ draft.checkout.modalidad }}</dd>
+            </div>
+            <div>
+              <dt>Comprobante</dt>
+              <dd>{{ draft.checkout.tipoComprobante }}</dd>
+            </div>
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(draft.validacion.subtotal) }}</dd>
+            </div>
+            @if (draft.validacion.costoDelivery > 0) {
+              <div>
+                <dt>Delivery</dt>
+                <dd>{{ formatMoney(draft.validacion.costoDelivery) }}</dd>
+              </div>
+            }
+            <div>
+              <dt>IGV</dt>
+              <dd>{{ formatMoney(draft.validacion.impuestoTotal) }}</dd>
+            </div>
+            <div class="payment-total">
+              <dt>Total a pagar</dt>
+              <dd>{{ formatMoney(draft.validacion.total) }}</dd>
+            </div>
+          </dl>
+
+          @if (error) {
+            <p class="payment-error">{{ error }}</p>
+          }
+
+          <button class="payment-action payment-action--primary" type="button" (click)="confirmarPago()" [disabled]="openingCheckout || submitting || !culqiReady">
+            {{ submitting ? 'Confirmando...' : (openingCheckout ? 'Abriendo Culqi...' : 'Pagar con Culqi') }}
+          </button>
+          <button class="payment-action payment-action--ghost" type="button" (click)="volverCheckout()" [disabled]="openingCheckout || submitting">
+            Volver al checkout
+          </button>
+        </aside>
+      </div>
+    }
+  }
 </section>
