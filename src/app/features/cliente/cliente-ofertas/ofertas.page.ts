@@ -1,24 +1,26 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, ElementRef, NgZone, OnInit, ViewChild, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { firstValueFrom, timeout } from 'rxjs';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
-import { PlannedFeatureModalComponent } from '../../../shared/components/planned-feature-modal/planned-feature-modal.component';
+import { ConfirmModalComponent } from '../../../shared/components/confirm-modal/confirm-modal.component';
 import { withCacheOptions } from '../../../core/http/cache-context.helpers';
 import { runWithUiRefresh, scheduleUiRefresh } from '../../../shared/utils/async-ui.util';
 import { matchesSearchQuery } from '../../../shared/utils/search-match.util';
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 import { resolveBackendAssetUrl } from '../../../shared/utils/media-url.util';
+import { ToastService } from '../../../shared/services/toast.service';
+import { ClienteCarritoService } from '../cliente-carrito/cliente-carrito.service';
 
-type CategoriaResponse = {
+interface CategoriaResponse {
   idCategoria: number;
   nombre: string;
   descripcion: string | null;
   ordenVisual: number;
   activa: boolean;
-};
+}
 
-type ProductoResponse = {
+interface ProductoResponse {
   idProducto: number;
   nombre: string;
   descripcion: string | null;
@@ -30,21 +32,25 @@ type ProductoResponse = {
   estado: string;
   imagenUrl: string | null;
   ordenVisual: number;
-};
+}
 
 @Component({
   selector: 'app-ofertas-page',
   standalone: true,
-  imports: [LoadingSpinnerComponent, RouterLink, PlannedFeatureModalComponent],
+  imports: [LoadingSpinnerComponent, RouterLink, ConfirmModalComponent],
   templateUrl: './ofertas.page.html',
   styleUrl: './ofertas.page.scss'
 })
-export class OfertasPageComponent {
+export class OfertasPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly zone = inject(NgZone);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly carritoService = inject(ClienteCarritoService);
+  private readonly toast = inject(ToastService);
   private readonly apiBase = API_ENDPOINTS.public.catalogo;
+  private readonly authStorageKey = 'bambino_basic_auth';
   private readonly tones = ['beige', 'mint', 'sky', 'sand'] as const;
   @ViewChild('resultsStart') private resultsStartEl?: ElementRef<HTMLElement>;
 
@@ -59,7 +65,8 @@ export class OfertasPageComponent {
   protected masPedidosIds = new Set<number>();
   protected masPedidosLoaded = false;
   protected productos: ProductoResponse[] = [];
-  protected showPlannedFeatureModal = false;
+  protected addingProductId: number | null = null;
+  protected showLoginRequiredModal = false;
   protected searchQuery = '';
   private pendingFilterFromQuery: string | null = null;
 
@@ -115,22 +122,7 @@ export class OfertasPageComponent {
   }
 
   protected resolveCardImageUrl(rawUrl: string | null): string {
-    const source = resolveBackendAssetUrl(rawUrl);
-    if (!source) return '';
-    try {
-      const parsed = new URL(source);
-      const marker = '/image/upload/';
-      if (!parsed.hostname.includes('res.cloudinary.com') || !parsed.pathname.includes(marker)) {
-        return source;
-      }
-
-      const [prefix, suffix] = parsed.pathname.split(marker);
-      const transform = 'f_auto,q_auto:good,dpr_auto,c_fill,g_auto,w_1000,h_620';
-      parsed.pathname = `${prefix}${marker}${transform}/${suffix}`;
-      return parsed.toString();
-    } catch {
-      return source;
-    }
+    return resolveBackendAssetUrl(rawUrl);
   }
 
   protected toSlug(nombre: string): string {
@@ -142,14 +134,41 @@ export class OfertasPageComponent {
       .replace(/^-+|-+$/g, '');
   }
 
-  protected onAgregarClick(event: Event): void {
+  protected async onAgregarClick(event: Event, producto: ProductoResponse): Promise<void> {
     event.stopPropagation();
     event.preventDefault();
-    this.showPlannedFeatureModal = true;
+    if (this.addingProductId === producto.idProducto) return;
+
+    const token = localStorage.getItem(this.authStorageKey)?.trim();
+    if (!token) {
+      this.showLoginRequiredModal = true;
+      return;
+    }
+
+    this.addingProductId = producto.idProducto;
+
+    try {
+      await firstValueFrom(this.carritoService.agregarItem({
+        idProducto: producto.idProducto,
+        cantidad: 1,
+        observacion: null
+      }).pipe(timeout(10000)));
+      this.toast.success('Producto agregado al carrito.');
+    } catch {
+      this.toast.error('No se pudo agregar el producto al carrito.');
+    } finally {
+      this.addingProductId = null;
+      this.cdr.detectChanges();
+    }
   }
 
-  protected closePlannedFeatureModal(): void {
-    this.showPlannedFeatureModal = false;
+  protected closeLoginRequiredModal(): void {
+    this.showLoginRequiredModal = false;
+  }
+
+  protected confirmLoginRequiredModal(): void {
+    this.showLoginRequiredModal = false;
+    void this.router.navigate(['/login']);
   }
 
   private async loadProductosIniciales(): Promise<void> {

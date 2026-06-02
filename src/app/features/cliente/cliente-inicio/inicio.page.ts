@@ -62,8 +62,8 @@ export class InicioPageComponent implements OnInit {
   private async loadPromocionesMasPedidos(): Promise<void> {
     const cached = this.inicioCache.getMasPedidos();
     if (cached) {
-      this.promocionesMasPedidos = cached;
-      this.masPedidosIds = new Set(cached.map((p) => p.idProducto));
+      this.promocionesMasPedidos = cached.slice(0, 3);
+      this.masPedidosIds = new Set(this.promocionesMasPedidos.map((p) => p.idProducto));
       this.loadingMasPedidos = false;
       this.cdr.detectChanges();
       return;
@@ -79,7 +79,7 @@ export class InicioPageComponent implements OnInit {
           })
           .pipe(timeout(10000))
       );
-      this.promocionesMasPedidos = (data ?? []).slice(0, 4);
+      this.promocionesMasPedidos = (data ?? []).slice(0, 3);
       this.inicioCache.setMasPedidos(this.promocionesMasPedidos);
       this.masPedidosIds = new Set(this.promocionesMasPedidos.map((p) => p.idProducto));
       this.cdr.detectChanges();
@@ -173,8 +173,8 @@ export class InicioPageComponent implements OnInit {
   private restoreCachedMasPedidos(): void {
     const cached = this.inicioCache.getMasPedidos();
     if (!cached) return;
-    this.promocionesMasPedidos = cached;
-    this.masPedidosIds = new Set(cached.map((p) => p.idProducto));
+    this.promocionesMasPedidos = cached.slice(0, 3);
+    this.masPedidosIds = new Set(this.promocionesMasPedidos.map((p) => p.idProducto));
     this.loadingMasPedidos = false;
   }
 
@@ -215,22 +215,7 @@ export class InicioPageComponent implements OnInit {
   }
 
   protected resolveCardImageUrl(rawUrl: string | null): string {
-    const source = resolveBackendAssetUrl(rawUrl);
-    if (!source) return '';
-    try {
-      const parsed = new URL(source);
-      const marker = '/image/upload/';
-      if (!parsed.hostname.includes('res.cloudinary.com') || !parsed.pathname.includes(marker)) {
-        return source;
-      }
-
-      const [prefix, suffix] = parsed.pathname.split(marker);
-      const transform = 'f_auto,q_auto:good,dpr_auto,c_fill,g_auto,w_1000,h_620';
-      parsed.pathname = `${prefix}${marker}${transform}/${suffix}`;
-      return parsed.toString();
-    } catch {
-      return source;
-    }
+    return resolveBackendAssetUrl(rawUrl);
   }
 
   protected onPedirAhoraClick(event: Event): void {

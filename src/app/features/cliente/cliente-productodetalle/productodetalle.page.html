@@ -31,7 +31,14 @@
             @if (extras.length > 0) {
               <div class="extra-lines">
                 @for (extra of extras; track extra.idProducto; let i = $index) {
-                  <article class="extra-item" (click)="addExtraOnce(i)">
+                  <article
+                    class="extra-item"
+                    role="button"
+                    tabindex="0"
+                    (click)="addExtraOnce(i)"
+                    (keydown.enter)="addExtraOnce(i)"
+                    (keydown.space)="addExtraOnce(i); $event.preventDefault()"
+                  >
                     <div class="extra-item__info">
                       <strong>{{ extra.nombre }}</strong>
                       <span>+ S/ {{ extra.precio.toFixed(2) }}</span>
@@ -110,7 +117,7 @@
           </section>
 
           <h3>Indicaciones especiales</h3>
-          <textarea rows="3" placeholder="Ej: Sin cremas, papas bien crocantes..."></textarea>
+          <textarea rows="3" [(ngModel)]="observacion" maxlength="220" placeholder="Ej: Sin cremas, papas bien crocantes..."></textarea>
 
           <div class="detail-actions-row">
             <div class="qty">
@@ -118,7 +125,9 @@
               <span>{{ cantidad }}</span>
               <button type="button" (click)="onCantidadDelta(1)">+</button>
             </div>
-            <button class="btn btn-solid" type="button" (click)="onAgregarPedidoClick($event)">Agregar al pedido</button>
+            <button class="btn btn-solid" type="button" (click)="onAgregarPedidoClick($event)" [disabled]="addingToCart">
+              {{ addingToCart ? 'Agregando...' : 'Agregar al pedido' }}
+            </button>
           </div>
         </aside>
       </div>
@@ -137,6 +146,13 @@
   />
 }
 
-@if (showPlannedFeatureModal) {
-  <app-planned-feature-modal (close)="closePlannedFeatureModal()" />
+@if (showLoginRequiredModal) {
+  <app-confirm-modal
+    title="Inicia sesión"
+    message="Para agregar productos al carrito necesitas iniciar sesión."
+    cancelText="Ahora no"
+    confirmText="Iniciar sesión"
+    (cancel)="closeLoginRequiredModal()"
+    (confirm)="confirmLoginRequiredModal()"
+  />
 }

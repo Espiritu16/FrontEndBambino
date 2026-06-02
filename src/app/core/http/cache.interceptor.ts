@@ -21,14 +21,14 @@ const AUTH_STORAGE_KEY = 'bambino_basic_auth';
 const USER_NAME_STORAGE_KEY = 'bambino_user_name';
 const USER_ROLE_STORAGE_KEY = 'bambino_user_role';
 
-const URL_RULES: Array<{ pattern: RegExp; ttlMs: number; tags: CacheTag[] }> = [
+const URL_RULES: { pattern: RegExp; ttlMs: number; tags: CacheTag[] }[] = [
   { pattern: /\/api\/public\/catalogo\/productos/i, ttlMs: 3 * 60 * 1000, tags: ['menu', 'promotions'] },
   { pattern: /\/api\/public\/catalogo\/categorias/i, ttlMs: 5 * 60 * 1000, tags: ['menu'] },
   { pattern: /\/api\/public\/configuracion\/media\//i, ttlMs: 5 * 60 * 1000, tags: ['media'] },
-  { pattern: /\/api\/clientes\/carrito/i, ttlMs: 30 * 1000, tags: ['cart', 'checkout'] },
-  { pattern: /\/api\/clientes\/pedidos/i, ttlMs: 30 * 1000, tags: ['orders'] },
-  { pattern: /\/api\/clientes\/perfil/i, ttlMs: 10 * 60 * 1000, tags: ['profile'] },
-  { pattern: /\/api\/clientes\/direcciones/i, ttlMs: 10 * 60 * 1000, tags: ['addresses'] },
+  { pattern: /\/api\/cliente\/carrito/i, ttlMs: 30 * 1000, tags: ['cart', 'checkout'] },
+  { pattern: /\/api\/cliente\/pedidos/i, ttlMs: 30 * 1000, tags: ['orders'] },
+  { pattern: /\/api\/cliente\/perfil/i, ttlMs: 10 * 60 * 1000, tags: ['profile'] },
+  { pattern: /\/api\/cliente\/direcciones/i, ttlMs: 10 * 60 * 1000, tags: ['addresses'] },
   { pattern: /\/api\/auth\/yo/i, ttlMs: 2 * 60 * 1000, tags: ['profile'] }
 ];
 
@@ -135,19 +135,19 @@ function getMutationInvalidationTags(url: string): CacheTag[] {
     return ['store_status', 'company_admin'];
   }
 
-  if (/\/api\/clientes\/carrito/i.test(url)) {
+  if (/\/api\/cliente\/carrito/i.test(url)) {
     return ['cart', 'checkout'];
   }
 
-  if (/\/api\/clientes\/pedidos/i.test(url)) {
+  if (/\/api\/cliente\/pedidos/i.test(url)) {
     return ['orders', 'cart', 'checkout'];
   }
 
-  if (/\/api\/clientes\/perfil/i.test(url)) {
+  if (/\/api\/cliente\/perfil/i.test(url)) {
     return ['profile'];
   }
 
-  if (/\/api\/clientes\/direcciones/i.test(url)) {
+  if (/\/api\/cliente\/direcciones/i.test(url)) {
     return ['addresses', 'checkout'];
   }
 

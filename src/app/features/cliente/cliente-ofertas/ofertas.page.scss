@@ -1,6 +1,6 @@
 :host {
   display: block;
-  --ofertas-topbar-h: 78px;
+  --ofertas-topbar-h: var(--t, 78px);
   --ofertas-filters-h: 74px;
   --ofertas-title-h: 86px;
 }
@@ -129,8 +129,8 @@
 
 .menu-cards {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 28px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
 }
 
 .menu-card {
@@ -153,8 +153,7 @@
 
 .menu-card__media {
   height: auto;
-  aspect-ratio: 16 / 10;
-  min-height: 220px;
+  aspect-ratio: 16 / 9;
   display: grid;
   place-items: center;
   position: relative;
@@ -165,11 +164,13 @@
 .menu-card__media--beige { background: #ebdfd5; }
 .menu-card__media--mint { background: #d7e8e2; }
 .menu-card__media--sand { background: #ecdfbf; }
+.menu-card__media--with-image { background: #050505; }
 
 .menu-card__badge {
   position: absolute;
   top: 18px;
   right: 18px;
+  z-index: 1;
   background: #c91420;
   color: #fff;
   font-size: 0.75rem;
@@ -194,6 +195,8 @@
 }
 
 .dish-photo--real {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   max-width: 100%;
@@ -203,10 +206,10 @@
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   padding: 0;
-  background: #f9f2e8;
+  background: #050505;
 }
 
 .menu-card__body {
@@ -264,7 +267,6 @@
 
 @media (max-width: 960px) {
   :host {
-    --ofertas-topbar-h: 142px;
     --ofertas-filters-h: 70px;
     --ofertas-title-h: 82px;
   }
@@ -288,7 +290,7 @@
 
   .menu-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+    gap: 18px;
   }
 
   .menu-block__header {
@@ -302,7 +304,6 @@
 
 @media (max-width: 760px) {
   :host {
-    --ofertas-topbar-h: 142px;
     --ofertas-filters-h: 64px;
     --ofertas-title-h: 76px;
   }
@@ -317,10 +318,6 @@
 
   .menu-cards {
     grid-template-columns: 1fr;
-  }
-
-  .menu-card__media {
-    min-height: 200px;
   }
 
   .menu-block__header {

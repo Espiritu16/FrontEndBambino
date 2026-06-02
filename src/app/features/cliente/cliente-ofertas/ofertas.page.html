@@ -41,6 +41,7 @@
               <article class="menu-card card" [routerLink]="['/producto-detalle', item.idProducto, toSlug(item.nombre)]">
                 <div
                   class="menu-card__media"
+                  [class.menu-card__media--with-image]="!!item.imagenUrl"
                   [class.menu-card__media--sky]="toneFor(i) === 'sky'"
                   [class.menu-card__media--beige]="toneFor(i) === 'beige'"
                   [class.menu-card__media--mint]="toneFor(i) === 'mint'"
@@ -66,7 +67,9 @@
                   <p>{{ item.descripcion || 'Producto del catálogo Bambino.' }}</p>
                   <strong>S/ {{ item.precioBase }}</strong>
                   <div class="menu-card__actions">
-                    <button class="btn menu-card__btn" type="button" (click)="onAgregarClick($event)">Agregar</button>
+                    <button class="btn menu-card__btn" type="button" (click)="onAgregarClick($event, item)" [disabled]="addingProductId === item.idProducto">
+                      {{ addingProductId === item.idProducto ? 'Agregando...' : 'Agregar' }}
+                    </button>
                     <a class="btn menu-card__btn menu-card__btn--ghost" [routerLink]="['/producto-detalle', item.idProducto, toSlug(item.nombre)]" (click)="$event.stopPropagation()">
                       Ver detalle
                     </a>
@@ -82,8 +85,15 @@
       }
     </div>
   </main>
-
-  @if (showPlannedFeatureModal) {
-    <app-planned-feature-modal (close)="closePlannedFeatureModal()" />
-  }
 </div>
+
+@if (showLoginRequiredModal) {
+  <app-confirm-modal
+    title="Inicia sesión"
+    message="Para agregar productos al carrito necesitas iniciar sesión."
+    cancelText="Ahora no"
+    confirmText="Iniciar sesión"
+    (cancel)="closeLoginRequiredModal()"
+    (confirm)="confirmLoginRequiredModal()"
+  />
+}
