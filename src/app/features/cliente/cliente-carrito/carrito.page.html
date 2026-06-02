@@ -1,4 +1,125 @@
-<section>
-  <h2>Carrito</h2>
-  <p>Resumen de items y cantidades.</p>
+<section class="cart-page">
+  <app-checkout-stepper current="carrito"></app-checkout-stepper>
+
+  <header class="cart-hero">
+    <div>
+      <span class="cart-eyebrow">Pedido online</span>
+      <h1>Tu carrito</h1>
+      <p>Revisa cantidades, indicaciones y totales antes de continuar al checkout.</p>
+    </div>
+    <a class="cart-hero__link" routerLink="/promociones">
+      <span class="material-symbols-outlined">restaurant_menu</span>
+      Seguir comprando
+    </a>
+  </header>
+
+  @if (loading) {
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando carrito"></app-loading-spinner>
+  } @else {
+    @if (error) {
+      <p class="cart-error">{{ error }}</p>
+    }
+
+    @if (!hasItems) {
+      <section class="cart-empty">
+        <span class="material-symbols-outlined">shopping_cart</span>
+        <h2>Tu carrito está vacío</h2>
+        <p>Agrega tus favoritos desde promociones para preparar tu pedido.</p>
+        <a class="cart-action cart-action--primary" routerLink="/promociones">Ver promociones</a>
+      </section>
+    } @else {
+      <div class="cart-layout">
+        <div class="cart-items" aria-label="Productos en carrito">
+          @for (item of items; track item.idCarritoItem) {
+            <article class="cart-item">
+              @if (resolveItemImageUrl(item); as imageUrl) {
+                <img class="cart-item__image" [src]="imageUrl" [alt]="item.nombreProducto" loading="lazy" decoding="async" />
+              } @else {
+                <div class="cart-item__icon" aria-hidden="true">
+                  <span class="material-symbols-outlined">lunch_dining</span>
+                </div>
+              }
+
+              <div class="cart-item__body">
+                <div class="cart-item__main">
+                  <div>
+                    <h2>{{ item.nombreProducto }}</h2>
+                    @if (item.observacion) {
+                      <p>{{ item.observacion }}</p>
+                    } @else {
+                      <p>Sin indicaciones especiales.</p>
+                    }
+                  </div>
+                  <strong>{{ formatMoney(item.subtotal) }}</strong>
+                </div>
+
+                <div class="cart-item__meta">
+                  <span>Precio: {{ formatMoney(item.precioUnitario) }}</span>
+                  @if (item.descuentoUnitario > 0) {
+                    <span>Descuento: -{{ formatMoney(item.descuentoUnitario) }}</span>
+                  }
+                </div>
+
+                <div class="cart-item__actions">
+                  <div class="cart-qty" [attr.aria-busy]="updatingItemId === item.idCarritoItem">
+                    <button type="button" (click)="cambiarCantidad(item, -1)" [disabled]="updatingItemId === item.idCarritoItem" aria-label="Reducir cantidad">
+                      <span class="material-symbols-outlined">remove</span>
+                    </button>
+                    <span>{{ item.cantidad | number: '1.0-0' }}</span>
+                    <button type="button" (click)="cambiarCantidad(item, 1)" [disabled]="updatingItemId === item.idCarritoItem" aria-label="Aumentar cantidad">
+                      <span class="material-symbols-outlined">add</span>
+                    </button>
+                  </div>
+
+                  <button class="cart-remove" type="button" (click)="quitarItem(item)" [disabled]="updatingItemId === item.idCarritoItem">
+                    <span class="material-symbols-outlined">delete</span>
+                    Quitar
+                  </button>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+
+        <aside class="cart-summary" aria-label="Resumen del carrito">
+          <h2>Resumen</h2>
+          <dl>
+            <div>
+              <dt>Productos</dt>
+              <dd>{{ carrito?.totalItems | number: '1.0-0' }}</dd>
+            </div>
+            <div>
+              <dt>Subtotal</dt>
+              <dd>{{ formatMoney(carrito?.subtotal) }}</dd>
+            </div>
+            @if ((carrito?.descuentoTotal ?? 0) > 0) {
+              <div>
+                <dt>Descuento</dt>
+                <dd>-{{ formatMoney(carrito?.descuentoTotal) }}</dd>
+              </div>
+            }
+            <div>
+              <dt>IGV</dt>
+              <dd>{{ formatMoney(carrito?.impuestoTotal) }}</dd>
+            </div>
+            <div>
+              <dt>Delivery</dt>
+              <dd>{{ formatMoney(carrito?.costoDelivery) }}</dd>
+            </div>
+            <div class="cart-summary__total">
+              <dt>Total</dt>
+              <dd>{{ formatMoney(carrito?.total) }}</dd>
+            </div>
+          </dl>
+
+          <button class="cart-action cart-action--primary" type="button" (click)="continueToCheckout()">
+            Continuar checkout
+          </button>
+          <button class="cart-action cart-action--ghost" type="button" (click)="vaciarCarrito()" [disabled]="clearing">
+            Vaciar carrito
+          </button>
+        </aside>
+      </div>
+    }
+  }
 </section>

@@ -208,7 +208,11 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
 
   protected handleMyOrderClick(): void {
     if (!this.canShowMyOrder()) return;
-    this.isMyOrderPlannedModalOpen = true;
+    void this.router.navigate(['/carrito']);
+  }
+
+  protected goToMisPedidos(): void {
+    void this.router.navigate(['/mis-pedidos']);
   }
 
   protected closeMyOrderPlannedModal(): void {
@@ -983,11 +987,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   private isRoleBlockedForMyOrder(role: string): boolean {
     if (!role) return false;
     const normalized = role.trim().toUpperCase();
-    return normalized === 'ADMIN'
-      || normalized === 'ROLE_ADMIN'
-      || normalized === 'ADMINISTRADOR'
-      || normalized.includes('ADMIN')
-      || normalized === 'COCINA'
+    return normalized === 'COCINA'
       || normalized === 'ROLE_COCINA'
       || normalized.includes('COCINA');
   }

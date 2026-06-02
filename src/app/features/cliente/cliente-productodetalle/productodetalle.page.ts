@@ -1,17 +1,19 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom, of, timeout } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { ConfirmModalComponent } from '../../../shared/components/confirm-modal/confirm-modal.component';
-import { PlannedFeatureModalComponent } from '../../../shared/components/planned-feature-modal/planned-feature-modal.component';
+import { ToastService } from '../../../shared/services/toast.service';
 import { withoutCache } from '../../../core/http/cache-context.helpers';
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 import { resolveBackendAssetUrl } from '../../../shared/utils/media-url.util';
+import { ClienteCarritoService } from '../cliente-carrito/cliente-carrito.service';
 
-type ProductoResponse = {
+interface ProductoResponse {
   idProducto: number;
   nombre: string;
   descripcion: string | null;
@@ -23,19 +25,19 @@ type ProductoResponse = {
   estado: string;
   imagenUrl: string | null;
   ordenVisual: number;
-};
+}
 
-type Extra = {
+interface Extra {
   idProducto: number;
   nombre: string;
   precio: number;
   cantidad: number;
-};
+}
 
 @Component({
   selector: 'app-productodetalle-page',
   standalone: true,
-  imports: [RouterLink, LoadingSpinnerComponent, ConfirmModalComponent, PlannedFeatureModalComponent],
+  imports: [FormsModule, RouterLink, LoadingSpinnerComponent, ConfirmModalComponent],
   templateUrl: './productodetalle.page.html',
   styleUrl: './productodetalle.page.scss'
 })
@@ -45,7 +47,10 @@ export class ProductoDetallePageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly carritoService = inject(ClienteCarritoService);
+  private readonly toast = inject(ToastService);
   private readonly apiBase = API_ENDPOINTS.public.catalogo;
+  private readonly authStorageKey = 'bambino_basic_auth';
 
   protected loading = true;
   protected error = '';
@@ -55,7 +60,9 @@ export class ProductoDetallePageComponent implements OnInit {
   protected extras: Extra[] = [];
   protected esMasPedido = false;
   protected isClearExtrasConfirmOpen = false;
-  protected showPlannedFeatureModal = false;
+  protected showLoginRequiredModal = false;
+  protected observacion = '';
+  protected addingToCart = false;
 
   ngOnInit(): void {
     this.route.paramMap
@@ -125,6 +132,15 @@ export class ProductoDetallePageComponent implements OnInit {
     this.isClearExtrasConfirmOpen = false;
   }
 
+  protected closeLoginRequiredModal(): void {
+    this.showLoginRequiredModal = false;
+  }
+
+  protected confirmLoginRequiredModal(): void {
+    this.showLoginRequiredModal = false;
+    void this.router.navigate(['/login']);
+  }
+
   protected get hasExtrasSelection(): boolean {
     return this.extras.some((e) => e.cantidad > 0);
   }
@@ -147,31 +163,34 @@ export class ProductoDetallePageComponent implements OnInit {
   }
 
   protected resolveCardImageUrl(rawUrl: string | null): string {
-    const source = resolveBackendAssetUrl(rawUrl);
-    if (!source) return '';
-    try {
-      const parsed = new URL(source);
-      const marker = '/image/upload/';
-      if (!parsed.hostname.includes('res.cloudinary.com') || !parsed.pathname.includes(marker)) {
-        return source;
-      }
-
-      const [prefix, suffix] = parsed.pathname.split(marker);
-      const transform = 'f_auto,q_auto:good,dpr_auto,c_fit,w_1400,h_840';
-      parsed.pathname = `${prefix}${marker}${transform}/${suffix}`;
-      return parsed.toString();
-    } catch {
-      return source;
-    }
+    return resolveBackendAssetUrl(rawUrl);
   }
 
-  protected onAgregarPedidoClick(event: Event): void {
+  protected async onAgregarPedidoClick(event: Event): Promise<void> {
     event.preventDefault();
-    this.showPlannedFeatureModal = true;
-  }
+    if (!this.producto || this.addingToCart) return;
 
-  protected closePlannedFeatureModal(): void {
-    this.showPlannedFeatureModal = false;
+    const token = localStorage.getItem(this.authStorageKey)?.trim();
+    if (!token) {
+      this.showLoginRequiredModal = true;
+      return;
+    }
+
+    this.addingToCart = true;
+
+    try {
+      await firstValueFrom(this.carritoService.agregarItem({
+        idProducto: this.producto.idProducto,
+        cantidad: this.cantidad,
+        observacion: this.observacion.trim() || null
+      }).pipe(timeout(10000)));
+      this.toast.success('Producto agregado al carrito.');
+    } catch {
+      this.toast.error('No se pudo agregar el producto al carrito.');
+    } finally {
+      this.addingToCart = false;
+      this.cdr.detectChanges();
+    }
   }
 
   private async loadDetalle(slug: string, idProducto: number): Promise<void> {

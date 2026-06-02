@@ -2,11 +2,12 @@
   display: block;
   background: #e8ddc0;
   min-height: 100vh;
+  --t: 78px;
 }
 
 .page-shell {
   background: #e8ddc0;
-  min-height: calc(100vh - 78px);
+  padding-top: var(--t);
 }
 
 .home {
@@ -17,10 +18,9 @@
   background: #fffdf8;
   border-bottom: 1px solid #eadfce;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  overflow: visible;
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1200;
 }
 
 .topbar .container {
@@ -484,6 +484,10 @@
 }
 
 @media (max-width: 1180px) {
+  :host {
+    --t: 142px;
+  }
+
   .topbar {
     border-bottom-width: 2px;
   }
@@ -579,7 +583,7 @@
   .mobile-drawer-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 180;
+    z-index: 1300;
     display: block;
     background: rgba(15, 23, 42, 0.34);
   }

@@ -13,13 +13,16 @@ export const API_ENDPOINTS = {
     configuracion: `${API_BASE_URL}/api/public/configuracion`,
     configuracionMedia: `${API_BASE_URL}/api/public/configuracion/media`,
     delivery: `${API_BASE_URL}/api/public/delivery`,
+    pagos: `${API_BASE_URL}/api/public/pagos`,
     libroReclamaciones: `${API_BASE_URL}/api/public/libro-reclamaciones`
   },
   cliente: {
     chatbot: `${API_BASE_URL}/api/cliente/chatbot`,
     perfil: `${API_BASE_URL}/api/cliente/perfil`,
     direcciones: `${API_BASE_URL}/api/cliente/direcciones`,
+    carrito: `${API_BASE_URL}/api/cliente/carrito`,
     pedidos: `${API_BASE_URL}/api/cliente/pedidos`,
+    pagos: `${API_BASE_URL}/api/cliente/pagos`,
     libroReclamaciones: `${API_BASE_URL}/api/cliente/libro-reclamaciones`
   },
   admin: {
