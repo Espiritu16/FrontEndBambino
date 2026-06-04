@@ -53,6 +53,12 @@ export class AdminOperacionesService {
     });
   }
 
+  enviarComprobanteCorreo(idComprobante: number) {
+    return this.http.post<AdminComprobante>(`${API_ENDPOINTS.admin.comprobantes}/${idComprobante}/enviar-correo`, null, {
+      headers: this.authHeaders()
+    });
+  }
+
   exportarComprobantesExcel() {
     return this.http.get(`${API_ENDPOINTS.admin.comprobantes}/exportar-excel`, {
       headers: this.authHeaders(),

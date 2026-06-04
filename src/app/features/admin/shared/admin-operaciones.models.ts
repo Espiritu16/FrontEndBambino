@@ -50,6 +50,13 @@ export interface AdminComprobante {
   impuestoTotal: number;
   total: number;
   fechaEmision: string | null;
+  correoEnviado: boolean;
+  correoDestino: string | null;
+  fechaCorreoEnvio: string | null;
+  correoError: string | null;
+  pdfPath: string | null;
+  pdfToken: string | null;
+  fechaPdfGenerado: string | null;
   detalle: AdminComprobanteDetalle[];
 }
 

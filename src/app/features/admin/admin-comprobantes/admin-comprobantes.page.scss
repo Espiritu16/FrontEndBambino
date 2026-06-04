@@ -56,6 +56,7 @@ p {
 .clear-button,
 .excel-button,
 .pdf-button,
+.send-mail-button,
 .state-box button {
   min-height: 2.5rem;
   border: 1px solid rgba(141, 10, 10, 0.24);
@@ -69,7 +70,8 @@ p {
 .ghost-button,
 .clear-button,
 .excel-button,
-.pdf-button {
+.pdf-button,
+.send-mail-button {
   padding: 0 1rem;
 }
 
@@ -95,6 +97,29 @@ p {
 .pdf-button:disabled {
   cursor: wait;
   opacity: 0.62;
+}
+
+.send-mail-button {
+  min-height: 1.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  border-color: rgba(181, 71, 8, 0.26);
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 0.76rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.send-mail-button .material-symbols-outlined {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.send-mail-button:disabled {
+  cursor: wait;
+  opacity: 0.64;
 }
 
 .summary-grid {
@@ -161,7 +186,7 @@ select {
 
 table {
   width: 100%;
-  min-width: 980px;
+  min-width: 1080px;
   border-collapse: collapse;
 }
 
@@ -196,7 +221,9 @@ td small {
 }
 
 .status-badge,
-.type-pill {
+.type-pill,
+.mail-badge,
+.pdf-badge {
   display: inline-flex;
   min-height: 1.65rem;
   align-items: center;
@@ -215,6 +242,53 @@ td small {
 .type-pill {
   background: #eef4ff;
   color: #3538cd;
+}
+
+.mail-badge--sent {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.mail-badge--pending {
+  background: #fffaeb;
+  color: #b54708;
+}
+
+.mail-badge--error {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.mail-error {
+  color: #b42318;
+}
+
+.mail-cell,
+.pdf-cell {
+  display: grid;
+  gap: 0.24rem;
+  min-width: 180px;
+}
+
+.pdf-cell {
+  min-width: 150px;
+}
+
+.mail-cell__state {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  flex-wrap: wrap;
+}
+
+.pdf-badge--ready {
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.pdf-badge--pending {
+  background: #eff8ff;
+  color: #175cd3;
 }
 
 .badge-emitido,
