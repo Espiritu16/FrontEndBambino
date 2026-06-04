@@ -80,8 +80,8 @@ export class CarritoPageComponent implements OnInit {
           observacion: item.observacion
         }).pipe(timeout(10000))
       );
-    } catch {
-      this.error = 'No se pudo actualizar la cantidad.';
+    } catch (error: any) {
+      this.error = this.errorMessage(error, 'No se pudo actualizar la cantidad.');
       this.toast.error(this.error);
     } finally {
       this.updatingItemId = null;
@@ -96,8 +96,8 @@ export class CarritoPageComponent implements OnInit {
     try {
       this.carrito = await firstValueFrom(this.carritoService.quitarItem(item.idCarritoItem).pipe(timeout(10000)));
       this.toast.success('Producto retirado del carrito.');
-    } catch {
-      this.error = 'No se pudo retirar el producto.';
+    } catch (error: any) {
+      this.error = this.errorMessage(error, 'No se pudo retirar el producto.');
       this.toast.error(this.error);
     } finally {
       this.updatingItemId = null;
@@ -114,8 +114,8 @@ export class CarritoPageComponent implements OnInit {
     try {
       this.carrito = await firstValueFrom(this.carritoService.vaciarCarrito().pipe(timeout(10000)));
       this.toast.success('Carrito vaciado.');
-    } catch {
-      this.error = 'No se pudo vaciar el carrito.';
+    } catch (error: any) {
+      this.error = this.errorMessage(error, 'No se pudo vaciar el carrito.');
       this.toast.error(this.error);
     } finally {
       this.clearing = false;
@@ -134,5 +134,9 @@ export class CarritoPageComponent implements OnInit {
 
   protected resolveItemImageUrl(item: CarritoItem): string {
     return resolveBackendAssetUrl(item.imagenUrl);
+  }
+
+  private errorMessage(error: any, fallback: string): string {
+    return error?.error?.mensaje || error?.error?.message || error?.message || fallback;
   }
 }

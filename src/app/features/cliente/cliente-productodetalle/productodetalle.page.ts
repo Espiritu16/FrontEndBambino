@@ -190,12 +190,22 @@ export class ProductoDetallePageComponent implements OnInit {
     this.addingToCart = true;
 
     try {
-      await firstValueFrom(this.carritoService.agregarItem({
-        idProducto: this.producto.idProducto,
-        cantidad: this.cantidad,
-        observacion: this.observacion.trim() || null
-      }).pipe(timeout(10000)));
-      this.toast.success('Producto agregado al carrito.');
+      const itemsParaAgregar = [
+        {
+          idProducto: this.producto.idProducto,
+          cantidad: this.cantidad,
+          observacion: this.observacion.trim() || null
+        },
+        ...this.selectedExtras.map((extra) => ({
+          idProducto: extra.idProducto,
+          cantidad: extra.cantidad,
+          observacion: null
+        }))
+      ];
+
+      await firstValueFrom(this.carritoService.agregarItems({ items: itemsParaAgregar }).pipe(timeout(10000)));
+
+      this.toast.success(this.hasExtrasSelection ? 'Producto y adicionales agregados al carrito.' : 'Producto agregado al carrito.');
     } catch {
       this.toast.error('No se pudo agregar el producto al carrito.');
     } finally {

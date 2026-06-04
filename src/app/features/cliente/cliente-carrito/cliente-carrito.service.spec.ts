@@ -65,4 +65,30 @@ describe('ClienteCarritoService', () => {
       items: []
     });
   });
+
+  it('adds multiple items with a single bulk request', () => {
+    const items = [
+      { idProducto: 15, cantidad: 1, observacion: 'Sin cremas' },
+      { idProducto: 31, cantidad: 2, observacion: null }
+    ];
+
+    service.agregarItems({ items }).subscribe();
+
+    const req = http.expectOne(`${API_ENDPOINTS.cliente.carrito}/items/bulk`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.headers.get('Authorization')).toBe('Basic token-test');
+    expect(req.request.body).toEqual({ items });
+
+    req.flush({
+      idCarrito: 1,
+      estado: 'ABIERTO',
+      subtotal: 50,
+      descuentoTotal: 0,
+      impuestoTotal: 9,
+      costoDelivery: 0,
+      total: 59,
+      totalItems: 3,
+      items: []
+    });
+  });
 });

@@ -18,6 +18,17 @@ describe('ProductoDetallePageComponent', () => {
   let fixture: ComponentFixture<ProductoDetallePageComponent>;
 
   const carritoServiceMock = {
+    agregarItems: vi.fn(() => of({
+      idCarrito: 1,
+      estado: 'ABIERTO',
+      subtotal: 30,
+      descuentoTotal: 0,
+      impuestoTotal: 5.4,
+      costoDelivery: 0,
+      total: 35.4,
+      totalItems: 1,
+      items: []
+    })),
     agregarItem: vi.fn(() => of({
       idCarrito: 1,
       estado: 'ABIERTO',
@@ -71,12 +82,57 @@ describe('ProductoDetallePageComponent', () => {
 
     await component.onAgregarPedidoClick(new Event('click'));
 
-    expect(carritoServiceMock.agregarItem).toHaveBeenCalledWith({
-      idProducto: 15,
-      cantidad: 2,
-      observacion: 'Sin cremas'
+    expect(carritoServiceMock.agregarItems).toHaveBeenCalledWith({
+      items: [{
+        idProducto: 15,
+        cantidad: 2,
+        observacion: 'Sin cremas'
+      }]
     });
+    expect(carritoServiceMock.agregarItem).not.toHaveBeenCalled();
     expect(navigateSpy).not.toHaveBeenCalledWith(['/carrito']);
+  });
+
+  it('adds selected extras as separated cart items', async () => {
+    const component = fixture.componentInstance as unknown as {
+      producto: { idProducto: number };
+      cantidad: number;
+      observacion: string;
+      extras: Array<{ idProducto: number; nombre: string; precio: number; cantidad: number }>;
+      onAgregarPedidoClick(event: Event): Promise<void> | void;
+    };
+
+    component.producto = { idProducto: 15 };
+    component.cantidad = 1;
+    component.observacion = 'Sin ensalada';
+    component.extras = [
+      { idProducto: 31, nombre: 'Papas extra', precio: 5, cantidad: 2 },
+      { idProducto: 32, nombre: 'Ají extra', precio: 1, cantidad: 0 },
+      { idProducto: 33, nombre: 'Ensalada extra', precio: 4, cantidad: 1 }
+    ];
+
+    await component.onAgregarPedidoClick(new Event('click'));
+
+    expect(carritoServiceMock.agregarItems).toHaveBeenCalledWith({
+      items: [
+        {
+          idProducto: 15,
+          cantidad: 1,
+          observacion: 'Sin ensalada'
+        },
+        {
+          idProducto: 31,
+          cantidad: 2,
+          observacion: null
+        },
+        {
+          idProducto: 33,
+          cantidad: 1,
+          observacion: null
+        }
+      ]
+    });
+    expect(carritoServiceMock.agregarItem).not.toHaveBeenCalled();
   });
 
   it('opens the login modal when adding without an active session', async () => {
@@ -91,6 +147,7 @@ describe('ProductoDetallePageComponent', () => {
 
     await component.onAgregarPedidoClick(new Event('click'));
 
+    expect(carritoServiceMock.agregarItems).not.toHaveBeenCalled();
     expect(carritoServiceMock.agregarItem).not.toHaveBeenCalled();
     expect(component.showLoginRequiredModal).toBe(true);
   });

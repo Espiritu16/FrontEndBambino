@@ -34,6 +34,10 @@ export interface CarritoItemAgregarRequest {
   observacion?: string | null;
 }
 
+export interface CarritoItemsAgregarRequest {
+  items: CarritoItemAgregarRequest[];
+}
+
 export interface CarritoItemActualizarRequest {
   cantidad: number;
   observacion?: string | null;
@@ -51,6 +55,10 @@ export class ClienteCarritoService {
 
   agregarItem(request: CarritoItemAgregarRequest): Observable<CarritoResumen> {
     return this.http.post<CarritoResumen>(`${this.apiBase}/items`, request, { headers: this.authHeaders() });
+  }
+
+  agregarItems(request: CarritoItemsAgregarRequest): Observable<CarritoResumen> {
+    return this.http.post<CarritoResumen>(`${this.apiBase}/items/bulk`, request, { headers: this.authHeaders() });
   }
 
   actualizarItem(idCarritoItem: number, request: CarritoItemActualizarRequest): Observable<CarritoResumen> {
