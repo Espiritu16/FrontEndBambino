@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, timeout } from 'rxjs';
 
@@ -68,8 +68,10 @@ type OfertaFieldErrors = Partial<Record<'nombre' | 'valorDescuento' | 'precioEsp
 export class AdminComercialOfertasPageComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly toast = inject(ToastService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly apiBase = API_ENDPOINTS.admin.catalogo;
   private readonly authStorageKey = 'bambino_basic_auth';
+  private loadingInProgress = false;
 
   protected ofertas: OfertaResponse[] = [];
   protected productos: ProductoResponse[] = [];
@@ -95,6 +97,8 @@ export class AdminComercialOfertasPageComponent implements OnInit, OnDestroy {
   }
 
   protected async loadAll(): Promise<void> {
+    if (this.loadingInProgress) return;
+    this.loadingInProgress = true;
     this.loading = true;
     this.error = '';
     try {
@@ -105,6 +109,8 @@ export class AdminComercialOfertasPageComponent implements OnInit, OnDestroy {
       this.toast.error(this.error);
     } finally {
       this.loading = false;
+      this.loadingInProgress = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -334,6 +340,15 @@ export class AdminComercialOfertasPageComponent implements OnInit, OnDestroy {
     if (this.form.fechaInicio && this.form.fechaFin && new Date(this.form.fechaFin) <= new Date(this.form.fechaInicio)) {
       errors.fechaFin = 'La fecha fin debe ser posterior al inicio.';
     }
+    if (this.form.estado === 'ACTIVA') {
+      const now = new Date();
+      if (this.form.fechaInicio && new Date(this.form.fechaInicio) > now) {
+        errors.fechaInicio = 'Una oferta activa debe iniciar ahora o antes.';
+      }
+      if (this.form.fechaFin && new Date(this.form.fechaFin) <= now) {
+        errors.fechaFin = 'Una oferta activa debe tener fecha fin futura.';
+      }
+    }
     if (this.form.idsProductos.length === 0) {
       errors.idsProductos = 'Selecciona al menos un producto.';
     }
@@ -398,7 +413,8 @@ export class AdminComercialOfertasPageComponent implements OnInit, OnDestroy {
     if (lower.includes('producto')) this.fieldErrors.idsProductos = message;
     if (lower.includes('porcentaje') || lower.includes('monto')) this.fieldErrors.valorDescuento = message;
     if (lower.includes('precio especial')) this.fieldErrors.precioEspecial = message;
-    if (lower.includes('fechafin')) this.fieldErrors.fechaFin = message;
+    if (lower.includes('fechainicio') || lower.includes('fecha inicio')) this.fieldErrors.fechaInicio = message;
+    if (lower.includes('fechafin') || lower.includes('fecha fin')) this.fieldErrors.fechaFin = message;
   }
 
   private authHeaders(): HttpHeaders {
