@@ -27,8 +27,13 @@ export const API_ENDPOINTS = {
   },
   admin: {
     catalogo: `${API_BASE_URL}/api/admin/catalogo`,
+    pedidos: `${API_BASE_URL}/api/admin/pedidos`,
+    pagos: `${API_BASE_URL}/api/admin/pagos`,
+    comprobantes: `${API_BASE_URL}/api/admin/comprobantes`,
+    configuracion: `${API_BASE_URL}/api/admin/configuracion`,
     configuracionEmpresas: `${API_BASE_URL}/api/admin/configuracion/empresas`,
     configuracionMedia: `${API_BASE_URL}/api/admin/configuracion/media`,
+    auditoria: `${API_BASE_URL}/api/admin/auditoria`,
     seguridadUsuarios: `${API_BASE_URL}/api/admin/seguridad/usuarios`,
     zonasDelivery: `${API_BASE_URL}/api/admin/configuracion/zonas-delivery`
   }

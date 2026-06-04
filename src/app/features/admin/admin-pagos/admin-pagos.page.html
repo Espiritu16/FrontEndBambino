@@ -1,0 +1,97 @@
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="overline">Operacion</p>
+      <h2>Pagos</h2>
+      <p>Revisa pagos registrados, metodo utilizado, estado y referencia del proveedor.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="excel-button" (click)="exportExcel()" [disabled]="loading || exportingExcel">
+        {{ exportingExcel ? 'Exportando...' : 'Exportar Excel' }}
+      </button>
+      <button type="button" class="ghost-button" (click)="loadPagos()" [disabled]="loading">Actualizar</button>
+    </div>
+  </header>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Pagos filtrados</span>
+      <strong>{{ pagosFiltrados.length }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Monto filtrado</span>
+      <strong>{{ money(totalPagado) }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Metodos usados</span>
+      <strong>{{ metodos.length }}</strong>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="filters">
+      <label>
+        Buscar
+        <input type="search" [(ngModel)]="search" placeholder="Pago, pedido, transaccion..." />
+      </label>
+      <label>
+        Metodo
+        <select [(ngModel)]="metodoFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let metodo of metodos" [value]="metodo">{{ label(metodo) }}</option>
+        </select>
+      </label>
+      <label>
+        Estado
+        <select [(ngModel)]="estadoFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let estado of estados" [value]="estado">{{ label(estado) }}</option>
+        </select>
+      </label>
+      <button type="button" class="clear-button" (click)="clearFilters()">Limpiar</button>
+    </div>
+
+    <div *ngIf="loading" class="state-box state-box--loading">
+      <app-loading-spinner size="lg" label="Cargando pagos"></app-loading-spinner>
+    </div>
+    <div *ngIf="!loading && error" class="state-box error">
+      <span>{{ error }}</span>
+      <button type="button" (click)="loadPagos()">Reintentar</button>
+    </div>
+    <div *ngIf="!loading && !error && pagosFiltrados.length === 0" class="state-box">
+      No hay pagos para los filtros seleccionados.
+    </div>
+
+    <div *ngIf="!loading && !error && pagosFiltrados.length > 0" class="table-wrap table-wrap--scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Pago</th>
+            <th>Pedido</th>
+            <th>Metodo</th>
+            <th>Estado</th>
+            <th>Monto</th>
+            <th>Proveedor</th>
+            <th>Transaccion</th>
+            <th>Creacion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pago of pagosFiltrados; trackBy: trackByPago">
+            <td><strong>#{{ pago.idPago }}</strong></td>
+            <td>#{{ pago.idPedido }}</td>
+            <td><span class="method-pill">{{ label(pago.metodo) }}</span></td>
+            <td><span class="status-badge" [ngClass]="badge(pago.estado)">{{ label(pago.estado) }}</span></td>
+            <td><strong>{{ money(pago.monto) }}</strong></td>
+            <td>{{ pago.proveedor || 'Sin proveedor' }}</td>
+            <td>
+              <span>{{ pago.proveedorTxnId || 'Sin referencia' }}</span>
+              <small *ngIf="pago.idempotencyKey">{{ pago.idempotencyKey }}</small>
+            </td>
+            <td>{{ date(pago.fechaCreacion) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

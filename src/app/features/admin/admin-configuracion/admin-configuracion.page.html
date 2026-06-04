@@ -1,5 +1,235 @@
-<section class="admin-module card">
-  <p class="overline">Módulo Admin</p>
-  <h2>Configuración Operativa</h2>
-  <p>Configura políticas, parámetros de delivery, transiciones y reglas globales del negocio.</p>
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="overline">Operacion</p>
+      <h2>Configuracion Operativa</h2>
+      <p>Administra parametros del negocio, cobertura delivery, empresas, series y transiciones.</p>
+    </div>
+    <button type="button" class="ghost-button" (click)="loadConfiguracion()" [disabled]="loading">Actualizar</button>
+  </header>
+
+  <div *ngIf="error" class="alert error">{{ error }}</div>
+  <div *ngIf="success" class="alert success">{{ success }}</div>
+  <div *ngIf="loading" class="state-box state-box--loading">
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando configuracion"></app-loading-spinner>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <nav class="tabs" aria-label="Secciones de configuracion">
+      <button type="button" [class.active]="activeTab === 'delivery'" (click)="setTab('delivery')">Delivery</button>
+      <button type="button" [class.active]="activeTab === 'global'" (click)="setTab('global')">Global</button>
+      <button type="button" [class.active]="activeTab === 'empresas'" (click)="setTab('empresas')">Empresas</button>
+      <button type="button" [class.active]="activeTab === 'series'" (click)="setTab('series')">Series</button>
+      <button type="button" [class.active]="activeTab === 'transiciones'" (click)="setTab('transiciones')">Transiciones</button>
+    </nav>
+
+    <section *ngIf="activeTab === 'delivery'" class="panel">
+      <div class="section-heading">
+        <div>
+          <h3>Zonas delivery</h3>
+          <p>Edita radio km, tarifa, monto minimo y horario de atencion.</p>
+        </div>
+        <button type="button" class="primary-button" (click)="addZona()">Nueva zona</button>
+      </div>
+
+      <div class="zone-grid zone-grid--scroll">
+        <article class="zone-card" *ngFor="let zona of zonas; let i = index; trackBy: trackByZona">
+          <header>
+            <strong>{{ zona.idZona ? 'Zona #' + zona.idZona : 'Nueva zona' }}</strong>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="zona.activo" />
+              <span>Activa</span>
+            </label>
+          </header>
+
+          <div class="form-grid">
+            <label>
+              Nombre
+              <input [(ngModel)]="zona.nombre" placeholder="EMPRESA_PRINCIPAL_1" />
+            </label>
+            <label>
+              Radio km
+              <input type="number" min="0.1" step="0.1" [(ngModel)]="zona.radioKm" />
+            </label>
+            <label>
+              Tarifa base
+              <input type="number" min="0" step="0.1" [(ngModel)]="zona.tarifaBase" />
+            </label>
+            <label>
+              Monto minimo
+              <input type="number" min="0" step="0.1" [(ngModel)]="zona.montoMinimo" />
+            </label>
+            <label>
+              Tiempo estimado
+              <input type="number" min="1" step="1" [(ngModel)]="zona.tiempoEstimadoMinutos" />
+            </label>
+            <label>
+              Hora inicio
+              <input type="time" [(ngModel)]="zona.horaInicioAtencion" />
+            </label>
+            <label>
+              Hora fin
+              <input type="time" [(ngModel)]="zona.horaFinAtencion" />
+            </label>
+            <label>
+              Latitud centro
+              <input type="number" step="0.000001" [(ngModel)]="zona.latitudCentro" />
+            </label>
+            <label>
+              Longitud centro
+              <input type="number" step="0.000001" [(ngModel)]="zona.longitudCentro" />
+            </label>
+          </div>
+
+          <label class="wide-label">
+            Descripcion de cobertura
+            <textarea rows="3" [(ngModel)]="zona.coberturaDescripcion" placeholder="Delivery dentro del radio configurado"></textarea>
+          </label>
+
+          <label class="wide-label">
+            URL mapa embebido
+            <input [(ngModel)]="zona.mapaEmbedUrl" placeholder="https://www.google.com/maps/embed?..." />
+          </label>
+
+          <p *ngIf="zonaError(zona)" class="field-error">{{ zonaError(zona) }}</p>
+          <footer>
+            <span>{{ money(zona.tarifaBase) }} base · {{ money(zona.montoMinimo) }} minimo · {{ zona.radioKm || 0 }} km</span>
+            <button type="button" class="primary-button" (click)="guardarZona(zona)" [disabled]="isSavingZona(zona)">
+              {{ isSavingZona(zona) ? 'Guardando...' : 'Guardar zona' }}
+            </button>
+          </footer>
+        </article>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab === 'global'" class="panel">
+      <div class="section-heading">
+        <div>
+          <h3>Configuracion global</h3>
+          <p>Parametros generales usados por checkout y calculos del negocio.</p>
+        </div>
+        <button type="button" class="primary-button" (click)="guardarGlobal()" [disabled]="savingGlobal || !global">
+          {{ savingGlobal ? 'Guardando...' : 'Guardar global' }}
+        </button>
+      </div>
+
+      <div *ngIf="global" class="form-grid global-grid">
+        <label>
+          Moneda
+          <input [(ngModel)]="global.moneda" />
+        </label>
+        <label>
+          IGV %
+          <input type="number" min="0" step="0.01" [(ngModel)]="global.igvPorcentaje" />
+        </label>
+        <label>
+          Monto minimo delivery
+          <input type="number" min="0" step="0.1" [(ngModel)]="global.deliveryMontoMinimo" />
+        </label>
+        <label>
+          Tiempo minimo min.
+          <input type="number" min="1" step="1" [(ngModel)]="global.deliveryTiempoMinMinutos" />
+        </label>
+        <label>
+          Tiempo maximo min.
+          <input type="number" min="1" step="1" [(ngModel)]="global.deliveryTiempoMaxMinutos" />
+        </label>
+        <label>
+          Zona horaria
+          <input [(ngModel)]="global.timezone" />
+        </label>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab === 'empresas'" class="panel">
+      <div class="section-heading">
+        <div>
+          <h3>Empresas</h3>
+          <p>Datos fiscales configurados para emision de comprobantes.</p>
+        </div>
+      </div>
+      <div class="table-wrap table-wrap--scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>RUC</th>
+              <th>Razon social</th>
+              <th>Nombre comercial</th>
+              <th>Contacto</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let empresa of empresas; trackBy: trackByEmpresa">
+              <td>{{ empresa.ruc }}</td>
+              <td>{{ empresa.razonSocial }}</td>
+              <td>{{ empresa.nombreComercial || 'Sin nombre comercial' }}</td>
+              <td>{{ empresa.telefono || 'Sin telefono' }} · {{ empresa.correo || 'Sin correo' }}</td>
+              <td><span class="status-badge" [class.active]="empresa.activo">{{ empresa.activo ? 'Activa' : 'Inactiva' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab === 'series'" class="panel">
+      <div class="section-heading">
+        <div>
+          <h3>Series de comprobante</h3>
+          <p>Correlativos actuales para boletas y facturas.</p>
+        </div>
+      </div>
+      <div class="table-wrap table-wrap--scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Tipo</th>
+              <th>Serie</th>
+              <th>Correlativo</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let serie of series; trackBy: trackBySerie">
+              <td>{{ empresaNombre(serie.idEmpresa) }}</td>
+              <td>{{ label(serie.tipoComprobante) }}</td>
+              <td><strong>{{ serie.serie }}</strong></td>
+              <td>{{ serie.correlativoActual }}</td>
+              <td><span class="status-badge" [class.active]="serie.activo">{{ serie.activo ? 'Activa' : 'Inactiva' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab === 'transiciones'" class="panel">
+      <div class="section-heading">
+        <div>
+          <h3>Transiciones de pedido</h3>
+          <p>Reglas configuradas para permitir cambios de estado por tipo de actor.</p>
+        </div>
+      </div>
+      <div class="table-wrap table-wrap--scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Actor</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let transicion of transiciones; trackBy: trackByTransicion">
+              <td>{{ label(transicion.estadoOrigen) }}</td>
+              <td>{{ label(transicion.estadoDestino) }}</td>
+              <td>{{ label(transicion.actorTipo) }}</td>
+              <td><span class="status-badge" [class.active]="transicion.activo">{{ transicion.activo ? 'Activa' : 'Inactiva' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
 </section>
