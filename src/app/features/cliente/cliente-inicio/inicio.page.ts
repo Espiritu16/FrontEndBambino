@@ -28,6 +28,9 @@ type ProductoResponse = {
   estado: string;
   imagenUrl: string | null;
   ordenVisual: number;
+  precioFinal?: number | null;
+  descuentoAplicado?: number | null;
+  ofertaNombre?: string | null;
 };
 
 @Component({
@@ -126,6 +129,14 @@ export class InicioPageComponent implements OnInit {
     this.inicioCache.clearHeroImageUrl();
     this.cacheHeroImageUrl('');
     this.cdr.detectChanges();
+  }
+
+  protected precioVigente(producto: ProductoResponse): number {
+    return Number(producto.precioFinal ?? producto.precioBase ?? 0);
+  }
+
+  protected tieneOferta(producto: ProductoResponse): boolean {
+    return Number(producto.descuentoAplicado ?? 0) > 0 && this.precioVigente(producto) < Number(producto.precioBase ?? 0);
   }
 
   protected async openCartaPdf(event?: Event): Promise<void> {
