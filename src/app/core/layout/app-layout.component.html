@@ -57,7 +57,9 @@
         <button class="btn topbar-btn topbar-btn--ghost" (click)="openLoginModal()">Ingresar</button>
       } @else {
         <button class="btn topbar-btn topbar-btn--ghost" routerLink="/perfil">Mi perfil</button>
-        <button class="btn topbar-btn topbar-btn--ghost" type="button" (click)="goToMisPedidos()">Mis pedidos</button>
+        @if (canShowMisPedidos()) {
+          <button class="btn topbar-btn topbar-btn--ghost" type="button" (click)="goToMisPedidos()">Mis pedidos</button>
+        }
         @if (canShowMyOrder()) {
           <button class="btn topbar-btn topbar-btn--ghost" (click)="handleMyOrderClick()">Carrito</button>
         }
@@ -419,7 +421,7 @@
         <a routerLink="/promociones" routerLinkActive="is-active" (click)="closeMobileMenu()">Promociones</a>
         <a href="#" [attr.aria-busy]="cartaLoading" (click)="closeMobileMenu(); openCartaPdf($event)">{{ cartaLoading ? 'Cargando carta...' : 'Carta' }}</a>
         <a href="#" (click)="goToNosotros($event, true)">Nosotros</a>
-        @if (isAuthenticated) {
+        @if (isAuthenticated && canShowMisPedidos()) {
           <a routerLink="/mis-pedidos" routerLinkActive="is-active" (click)="closeMobileMenu()">Mis pedidos</a>
         }
       </nav>

@@ -73,6 +73,7 @@
             <th>Receptor</th>
             <th>Total</th>
             <th>Emision</th>
+            <th>Correo</th>
             <th>Detalle</th>
             <th>PDF</th>
           </tr>
@@ -93,6 +94,26 @@
             <td><strong>{{ money(comprobante.total) }}</strong></td>
             <td>{{ date(comprobante.fechaEmision) }}</td>
             <td>
+              <div class="mail-cell">
+                <div class="mail-cell__state">
+                  <span class="mail-badge" [ngClass]="correoBadge(comprobante)">{{ correoEstado(comprobante) }}</span>
+                  <button
+                    *ngIf="!comprobante.correoEnviado"
+                    type="button"
+                    class="send-mail-button"
+                    (click)="sendEmail(comprobante)"
+                    [disabled]="isEmailSending(comprobante)"
+                    [attr.aria-label]="'Enviar comprobante ' + comprobante.numeroCompleto + ' por correo'">
+                    <span class="material-symbols-outlined">outgoing_mail</span>
+                    {{ isEmailSending(comprobante) ? 'Enviando...' : 'Enviar' }}
+                  </button>
+                </div>
+                <small *ngIf="comprobante.correoDestino">{{ comprobante.correoDestino }}</small>
+                <small *ngIf="comprobante.fechaCorreoEnvio">{{ date(comprobante.fechaCorreoEnvio) }}</small>
+                <small *ngIf="comprobante.correoError" class="mail-error">{{ comprobante.correoError }}</small>
+              </div>
+            </td>
+            <td>
               <details *ngIf="comprobante.detalle.length">
                 <summary>{{ comprobante.detalle.length }} items</summary>
                 <ul>
@@ -104,14 +125,18 @@
               <span *ngIf="!comprobante.detalle.length">Sin detalle</span>
             </td>
             <td>
-              <button
-                type="button"
-                class="pdf-button"
-                (click)="openPdf(comprobante)"
-                [disabled]="isPdfLoading(comprobante)"
-                [attr.aria-label]="'Abrir PDF de comprobante ' + comprobante.numeroCompleto">
-                {{ isPdfLoading(comprobante) ? 'Generando...' : 'PDF' }}
-              </button>
+              <div class="pdf-cell">
+                <span class="pdf-badge" [ngClass]="pdfBadge(comprobante)">{{ pdfEstado(comprobante) }}</span>
+                <button
+                  type="button"
+                  class="pdf-button"
+                  (click)="openPdf(comprobante)"
+                  [disabled]="isPdfLoading(comprobante)"
+                  [attr.aria-label]="'Abrir PDF de comprobante ' + comprobante.numeroCompleto">
+                  {{ isPdfLoading(comprobante) ? 'Generando...' : (pdfGenerado(comprobante) ? 'Abrir PDF' : 'Generar PDF') }}
+                </button>
+                <small *ngIf="comprobante.fechaPdfGenerado">{{ date(comprobante.fechaPdfGenerado) }}</small>
+              </div>
             </td>
           </tr>
         </tbody>

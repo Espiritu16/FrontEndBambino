@@ -80,9 +80,11 @@ describe('AppLayoutComponent', () => {
     const component = fixture.componentInstance as unknown as {
       isAuthenticated: boolean;
       displayName: string;
+      currentRole: string;
     };
     component.isAuthenticated = true;
     component.displayName = 'Fabrizio';
+    component.currentRole = 'CLIENTE';
 
     fixture.detectChanges();
 
@@ -90,6 +92,22 @@ describe('AppLayoutComponent', () => {
       .map((button) => button.textContent?.trim())
       .filter(Boolean);
     expect(buttons).toContain('Mis pedidos');
+  });
+
+  it('hides my orders action for administrator users', () => {
+    const component = fixture.componentInstance as unknown as {
+      isAuthenticated: boolean;
+      displayName: string;
+      currentRole: string;
+    };
+    component.isAuthenticated = true;
+    component.displayName = 'Admin';
+    component.currentRole = 'ADMINISTRADOR';
+
+    fixture.detectChanges();
+
+    const hostText = fixture.nativeElement.textContent as string;
+    expect(hostText).not.toContain('Mis pedidos');
   });
 
   it('shows live password requirement states while registering', async () => {

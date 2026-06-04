@@ -29,6 +29,7 @@ export class AdminComprobantesPageComponent implements OnInit {
   protected tipoFiltro = '';
   protected estadoFiltro = '';
   protected pdfLoadingIds = new Set<number>();
+  protected emailSendingIds = new Set<number>();
   protected exportingExcel = false;
 
   ngOnInit(): void {
@@ -64,6 +65,10 @@ export class AdminComprobantesPageComponent implements OnInit {
           comprobante.docReceptorTipo,
           comprobante.docReceptorNumero,
           comprobante.razonSocialReceptor,
+          comprobante.correoEnviado ? 'correo enviado' : 'correo no enviado',
+          comprobante.correoDestino,
+          comprobante.correoError,
+          this.pdfGenerado(comprobante) ? 'pdf generado' : 'pdf pendiente',
           comprobante.total
         ].some((value) => normalizeText(value).includes(query));
       });
@@ -108,6 +113,12 @@ export class AdminComprobantesPageComponent implements OnInit {
       const pdf = await firstValueFrom(this.adminService.obtenerComprobantePdf(comprobante.idComprobante).pipe(timeout(15000)));
       const pdfUrl = URL.createObjectURL(pdf);
       popup.location.href = pdfUrl;
+      this.comprobantes = this.comprobantes.map((item) => {
+        if (item.idComprobante !== comprobante.idComprobante || this.pdfGenerado(item)) {
+          return item;
+        }
+        return { ...item, fechaPdfGenerado: new Date().toISOString() };
+      });
       setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
     } catch (error: any) {
       popup.close();
@@ -120,6 +131,27 @@ export class AdminComprobantesPageComponent implements OnInit {
 
   protected isPdfLoading(comprobante: AdminComprobante): boolean {
     return this.pdfLoadingIds.has(comprobante.idComprobante);
+  }
+
+  protected async sendEmail(comprobante: AdminComprobante): Promise<void> {
+    this.error = '';
+    this.emailSendingIds.add(comprobante.idComprobante);
+    try {
+      const actualizado = await firstValueFrom(this.adminService.enviarComprobanteCorreo(comprobante.idComprobante).pipe(timeout(20000)));
+      this.comprobantes = this.comprobantes.map((item) => item.idComprobante === actualizado.idComprobante ? actualizado : item);
+      if (!actualizado.correoEnviado) {
+        this.error = actualizado.correoError || 'No se pudo enviar el comprobante por correo.';
+      }
+    } catch (error: any) {
+      this.error = error?.error?.mensaje || error?.message || 'No se pudo enviar el comprobante por correo.';
+    } finally {
+      this.emailSendingIds.delete(comprobante.idComprobante);
+      scheduleUiRefresh(this.ngZone, this.cdr);
+    }
+  }
+
+  protected isEmailSending(comprobante: AdminComprobante): boolean {
+    return this.emailSendingIds.has(comprobante.idComprobante);
   }
 
   protected async exportExcel(): Promise<void> {
@@ -154,6 +186,29 @@ export class AdminComprobantesPageComponent implements OnInit {
 
   protected badge(value: string | null | undefined): string {
     return badgeClass(value);
+  }
+
+  protected correoEstado(comprobante: AdminComprobante): string {
+    return comprobante.correoEnviado ? 'Enviado' : 'No enviado';
+  }
+
+  protected correoBadge(comprobante: AdminComprobante): string {
+    if (comprobante.correoEnviado) {
+      return 'mail-badge--sent';
+    }
+    return comprobante.correoError ? 'mail-badge--error' : 'mail-badge--pending';
+  }
+
+  protected pdfGenerado(comprobante: AdminComprobante): boolean {
+    return Boolean(comprobante.fechaPdfGenerado || comprobante.pdfPath || comprobante.pdfToken);
+  }
+
+  protected pdfEstado(comprobante: AdminComprobante): string {
+    return this.pdfGenerado(comprobante) ? 'PDF generado' : 'PDF pendiente';
+  }
+
+  protected pdfBadge(comprobante: AdminComprobante): string {
+    return this.pdfGenerado(comprobante) ? 'pdf-badge--ready' : 'pdf-badge--pending';
   }
 
   private uniqueValues(values: Array<string | null>): string[] {
