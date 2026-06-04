@@ -176,4 +176,30 @@ describe('ClienteCheckoutService', () => {
     expect(crearReq.request.body).toEqual({ docTipo: 'RUC', docNumero: '20123456789' });
     crearReq.flush({ idDocumento: 4, docTipo: 'RUC', docNumero: '20123456789', esPrincipal: false, activo: true });
   });
+
+  it('registers a delivery address from checkout', () => {
+    const payload = {
+      direccionLinea1: 'Av. Nueva 456',
+      referencia: 'Piso 2',
+      distrito: 'Chorrillos',
+      ciudad: 'Lima',
+      latitud: null,
+      longitud: null,
+      googlePlaceId: null,
+      googlePlusCode: null
+    };
+
+    service.registrarDireccion(payload).subscribe();
+
+    const req = http.expectOne(API_ENDPOINTS.cliente.direcciones);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.headers.get('Authorization')).toBe('Basic token-test');
+    expect(req.request.body).toEqual(payload);
+    req.flush({
+      idDireccion: 12,
+      ...payload,
+      esPrincipal: true,
+      activo: true
+    });
+  });
 });

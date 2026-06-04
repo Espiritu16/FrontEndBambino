@@ -346,6 +346,21 @@
   letter-spacing: 0.02em;
 }
 
+.product-price {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.product-price span {
+  color: #8b8179;
+  font-weight: 800;
+  text-decoration: line-through;
+}
+
+.product-price strong {
+  color: #8f0a0d;
+}
+
 @media (max-width: 1180px) {
   .hero {
     height: auto;

@@ -2,28 +2,272 @@
   display: block;
 }
 
-.admin-module {
-  padding: 1.1rem;
+.admin-page {
+  display: grid;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.page-header,
+.panel,
+.summary-card {
+  background: #fff;
+  border: 1px solid rgba(145, 22, 22, 0.11);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(37, 23, 17, 0.06);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
 }
 
 .overline {
   margin: 0;
+  color: #9f0d0d;
   font-size: 0.72rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #8d0a0a;
-  font-weight: 700;
 }
 
 h2 {
-  margin: 0.25rem 0 0.45rem;
-  font-family: 'Barlow', sans-serif;
-  letter-spacing: 0.04em;
-  font-size: 2.2rem;
+  margin: 0.2rem 0 0.35rem;
   color: #8d0a0a;
+  font-family: 'Barlow', sans-serif;
+  font-size: 2rem;
 }
 
 p {
   margin: 0;
+  color: #667085;
+}
+
+.ghost-button,
+.primary-button,
+.excel-button,
+.clear-button,
+.state-box button {
+  min-height: 2.5rem;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ghost-button,
+.clear-button,
+.excel-button {
+  border: 1px solid rgba(141, 10, 10, 0.24);
+  background: #fff;
+  color: #8d0a0a;
+  padding: 0 1rem;
+}
+
+.excel-button {
+  border-color: rgba(2, 122, 72, 0.28);
+  background: #ecfdf3;
+  color: #027a48;
+}
+
+.excel-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.primary-button {
+  border: 0;
+  background: #a40d0d;
+  color: #fff;
+  padding: 0 1rem;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.summary-card,
+.panel {
+  padding: 1rem;
+  min-height: 0;
+}
+
+.summary-card span {
+  color: #667085;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.summary-card strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #1f2937;
+  font-size: 1.5rem;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr)) auto auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  color: #5b6472;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+input,
+select {
+  min-height: 2.65rem;
+  border: 1px solid #d7dde8;
+  border-radius: 8px;
+  padding: 0 0.8rem;
+  color: #1f2937;
+  font: inherit;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table-wrap--scroll {
+  max-height: calc(100dvh - 380px);
+  min-height: 360px;
+  overflow-y: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.8rem 0.7rem;
+  border-bottom: 1px solid #eef1f6;
+  text-align: left;
+  color: #344054;
+  vertical-align: top;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #fff;
+  color: #667085;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+td small {
+  display: block;
+  margin-top: 0.15rem;
+  color: #98a2b3;
+}
+
+.status-badge {
+  display: inline-flex;
+  min-height: 1.65rem;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  background: #f2f4f7;
   color: #475467;
+  font-size: 0.78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.badge-admin {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.badge-cliente {
+  background: #eef4ff;
+  color: #3538cd;
+}
+
+.badge-cocina {
+  background: #fff7e6;
+  color: #b54708;
+}
+
+details summary {
+  cursor: pointer;
+  color: #8d0a0a;
+  font-weight: 800;
+}
+
+pre {
+  max-width: 420px;
+  max-height: 220px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #101828;
+  color: #ecfdf3;
+  padding: 0.75rem;
+  white-space: pre-wrap;
+}
+
+.state-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 8rem;
+  border: 1px dashed #d7dde8;
+  border-radius: 8px;
+  color: #667085;
+  text-align: center;
+}
+
+.state-box--loading {
+  min-height: 18rem;
+}
+
+.state-box.error {
+  border-color: #f1b4b4;
+  color: #b42318;
+}
+
+@media (max-width: 1100px) {
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .page-header {
+    flex-direction: column;
+  }
+
+  .summary-grid,
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrap--scroll {
+    max-height: none;
+    min-height: 0;
+  }
 }

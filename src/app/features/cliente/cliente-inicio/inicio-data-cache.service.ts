@@ -12,6 +12,9 @@ type ProductoResponse = {
   estado: string;
   imagenUrl: string | null;
   ordenVisual: number;
+  precioFinal?: number | null;
+  descuentoAplicado?: number | null;
+  ofertaNombre?: string | null;
 };
 
 type InicioCacheState = {

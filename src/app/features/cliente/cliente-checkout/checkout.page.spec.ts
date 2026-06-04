@@ -79,6 +79,20 @@ describe('CheckoutPageComponent', () => {
       esPrincipal: false,
       activo: true
     })),
+    registrarDireccion: vi.fn((request: {
+      direccionLinea1: string;
+      referencia: string | null;
+      distrito: string | null;
+      ciudad: string;
+    }) => of({
+      idDireccion: 12,
+      direccionLinea1: request.direccionLinea1,
+      referencia: request.referencia,
+      distrito: request.distrito,
+      ciudad: request.ciudad,
+      esPrincipal: true,
+      activo: true
+    })),
     validarCheckout: vi.fn(() => of(validacion)),
     confirmarCheckout: vi.fn(() => of(validacion)),
     crearPedido: vi.fn(() => of({ idPedido: 99, codigoPedido: 'PED-TEST', total: 64 }))
@@ -126,6 +140,63 @@ describe('CheckoutPageComponent', () => {
     expect(checkoutServiceMock.crearPedido).not.toHaveBeenCalled();
   });
 
+  it('registers and selects a delivery address without leaving checkout', async () => {
+    checkoutServiceMock.obtenerDirecciones.mockReturnValueOnce(of<DireccionCliente[]>([]));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance as unknown as {
+      form: { modalidad: 'RECOJO' | 'DELIVERY'; idDireccion: number | null };
+      addressForm: {
+        direccionLinea1: string;
+        referencia: string;
+        distrito: string;
+        ciudad: string;
+        latitud: string;
+        longitud: string;
+        googlePlaceId: string;
+        googlePlusCode: string;
+      };
+      onCheckoutOptionChange(): Promise<void>;
+      registrarDireccionCheckout(): Promise<void>;
+    };
+    component.form.modalidad = 'DELIVERY';
+    await component.onCheckoutOptionChange();
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).not.toContain('Ciudad');
+    expect(text).not.toContain('Latitud');
+    expect(text).not.toContain('Longitud');
+    expect(text).not.toContain('Google Place ID');
+    expect(text).not.toContain('Google Plus Code');
+
+    component.addressForm = {
+      direccionLinea1: 'Av. Nueva 456',
+      referencia: 'Piso 2',
+      distrito: 'Chorrillos',
+      ciudad: 'Lima',
+      latitud: '-12.1700000',
+      longitud: '-77.0100000',
+      googlePlaceId: 'COORD:-12.1700000,-77.0100000',
+      googlePlusCode: ''
+    };
+
+    await component.registrarDireccionCheckout();
+
+    expect(checkoutServiceMock.registrarDireccion).toHaveBeenCalledWith({
+      direccionLinea1: 'Av. Nueva 456',
+      referencia: 'Piso 2',
+      distrito: 'Chorrillos',
+      ciudad: 'Lima',
+      latitud: -12.17,
+      longitud: -77.01,
+      googlePlaceId: 'COORD:-12.1700000,-77.0100000',
+      googlePlusCode: null
+    });
+    expect(component.form.idDireccion).toBe(12);
+  });
+
   it('uses the client profile DNI for boleta by default', async () => {
     fixture.detectChanges();
     await fixture.whenStable();
@@ -166,6 +237,36 @@ describe('CheckoutPageComponent', () => {
 
     expect(checkoutServiceMock.registrarDocumento).toHaveBeenCalledWith({ docTipo: 'RUC', docNumero: '20123456789' });
     expect(component.form.docNumero).toBe('20123456789');
+  });
+
+  it('does not show fiscal text fields when invoice only requires RUC', async () => {
+    checkoutServiceMock.obtenerDocumentos.mockReturnValueOnce(of<DocumentoCliente[]>([
+      { idDocumento: 4, docTipo: 'RUC', docNumero: '20123456789', esPrincipal: false, activo: true }
+    ]));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const component = fixture.componentInstance as unknown as {
+      form: { tipoComprobante: 'FACTURA'; docNumero: string };
+      onCheckoutOptionChange(): Promise<void>;
+      validarPedido(): Promise<void>;
+    };
+    component.form.tipoComprobante = 'FACTURA';
+    await component.onCheckoutOptionChange();
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).not.toContain('Razón social');
+    expect(text).not.toContain('Dirección fiscal');
+
+    await component.validarPedido();
+
+    expect(checkoutServiceMock.validarCheckout).toHaveBeenCalledWith(expect.objectContaining({
+      tipoComprobante: 'FACTURA',
+      docNumero: '20123456789',
+      razonSocial: null,
+      direccionFiscal: null
+    }));
   });
 
   it('does not create the order until checkout has been validated', async () => {

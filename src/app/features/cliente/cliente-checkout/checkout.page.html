@@ -58,8 +58,89 @@
 
               @if (direcciones.length === 0) {
                 <section class="checkout-address-empty">
-                  <p>No tienes direcciones activas para delivery.</p>
-                  <a class="checkout-action checkout-action--primary" routerLink="/direcciones">Agregar dirección</a>
+                  <div class="checkout-address-empty__intro">
+                    <span class="material-symbols-outlined">add_location_alt</span>
+                    <div>
+                      <strong>Agrega una dirección para delivery</strong>
+                      <p>La guardaremos en tu perfil y quedará seleccionada para este pedido.</p>
+                    </div>
+                  </div>
+
+                  @if (addressError) {
+                    <p class="checkout-address-error">{{ addressError }}</p>
+                  }
+
+                  <div class="checkout-address-form">
+                    <label [class.is-error]="hasAddressFieldError('direccionLinea1')">
+                      <span>Dirección</span>
+                      <input
+                        type="text"
+                        maxlength="220"
+                        [(ngModel)]="addressForm.direccionLinea1"
+                        (ngModelChange)="onAddressFormChange()"
+                        placeholder="Av. / Jr. / Calle + número"
+                      />
+                      @if (addressErrors.direccionLinea1) {
+                        <small>{{ addressErrors.direccionLinea1 }}</small>
+                      }
+                    </label>
+
+                    <label [class.is-error]="hasAddressFieldError('distrito')">
+                      <span>Distrito</span>
+                      <input
+                        type="text"
+                        maxlength="120"
+                        [(ngModel)]="addressForm.distrito"
+                        (ngModelChange)="onAddressFormChange()"
+                        placeholder="Chorrillos"
+                      />
+                      @if (addressErrors.distrito) {
+                        <small>{{ addressErrors.distrito }}</small>
+                      }
+                    </label>
+
+                    <label class="checkout-address-form__full" [class.is-error]="hasAddressFieldError('referencia')">
+                      <span>Referencia</span>
+                      <input
+                        type="text"
+                        maxlength="220"
+                        [(ngModel)]="addressForm.referencia"
+                        (ngModelChange)="onAddressFormChange()"
+                        placeholder="Piso, interior, indicaciones para llegar"
+                      />
+                      @if (addressErrors.referencia) {
+                        <small>{{ addressErrors.referencia }}</small>
+                      }
+                    </label>
+
+                    @if (addressErrors.latitud || addressErrors.longitud) {
+                      <p class="checkout-address-form__full checkout-address-inline-error">Selecciona el punto exacto en el mapa.</p>
+                    }
+                  </div>
+
+                  <section class="checkout-address-map-box">
+                    <div class="checkout-address-map-box__head">
+                      <h3>Punto exacto de entrega</h3>
+                      <button class="checkout-action checkout-action--ghost checkout-action--compact" type="button" (click)="useCurrentLocation()" [disabled]="locatingCurrentPosition">
+                        {{ locatingCurrentPosition ? 'Ubicando...' : 'Usar mi ubicación actual' }}
+                      </button>
+                    </div>
+                    <p>Haz click en el mapa o muévelo con el dedo; se tomará el punto del centro para autocompletar la dirección.</p>
+                    <div class="checkout-address-map" [id]="mapElementId"></div>
+                    @if (geocodingMessage) {
+                      <p class="checkout-address-map-box__msg">{{ geocodingMessage }}</p>
+                    }
+                    @if (geocodingError) {
+                      <p class="checkout-address-map-box__error">{{ geocodingError }}</p>
+                    }
+                    @if (coverageError) {
+                      <p class="checkout-address-map-box__error">{{ coverageError }}</p>
+                    }
+                  </section>
+
+                  <button class="checkout-action checkout-action--primary" type="button" (click)="registrarDireccionCheckout()" [disabled]="!canSaveAddress()">
+                    {{ savingAddress ? 'Guardando dirección...' : 'Guardar dirección y continuar' }}
+                  </button>
                 </section>
               } @else {
                 <div class="address-options">
@@ -150,19 +231,6 @@
                 }
               }
             </div>
-
-            @if (form.tipoComprobante === 'FACTURA') {
-              <div class="checkout-form">
-                <label>
-                  <span>Razón social</span>
-                  <input type="text" maxlength="180" [(ngModel)]="form.razonSocial" (ngModelChange)="onCheckoutDataChange()" placeholder="Razón social" />
-                </label>
-                <label class="checkout-form__full">
-                  <span>Dirección fiscal</span>
-                  <input type="text" maxlength="220" [(ngModel)]="form.direccionFiscal" (ngModelChange)="onCheckoutDataChange()" placeholder="Dirección fiscal" />
-                </label>
-              </div>
-            }
           </section>
         </main>
 

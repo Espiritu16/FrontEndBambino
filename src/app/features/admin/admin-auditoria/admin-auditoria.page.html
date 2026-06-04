@@ -1,5 +1,113 @@
-<section class="admin-module card">
-  <p class="overline">Módulo Admin</p>
-  <h2>Auditoría</h2>
-  <p>Consulta eventos críticos por entidad, acción y tipo de actor para trazabilidad completa.</p>
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="overline">Trazabilidad</p>
+      <h2>Auditoria</h2>
+      <p>Consulta eventos criticos por entidad, accion, actor y metadata registrada por el backend.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="excel-button" (click)="exportExcel()" [disabled]="loading || exportingExcel">
+        {{ exportingExcel ? 'Exportando...' : 'Exportar Excel' }}
+      </button>
+      <button type="button" class="ghost-button" (click)="loadEventos()" [disabled]="loading">Actualizar</button>
+    </div>
+  </header>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Eventos cargados</span>
+      <strong>{{ eventos.length }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Eventos filtrados</span>
+      <strong>{{ eventosFiltrados.length }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Entidades</span>
+      <strong>{{ entidades.length }}</strong>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="filters">
+      <label>
+        Entidad
+        <input list="entidades-auditoria" [(ngModel)]="entidadFiltro" placeholder="PRODUCTO, PAGO..." />
+        <datalist id="entidades-auditoria">
+          <option *ngFor="let entidad of entidades" [value]="entidad"></option>
+        </datalist>
+      </label>
+      <label>
+        Accion
+        <input list="acciones-auditoria" [(ngModel)]="accionFiltro" placeholder="ACTUALIZAR_PRODUCTO" />
+        <datalist id="acciones-auditoria">
+          <option *ngFor="let accion of acciones" [value]="accion"></option>
+        </datalist>
+      </label>
+      <label>
+        Actor
+        <select [(ngModel)]="actorTipoFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let actor of actorTipos" [value]="actor">{{ label(actor) }}</option>
+        </select>
+      </label>
+      <label>
+        Buscar local
+        <input type="search" [(ngModel)]="search" placeholder="Entidad, id, metadata..." />
+      </label>
+      <button type="button" class="primary-button" (click)="aplicarFiltrosBackend()">Aplicar</button>
+      <button type="button" class="clear-button" (click)="clearFilters()">Limpiar</button>
+    </div>
+
+    <div *ngIf="loading" class="state-box state-box--loading">
+      <app-loading-spinner size="lg" label="Cargando auditoria"></app-loading-spinner>
+    </div>
+    <div *ngIf="!loading && error" class="state-box error">
+      <span>{{ error }}</span>
+      <button type="button" (click)="loadEventos()">Reintentar</button>
+    </div>
+    <div *ngIf="!loading && !error && eventosFiltrados.length === 0" class="state-box">
+      No hay eventos para los filtros seleccionados.
+    </div>
+
+    <div *ngIf="!loading && !error && eventosFiltrados.length > 0" class="table-wrap table-wrap--scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Entidad</th>
+            <th>Accion</th>
+            <th>Actor</th>
+            <th>Canal</th>
+            <th>Metadata</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let evento of eventosFiltrados; trackBy: trackByEvento">
+            <td>
+              {{ date(evento.fechaCreacion) }}
+              <small>#{{ evento.idEvento }}</small>
+            </td>
+            <td>
+              <strong>{{ evento.entidad }}</strong>
+              <small>ID {{ evento.entidadId }}</small>
+            </td>
+            <td>{{ label(evento.accion) }}</td>
+            <td>
+              <span class="status-badge" [ngClass]="badge(evento.actorTipo)">{{ label(evento.actorTipo) }}</span>
+              <small *ngIf="evento.idActor">Usuario #{{ evento.idActor }}</small>
+            </td>
+            <td>{{ label(evento.canal) }}</td>
+            <td>
+              <details *ngIf="evento.metadataJson">
+                <summary>Ver detalle</summary>
+                <pre>{{ prettyJson(evento.metadataJson) }}</pre>
+              </details>
+              <span *ngIf="!evento.metadataJson">Sin metadata</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </section>

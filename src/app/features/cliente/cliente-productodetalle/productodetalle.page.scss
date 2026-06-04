@@ -125,6 +125,30 @@
   line-height: 1;
 }
 
+.detail-price {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 14px;
+}
+
+.detail-price span {
+  color: #8b8179;
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-decoration: line-through;
+}
+
+.detail-price em {
+  color: #97040b;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.detail-price .big-price {
+  color: #97040b;
+  margin-bottom: 0;
+}
+
 .detail-panel p {
   color: #5f5c65;
   font-size: 1.05rem;

@@ -25,6 +25,9 @@ interface ProductoResponse {
   estado: string;
   imagenUrl: string | null;
   ordenVisual: number;
+  precioFinal?: number | null;
+  descuentoAplicado?: number | null;
+  ofertaNombre?: string | null;
 }
 
 interface Extra {
@@ -158,8 +161,16 @@ export class ProductoDetallePageComponent implements OnInit {
   }
 
   protected get totalEstimado(): number {
-    const baseTotal = (this.producto?.precioBase ?? 0) * this.cantidad;
+    const baseTotal = this.precioVigente * this.cantidad;
     return baseTotal + this.extrasSubtotal;
+  }
+
+  protected get precioVigente(): number {
+    return Number(this.producto?.precioFinal ?? this.producto?.precioBase ?? 0);
+  }
+
+  protected get productoTieneOferta(): boolean {
+    return !!this.producto && Number(this.producto.descuentoAplicado ?? 0) > 0 && this.precioVigente < Number(this.producto.precioBase ?? 0);
   }
 
   protected resolveCardImageUrl(rawUrl: string | null): string {
@@ -241,7 +252,7 @@ export class ProductoDetallePageComponent implements OnInit {
         .map((p) => ({
           idProducto: p.idProducto,
           nombre: p.nombre,
-          precio: p.precioBase ?? 0,
+          precio: p.precioFinal ?? p.precioBase ?? 0,
           cantidad: 0
         }))
         .sort((a, b) => (a.precio - b.precio) || a.nombre.localeCompare(b.nombre));

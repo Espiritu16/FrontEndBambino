@@ -315,22 +315,86 @@
           @if (registerFieldErrors.telefono) { <small class="login-modal__field-error">{{ registerFieldErrors.telefono }}</small> }
 
           <label>Contraseña</label>
-          <div class="login-modal__field">
-            <span class="material-symbols-outlined">lock</span>
-            <input [type]="showRegisterPassword ? 'text' : 'password'" name="register_password" [(ngModel)]="registerPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            <button type="button" (click)="showRegisterPassword = !showRegisterPassword">
-              <span class="material-symbols-outlined">{{ showRegisterPassword ? 'visibility' : 'visibility_off' }}</span>
-            </button>
+          <div style="position: relative; width: 100%;">
+            <div class="login-modal__field" style="width: 100%;" [class.login-modal__field--error]="registerPassword && !isRegisterPasswordValid()">
+              <span class="material-symbols-outlined">lock</span>
+              <input
+                [type]="showRegisterPassword ? 'text' : 'password'"
+                name="register_password"
+                [(ngModel)]="registerPassword"
+                placeholder="Mínimo 8 caracteres"
+                autocomplete="new-password"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                (focus)="openRegisterPasswordRequirements()"
+                (blur)="closeRegisterPasswordRequirements()"
+              />
+              <button type="button" (click)="showRegisterPassword = !showRegisterPassword">
+                <span class="material-symbols-outlined">{{ showRegisterPassword ? 'visibility' : 'visibility_off' }}</span>
+              </button>
+            </div>
+            @if (showRegisterPasswordRequirements) {
+              <div class="password-requirements" aria-live="polite" style="position: absolute; right: -0.9rem; bottom: calc(100% + 0.35rem); width: min(320px, calc(100vw - 2rem)); z-index: 30; border: 1px solid #d5d9e0; border-radius: 10px; background: #fff; box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16); padding: 0.65rem 0.75rem; color: #5f6b7a; font-size: 0.79rem; font-weight: 700;">
+                <span class="password-requirements__title">La contraseña debe cumplir:</span>
+                <ul style="list-style: none; margin: 0.35rem 0 0; padding: 0;">
+                  @for (requirement of getRegisterPasswordRequirementsWithMatch(); track requirement.label) {
+                    <li
+                      class="password-requirements__item"
+                      [class.password-requirements__item--valid]="requirement.valid"
+                      [class.password-requirements__item--invalid]="!requirement.valid"
+                      [style.color]="requirement.valid ? '#16864a' : '#d63e48'"
+                      style="display: flex; align-items: center; gap: 0.35rem; margin-top: 0.16rem;"
+                    >
+                      <span class="material-symbols-outlined">{{ requirement.valid ? 'check_circle' : 'cancel' }}</span>
+                      <span>{{ requirement.label }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
           </div>
           @if (registerFieldErrors.password) { <small class="login-modal__field-error">{{ registerFieldErrors.password }}</small> }
 
           <label>Confirmar Contraseña</label>
-          <div class="login-modal__field">
-            <span class="material-symbols-outlined">lock</span>
-            <input [type]="showRegisterConfirmPassword ? 'text' : 'password'" name="register_confirm_password" [(ngModel)]="registerConfirmPassword" placeholder="Repite la contraseña" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" />
-            <button type="button" (click)="showRegisterConfirmPassword = !showRegisterConfirmPassword">
-              <span class="material-symbols-outlined">{{ showRegisterConfirmPassword ? 'visibility' : 'visibility_off' }}</span>
-            </button>
+          <div style="position: relative; width: 100%;">
+            <div class="login-modal__field" style="width: 100%;" [class.login-modal__field--error]="registerConfirmPassword && !doRegisterPasswordsMatch()">
+              <span class="material-symbols-outlined">lock</span>
+              <input
+                [type]="showRegisterConfirmPassword ? 'text' : 'password'"
+                name="register_confirm_password"
+                [(ngModel)]="registerConfirmPassword"
+                placeholder="Repite la contraseña"
+                autocomplete="new-password"
+                autocorrect="off"
+                autocapitalize="off"
+                spellcheck="false"
+                (focus)="openRegisterConfirmPasswordRequirements()"
+                (blur)="closeRegisterConfirmPasswordRequirements()"
+              />
+              <button type="button" (click)="showRegisterConfirmPassword = !showRegisterConfirmPassword">
+                <span class="material-symbols-outlined">{{ showRegisterConfirmPassword ? 'visibility' : 'visibility_off' }}</span>
+              </button>
+            </div>
+            @if (showRegisterConfirmPasswordRequirements) {
+              <div class="password-requirements" aria-live="polite" style="position: absolute; right: -0.9rem; bottom: calc(100% + 0.35rem); width: min(320px, calc(100vw - 2rem)); z-index: 30; border: 1px solid #d5d9e0; border-radius: 10px; background: #fff; box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16); padding: 0.65rem 0.75rem; color: #5f6b7a; font-size: 0.79rem; font-weight: 700;">
+                <span class="password-requirements__title">La contraseña debe cumplir:</span>
+                <ul style="list-style: none; margin: 0.35rem 0 0; padding: 0;">
+                  @for (requirement of getRegisterPasswordRequirementsWithMatch(); track requirement.label) {
+                    <li
+                      class="password-requirements__item"
+                      [class.password-requirements__item--valid]="requirement.valid"
+                      [class.password-requirements__item--invalid]="!requirement.valid"
+                      [style.color]="requirement.valid ? '#16864a' : '#d63e48'"
+                      style="display: flex; align-items: center; gap: 0.35rem; margin-top: 0.16rem;"
+                    >
+                      <span class="material-symbols-outlined">{{ requirement.valid ? 'check_circle' : 'cancel' }}</span>
+                      <span>{{ requirement.label }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
           </div>
           @if (registerFieldErrors.confirmPassword) { <small class="login-modal__field-error">{{ registerFieldErrors.confirmPassword }}</small> }
 

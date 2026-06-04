@@ -1,0 +1,120 @@
+export interface AdminPedido {
+  idPedido: number;
+  codigoPedido: string | null;
+  estadoActual: string | null;
+  modalidad: string | null;
+  tipoComprobante: string | null;
+  subtotal: number;
+  descuentoTotal: number;
+  impuestoTotal: number;
+  total: number;
+  fechaCreacion: string | null;
+}
+
+export interface AdminPago {
+  idPago: number;
+  idPedido: number;
+  metodo: string | null;
+  estado: string | null;
+  monto: number;
+  proveedor: string | null;
+  proveedorTxnId: string | null;
+  idempotencyKey: string | null;
+  urlPago: string | null;
+  fechaCreacion: string | null;
+  fechaActualizacion: string | null;
+}
+
+export interface AdminComprobanteDetalle {
+  idComprobanteDetalle: number;
+  descripcionItem: string | null;
+  cantidad: number;
+  precioUnitario: number;
+  descuentoUnitario: number;
+  subtotalLinea: number;
+}
+
+export interface AdminComprobante {
+  idComprobante: number;
+  idPedido: number;
+  tipo: string | null;
+  serie: string | null;
+  correlativo: number | null;
+  numeroCompleto: string | null;
+  estado: string | null;
+  docReceptorTipo: string | null;
+  docReceptorNumero: string | null;
+  razonSocialReceptor: string | null;
+  direccionFiscalReceptor: string | null;
+  subtotal: number;
+  impuestoTotal: number;
+  total: number;
+  fechaEmision: string | null;
+  detalle: AdminComprobanteDetalle[];
+}
+
+export interface ConfiguracionGlobal {
+  idConfig: number;
+  moneda: string;
+  igvPorcentaje: number;
+  deliveryMontoMinimo: number;
+  deliveryTiempoMinMinutos: number;
+  deliveryTiempoMaxMinutos: number;
+  timezone: string;
+}
+
+export interface ZonaDelivery {
+  idZona: number | null;
+  nombre: string;
+  activo: boolean;
+  tarifaBase: number;
+  montoMinimo: number;
+  tiempoEstimadoMinutos: number;
+  coberturaDescripcion: string | null;
+  mapaEmbedUrl: string | null;
+  latitudCentro: number | null;
+  longitudCentro: number | null;
+  radioKm: number | null;
+  horaInicioAtencion: string | null;
+  horaFinAtencion: string | null;
+}
+
+export interface EmpresaAdmin {
+  idEmpresa: number;
+  ruc: string;
+  razonSocial: string;
+  nombreComercial: string | null;
+  direccionFiscal: string;
+  telefono: string | null;
+  correo: string | null;
+  activo: boolean;
+}
+
+export interface SerieComprobanteAdmin {
+  idSerie: number;
+  idEmpresa: number;
+  tipoComprobante: string;
+  serie: string;
+  correlativoActual: number;
+  activo: boolean;
+}
+
+export interface TransicionPedidoAdmin {
+  idTransicion: number;
+  estadoOrigen: string | null;
+  estadoDestino: string;
+  actorTipo: string;
+  activo: boolean;
+}
+
+export interface AuditoriaEvento {
+  idEvento: number;
+  entidad: string;
+  entidadId: string;
+  accion: string;
+  actorTipo: string | null;
+  idActor: number | null;
+  canal: string | null;
+  metadataJson: string | null;
+  fechaCreacion: string | null;
+}

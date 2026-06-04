@@ -1,0 +1,121 @@
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="overline">Facturacion</p>
+      <h2>Comprobantes</h2>
+      <p>Consulta boletas y facturas emitidas, receptor, pedido asociado e importe final.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="excel-button" (click)="exportExcel()" [disabled]="loading || exportingExcel">
+        {{ exportingExcel ? 'Exportando...' : 'Exportar Excel' }}
+      </button>
+      <button type="button" class="ghost-button" (click)="loadComprobantes()" [disabled]="loading">Actualizar</button>
+    </div>
+  </header>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Comprobantes</span>
+      <strong>{{ comprobantesFiltrados.length }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Boletas / Facturas</span>
+      <strong>{{ boletas }} / {{ facturas }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Total emitido</span>
+      <strong>{{ money(totalEmitido) }}</strong>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="filters">
+      <label>
+        Buscar
+        <input type="search" [(ngModel)]="search" placeholder="Numero, pedido, receptor..." />
+      </label>
+      <label>
+        Tipo
+        <select [(ngModel)]="tipoFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let tipo of tipos" [value]="tipo">{{ label(tipo) }}</option>
+        </select>
+      </label>
+      <label>
+        Estado
+        <select [(ngModel)]="estadoFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let estado of estados" [value]="estado">{{ label(estado) }}</option>
+        </select>
+      </label>
+      <button type="button" class="clear-button" (click)="clearFilters()">Limpiar</button>
+    </div>
+
+    <div *ngIf="loading" class="state-box state-box--loading">
+      <app-loading-spinner size="lg" label="Cargando comprobantes"></app-loading-spinner>
+    </div>
+    <div *ngIf="!loading && error" class="state-box error">
+      <span>{{ error }}</span>
+      <button type="button" (click)="loadComprobantes()">Reintentar</button>
+    </div>
+    <div *ngIf="!loading && !error && comprobantesFiltrados.length === 0" class="state-box">
+      No hay comprobantes para los filtros seleccionados.
+    </div>
+
+    <div *ngIf="!loading && !error && comprobantesFiltrados.length > 0" class="table-wrap table-wrap--scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Numero</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Pedido</th>
+            <th>Receptor</th>
+            <th>Total</th>
+            <th>Emision</th>
+            <th>Detalle</th>
+            <th>PDF</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let comprobante of comprobantesFiltrados; trackBy: trackByComprobante">
+            <td>
+              <strong>{{ comprobante.numeroCompleto || (comprobante.serie + '-' + comprobante.correlativo) }}</strong>
+              <small>#{{ comprobante.idComprobante }}</small>
+            </td>
+            <td><span class="type-pill">{{ label(comprobante.tipo) }}</span></td>
+            <td><span class="status-badge" [ngClass]="badge(comprobante.estado)">{{ label(comprobante.estado) }}</span></td>
+            <td>#{{ comprobante.idPedido }}</td>
+            <td>
+              <strong>{{ comprobante.docReceptorTipo || 'DOC' }} {{ comprobante.docReceptorNumero || 'Sin numero' }}</strong>
+              <small>{{ comprobante.razonSocialReceptor || 'Sin razon social registrada' }}</small>
+            </td>
+            <td><strong>{{ money(comprobante.total) }}</strong></td>
+            <td>{{ date(comprobante.fechaEmision) }}</td>
+            <td>
+              <details *ngIf="comprobante.detalle.length">
+                <summary>{{ comprobante.detalle.length }} items</summary>
+                <ul>
+                  <li *ngFor="let item of comprobante.detalle">
+                    {{ item.descripcionItem || 'Item' }} - {{ item.cantidad }} x {{ money(item.precioUnitario) }}
+                  </li>
+                </ul>
+              </details>
+              <span *ngIf="!comprobante.detalle.length">Sin detalle</span>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="pdf-button"
+                (click)="openPdf(comprobante)"
+                [disabled]="isPdfLoading(comprobante)"
+                [attr.aria-label]="'Abrir PDF de comprobante ' + comprobante.numeroCompleto">
+                {{ isPdfLoading(comprobante) ? 'Generando...' : 'PDF' }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

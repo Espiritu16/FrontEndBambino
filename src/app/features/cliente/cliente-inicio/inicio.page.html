@@ -80,7 +80,12 @@
                   <h3>{{ item.nombre }}</h3>
                   <p>{{ item.descripcion || 'Producto del catálogo Bambino.' }}</p>
                   <div class="product-actions">
-                    <strong>S/ {{ item.precioBase }}</strong>
+                    <div class="product-price">
+                      @if (tieneOferta(item)) {
+                        <span>S/ {{ item.precioBase.toFixed(2) }}</span>
+                      }
+                      <strong>S/ {{ precioVigente(item).toFixed(2) }}</strong>
+                    </div>
                     <a
                       class="btn-home btn-home--outline"
                       [routerLink]="['/producto-detalle', item.idProducto, toSlug(item.nombre)]"

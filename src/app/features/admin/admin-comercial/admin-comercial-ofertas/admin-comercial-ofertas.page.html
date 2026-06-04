@@ -1,0 +1,235 @@
+<section class="admin-module card">
+  <div class="admin-module__head">
+    <div>
+      <p class="overline">Gestión Comercial</p>
+      <h2>Ofertas</h2>
+      <p>Administra promociones, vigencias y productos asociados sin modificar el precio base.</p>
+    </div>
+    <button class="btn-primary" type="button" (click)="openCreate()">Nueva oferta</button>
+  </div>
+
+  <div class="admin-filters">
+    <label class="search-field">
+      Buscar
+      <input type="text" placeholder="Buscar oferta, tipo, estado o producto..." [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()" />
+    </label>
+
+    <label>
+      Estado
+      <select [(ngModel)]="filterEstado" (ngModelChange)="applyFilters()">
+        <option value="">Todos</option>
+        <option value="ACTIVA">ACTIVA</option>
+        <option value="PROGRAMADA">PROGRAMADA</option>
+        <option value="BORRADOR">BORRADOR</option>
+        <option value="INACTIVA">INACTIVA</option>
+        <option value="EXPIRADA">EXPIRADA</option>
+      </select>
+    </label>
+  </div>
+
+  @if (error) {
+    <p class="admin-error">{{ error }}</p>
+  }
+
+  @if (loading) {
+    <app-loading-spinner [fullPage]="true" size="lg" label="Cargando ofertas"></app-loading-spinner>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Oferta</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Vigencia</th>
+            <th>Productos</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (oferta of ofertasFiltradas; track oferta.idOferta) {
+            <tr class="clickable-row">
+              <td (click)="openEdit(oferta)">
+                <strong>{{ oferta.nombre }}</strong>
+              </td>
+              <td (click)="openEdit(oferta)">{{ oferta.tipo }}</td>
+              <td (click)="openEdit(oferta)">
+                @if (oferta.tipo === 'PORCENTAJE') {
+                  {{ oferta.valorDescuento }}%
+                } @else if (oferta.tipo === 'MONTO_FIJO') {
+                  -{{ formatMoney(oferta.valorDescuento) }}
+                } @else {
+                  {{ formatMoney(oferta.precioEspecial) }}
+                }
+              </td>
+              <td (click)="openEdit(oferta)">
+                <small>{{ oferta.fechaInicio | date: 'dd/MM/yyyy HH:mm' }}</small>
+                <small>{{ oferta.fechaFin | date: 'dd/MM/yyyy HH:mm' }}</small>
+              </td>
+              <td (click)="openEdit(oferta)">
+                <span class="product-count">{{ oferta.idsProductos.length }}</span>
+                <small>{{ productNames(oferta).slice(0, 2).join(', ') || '-' }}</small>
+              </td>
+              <td (click)="openEdit(oferta)">
+                <span class="chip" [class.chip--off]="oferta.estado !== 'ACTIVA'">{{ oferta.estado }}</span>
+              </td>
+              <td class="row-actions">
+                <button class="btn-link" type="button" (click)="$event.stopPropagation(); openEdit(oferta)">Editar</button>
+                <button class="btn-link" type="button" (click)="$event.stopPropagation(); toggleEstado(oferta)">
+                  {{ oferta.estado === 'ACTIVA' ? 'Desactivar' : 'Activar' }}
+                </button>
+              </td>
+            </tr>
+          }
+          @if (ofertasFiltradas.length === 0) {
+            <tr>
+              <td colspan="7" class="empty-row">No hay ofertas que coincidan con la búsqueda/filtro.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (showForm) {
+  <div class="modal-backdrop">
+    <section class="modal-card modal-card--xl" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3>{{ editingId ? 'Editar oferta' : 'Nueva oferta' }}</h3>
+
+      <div class="form-grid">
+        <label class="full">
+          Nombre
+          <input type="text" maxlength="180" [(ngModel)]="form.nombre" (ngModelChange)="clearFieldError('nombre')" [class.input-error]="!!fieldErrors.nombre" />
+          @if (fieldErrors.nombre) {
+            <small class="field-error">{{ fieldErrors.nombre }}</small>
+          }
+        </label>
+
+        <label>
+          Tipo
+          <select [(ngModel)]="form.tipo" (ngModelChange)="onTipoChange()">
+            <option value="PORCENTAJE">Porcentaje</option>
+            <option value="MONTO_FIJO">Monto fijo</option>
+            <option value="PRECIO_ESPECIAL">Precio especial</option>
+            <option value="COMBO">Combo</option>
+          </select>
+        </label>
+
+        <label>
+          Estado
+          <select [(ngModel)]="form.estado">
+            <option value="ACTIVA">ACTIVA</option>
+            <option value="PROGRAMADA">PROGRAMADA</option>
+            <option value="BORRADOR">BORRADOR</option>
+            <option value="INACTIVA">INACTIVA</option>
+            <option value="EXPIRADA">EXPIRADA</option>
+          </select>
+        </label>
+
+        @if (usesPrecioEspecial()) {
+          <label>
+            Precio especial
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              [(ngModel)]="form.precioEspecial"
+              (ngModelChange)="clearFieldError('precioEspecial')"
+              (keydown)="preventInvalidNumberKey($event)"
+              (input)="sanitizePositiveDecimalInput($event)"
+              [class.input-error]="!!fieldErrors.precioEspecial"
+            />
+            @if (fieldErrors.precioEspecial) {
+              <small class="field-error">{{ fieldErrors.precioEspecial }}</small>
+            }
+          </label>
+        } @else {
+          <label>
+            {{ form.tipo === 'PORCENTAJE' ? 'Porcentaje' : 'Monto de descuento' }}
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              [(ngModel)]="form.valorDescuento"
+              (ngModelChange)="clearFieldError('valorDescuento')"
+              (keydown)="preventInvalidNumberKey($event)"
+              (input)="sanitizePositiveDecimalInput($event)"
+              [class.input-error]="!!fieldErrors.valorDescuento"
+            />
+            @if (fieldErrors.valorDescuento) {
+              <small class="field-error">{{ fieldErrors.valorDescuento }}</small>
+            }
+          </label>
+        }
+
+        <label>
+          Inicio
+          <input type="datetime-local" [(ngModel)]="form.fechaInicio" (ngModelChange)="clearFieldError('fechaInicio')" [class.input-error]="!!fieldErrors.fechaInicio" />
+          @if (fieldErrors.fechaInicio) {
+            <small class="field-error">{{ fieldErrors.fechaInicio }}</small>
+          }
+        </label>
+
+        <label>
+          Fin
+          <input type="datetime-local" [(ngModel)]="form.fechaFin" (ngModelChange)="clearFieldError('fechaFin')" [class.input-error]="!!fieldErrors.fechaFin" />
+          @if (fieldErrors.fechaFin) {
+            <small class="field-error">{{ fieldErrors.fechaFin }}</small>
+          }
+        </label>
+      </div>
+
+      <section class="products-picker" [class.input-error-box]="!!fieldErrors.idsProductos">
+        <div class="products-picker__head">
+          <div>
+            <h4>Productos de la oferta</h4>
+            <p>El precio base no cambia; el descuento se aplicará como precio final vigente.</p>
+          </div>
+          <label>
+            Buscar producto
+            <input type="text" [(ngModel)]="productSearchQuery" (ngModelChange)="applyProductFilter()" placeholder="Nombre o categoría..." />
+          </label>
+        </div>
+
+        @if (fieldErrors.idsProductos) {
+          <small class="field-error">{{ fieldErrors.idsProductos }}</small>
+        }
+
+        <div class="products-grid">
+          @for (producto of productosFiltrados; track producto.idProducto) {
+            <button type="button" class="product-option" [class.is-active]="isProductoSelected(producto.idProducto)" (click)="toggleProducto(producto.idProducto)">
+              <span>{{ producto.nombre }}</span>
+              <small>{{ producto.categoriaNombre || 'Sin categoría' }}</small>
+              <strong>{{ formatMoney(producto.precioBase) }}</strong>
+            </button>
+          }
+        </div>
+      </section>
+
+      @if (selectedProductos().length > 0) {
+        <section class="price-preview">
+          <h4>Vista previa de precios</h4>
+          <div class="price-preview__grid">
+            @for (producto of selectedProductos(); track producto.idProducto) {
+              <article>
+                <strong>{{ producto.nombre }}</strong>
+                <span>Base: {{ formatMoney(producto.precioBase) }}</span>
+                <span>Descuento: -{{ formatMoney(discountFor(producto)) }}</span>
+                <b>Final: {{ formatMoney(finalPrice(producto)) }}</b>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      <div class="actions">
+        <button type="button" class="btn-ghost" (click)="closeForm()">Cancelar</button>
+        <button type="button" class="btn-primary" [disabled]="saving" (click)="saveOferta()">
+          {{ saving ? 'Guardando...' : 'Guardar oferta' }}
+        </button>
+      </div>
+    </section>
+  </div>
+}

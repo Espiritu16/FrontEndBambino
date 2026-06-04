@@ -1,5 +1,105 @@
-<section class="admin-module card">
-  <p class="overline">Módulo Admin</p>
-  <h2>Pedidos</h2>
-  <p>Monitorea pedidos por estado, aplica filtros operativos y ejecuta acciones excepcionales.</p>
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="overline">Operacion</p>
+      <h2>Pedidos</h2>
+      <p>Monitorea los pedidos realizados desde checkout y sus importes principales.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="excel-button" (click)="exportExcel()" [disabled]="loading || exportingExcel">
+        {{ exportingExcel ? 'Exportando...' : 'Exportar Excel' }}
+      </button>
+      <button type="button" class="ghost-button" (click)="loadPedidos()" [disabled]="loading">Actualizar</button>
+    </div>
+  </header>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Pedidos filtrados</span>
+      <strong>{{ pedidosFiltrados.length }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Total vendido</span>
+      <strong>{{ money(totalVentas) }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Ticket promedio</span>
+      <strong>{{ money(ticketPromedio) }}</strong>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="filters">
+      <label>
+        Buscar
+        <input type="search" [(ngModel)]="search" placeholder="Codigo, id, estado..." />
+      </label>
+      <label>
+        Estado
+        <select [(ngModel)]="estadoFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let estado of estados" [value]="estado">{{ label(estado) }}</option>
+        </select>
+      </label>
+      <label>
+        Modalidad
+        <select [(ngModel)]="modalidadFiltro">
+          <option value="">Todas</option>
+          <option *ngFor="let modalidad of modalidades" [value]="modalidad">{{ label(modalidad) }}</option>
+        </select>
+      </label>
+      <label>
+        Comprobante
+        <select [(ngModel)]="comprobanteFiltro">
+          <option value="">Todos</option>
+          <option *ngFor="let comprobante of comprobantes" [value]="comprobante">{{ label(comprobante) }}</option>
+        </select>
+      </label>
+      <button type="button" class="clear-button" (click)="clearFilters()">Limpiar</button>
+    </div>
+
+    <div *ngIf="loading" class="state-box state-box--loading">
+      <app-loading-spinner size="lg" label="Cargando pedidos"></app-loading-spinner>
+    </div>
+    <div *ngIf="!loading && error" class="state-box error">
+      <span>{{ error }}</span>
+      <button type="button" (click)="loadPedidos()">Reintentar</button>
+    </div>
+
+    <div *ngIf="!loading && !error && pedidosFiltrados.length === 0" class="state-box">
+      No hay pedidos para los filtros seleccionados.
+    </div>
+
+    <div *ngIf="!loading && !error && pedidosFiltrados.length > 0" class="table-wrap table-wrap--scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Pedido</th>
+            <th>Estado</th>
+            <th>Modalidad</th>
+            <th>Comprobante</th>
+            <th>Subtotal</th>
+            <th>Descuento</th>
+            <th>Total</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let pedido of pedidosFiltrados; trackBy: trackByPedido">
+            <td>
+              <strong>{{ pedido.codigoPedido || ('#' + pedido.idPedido) }}</strong>
+              <small>#{{ pedido.idPedido }}</small>
+            </td>
+            <td><span class="status-badge" [ngClass]="badge(pedido.estadoActual)">{{ label(pedido.estadoActual) }}</span></td>
+            <td>{{ label(pedido.modalidad) }}</td>
+            <td>{{ label(pedido.tipoComprobante) }}</td>
+            <td>{{ money(pedido.subtotal) }}</td>
+            <td>{{ money(pedido.descuentoTotal) }}</td>
+            <td><strong>{{ money(pedido.total) }}</strong></td>
+            <td>{{ date(pedido.fechaCreacion) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </section>

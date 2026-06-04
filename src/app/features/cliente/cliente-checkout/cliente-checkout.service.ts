@@ -18,6 +18,17 @@ export interface DireccionCliente {
   activo: boolean;
 }
 
+export interface DireccionCrearRequest {
+  direccionLinea1: string;
+  referencia: string | null;
+  distrito: string | null;
+  ciudad: string;
+  latitud: number | null;
+  longitud: number | null;
+  googlePlaceId: string | null;
+  googlePlusCode: string | null;
+}
+
 export interface PerfilCliente {
   idCliente: number;
   nombres?: string;
@@ -136,6 +147,10 @@ export class ClienteCheckoutService {
 
   obtenerDirecciones(): Observable<DireccionCliente[]> {
     return this.http.get<DireccionCliente[]>(API_ENDPOINTS.cliente.direcciones, { headers: this.authHeaders() });
+  }
+
+  registrarDireccion(request: DireccionCrearRequest): Observable<DireccionCliente> {
+    return this.http.post<DireccionCliente>(API_ENDPOINTS.cliente.direcciones, request, { headers: this.authHeaders() });
   }
 
   obtenerPerfil(): Observable<PerfilCliente> {

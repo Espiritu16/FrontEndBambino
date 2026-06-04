@@ -24,6 +24,17 @@ type RegisterDocumento = {
   docNumero: string;
 };
 
+type ConsultaDocumentoResponse = {
+  tipoDocumento: 'DNI' | 'RUC';
+  numeroDocumento: string;
+  nombreORazonSocial: string;
+};
+
+type PasswordRequirement = {
+  label: string;
+  valid: boolean;
+};
+
 type ConfiguracionMediaPublicResponse = {
   clave: string;
   url: string;
@@ -90,6 +101,12 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
 
   protected readonly currentYear = new Date().getFullYear();
+  protected readonly registerPasswordRequirementLabels = {
+    hasLetter: 'Al menos una letra',
+    hasUppercase: 'Al menos una letra en mayúsculas',
+    hasNumber: 'Al menos un número',
+    hasMinLength: 'Mínimo 8 caracteres'
+  };
   protected isMobileMenuOpen = false;
   protected isLoginModalOpen = false;
   protected isLogoutConfirmOpen = false;
@@ -130,6 +147,8 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   protected registerDocumentos: RegisterDocumento[] = [{ docTipo: 'DNI', docNumero: '' }];
   protected showRegisterPassword = false;
   protected showRegisterConfirmPassword = false;
+  protected showRegisterPasswordRequirements = false;
+  protected showRegisterConfirmPasswordRequirements = false;
   protected registerError = '';
   protected registerSuccess = '';
   protected registerLoading = false;
@@ -673,6 +692,11 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     if (!this.validateRegisterForm()) return;
     this.registerLoading = true;
     try {
+      const documentosValidos = await this.validateRegisterDocumentsWithFactiliza();
+      if (!documentosValidos) {
+        this.syncUi();
+        return;
+      }
       const registerResponse = await firstValueFrom(this.http.post<{ estado?: number; mensaje?: string; detalles?: Array<{ campo?: string; mensaje?: string }> }>(`${this.apiBaseUrl}/api/auth/registro`, {
         email: this.buildRegisterEmail(), password: this.registerPassword, nombres: this.registerNombres, apellidos: this.registerApellidos,
         telefono: this.registerTelefono || null,
@@ -691,6 +715,41 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
       this.syncUi();
     } catch (error) { this.handleRegisterHttpError(error as HttpErrorResponse); this.syncUi(); }
     finally { this.registerLoading = false; this.syncUi(); }
+  }
+
+  private async validateRegisterDocumentsWithFactiliza(): Promise<boolean> {
+    for (const doc of this.registerDocumentos) {
+      if (doc.docTipo === 'CE') continue;
+      try {
+        const response = await firstValueFrom(
+          this.http.get<ConsultaDocumentoResponse>(`${this.apiBaseUrl}/api/public/documentos/consultar`, {
+            params: { documento: doc.docNumero }
+          }).pipe(timeout(10000))
+        );
+        if (response.tipoDocumento !== doc.docTipo || response.numeroDocumento !== doc.docNumero) {
+          this.registerFieldErrors.docNumero = `${doc.docTipo} no coincide con la respuesta de validación.`;
+          return false;
+        }
+      } catch (error) {
+        this.registerFieldErrors.docNumero = this.resolveDocumentValidationError(error as HttpErrorResponse, doc.docTipo);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private resolveDocumentValidationError(error: HttpErrorResponse, docTipo: 'DNI' | 'RUC'): string {
+    const body = error.error as { mensaje?: string; message?: string; error?: string } | string | null;
+    const backendMessage = typeof body === 'string'
+      ? body
+      : (body?.mensaje ?? body?.message ?? body?.error ?? '');
+    if (error.status === 404) {
+      return `${docTipo} no encontrado. Verifica el número ingresado.`;
+    }
+    if (error.status === 502 || error.status === 503 || error.status === 0) {
+      return `No se pudo validar el ${docTipo}. Intenta nuevamente.`;
+    }
+    return backendMessage || `No se pudo validar el ${docTipo}.`;
   }
 
   protected sanitizePersonName(value: string): string { return (value ?? '').replace(/[^A-Za-zÁÉÍÓÚÑáéíóúñ\s'\-]/g, ''); }
@@ -752,6 +811,43 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   protected getDocInputMode(docTipo: 'DNI' | 'RUC' | 'CE'): 'numeric' | 'text' {
     return docTipo === 'DNI' || docTipo === 'RUC' ? 'numeric' : 'text';
   }
+  protected getRegisterPasswordRequirements(): PasswordRequirement[] {
+    return this.buildPasswordRequirements(this.registerPassword);
+  }
+  protected getRegisterPasswordRequirementsWithMatch(): PasswordRequirement[] {
+    return [
+      ...this.buildPasswordRequirements(this.registerPassword),
+      { label: 'Las contraseñas coinciden', valid: this.doRegisterPasswordsMatch() }
+    ];
+  }
+  protected isRegisterPasswordValid(): boolean {
+    return this.registerPassword.length > 0 && this.buildPasswordRequirements(this.registerPassword).every((requirement) => requirement.valid);
+  }
+  protected doRegisterPasswordsMatch(): boolean {
+    return this.registerPassword.length > 0
+      && this.registerConfirmPassword.length > 0
+      && this.registerPassword === this.registerConfirmPassword;
+  }
+  protected openRegisterPasswordRequirements(): void {
+    this.showRegisterConfirmPasswordRequirements = false;
+    this.showRegisterPasswordRequirements = true;
+  }
+  protected openRegisterConfirmPasswordRequirements(): void {
+    this.showRegisterPasswordRequirements = false;
+    this.showRegisterConfirmPasswordRequirements = true;
+  }
+  protected closeRegisterPasswordRequirements(): void {
+    setTimeout(() => {
+      this.showRegisterPasswordRequirements = false;
+      this.syncUi();
+    }, 120);
+  }
+  protected closeRegisterConfirmPasswordRequirements(): void {
+    setTimeout(() => {
+      this.showRegisterConfirmPasswordRequirements = false;
+      this.syncUi();
+    }, 120);
+  }
   protected canAddAnotherDocumento(): boolean {
     return this.registerDocumentos.length < 3;
   }
@@ -812,7 +908,7 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     this.modalView = 'login'; this.forgotStep = 'request'; this.loginPassword = ''; this.loginError = ''; this.showLoginPassword = false;
     this.forgotError = ''; this.forgotSuccess = ''; this.forgotCode = ''; this.forgotNewPassword = ''; this.forgotConfirmPassword = '';
     this.showForgotNewPassword = false; this.showForgotConfirmPassword = false; this.isRecoveryCodeValidated = false;
-    this.registerError = ''; this.registerSuccess = ''; this.registerFieldErrors = {}; this.showRegisterPassword = false; this.showRegisterConfirmPassword = false;
+    this.registerError = ''; this.registerSuccess = ''; this.registerFieldErrors = {}; this.showRegisterPassword = false; this.showRegisterConfirmPassword = false; this.showRegisterPasswordRequirements = false; this.showRegisterConfirmPasswordRequirements = false;
     this.registerDocumentos = [{ docTipo: 'DNI', docNumero: '' }];
   }
 
@@ -847,11 +943,24 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
       if (doc.docTipo === 'CE' && !/^[A-Za-z0-9]{9,12}$/.test(docNumero)) { this.registerFieldErrors.docNumero = 'El CE debe tener entre 9 y 12 caracteres.'; break; }
     }
     if (telefono && !/^9\d{8}$/.test(telefono)) this.registerFieldErrors.telefono = 'Ingresa un celular válido (9 dígitos iniciando en 9).';
+    const passwordRequirements = this.buildPasswordRequirements(this.registerPassword);
     if (!this.registerPassword) this.registerFieldErrors.password = 'La contraseña es obligatoria.';
-    else if (this.registerPassword.length < 8) this.registerFieldErrors.password = 'La contraseña debe tener al menos 8 caracteres.';
+    else if (passwordRequirements.some((requirement) => !requirement.valid)) this.registerFieldErrors.password = 'La contraseña no cumple los requisitos.';
+    if (this.registerFieldErrors.password) this.showRegisterPasswordRequirements = true;
     if (!this.registerConfirmPassword) this.registerFieldErrors.confirmPassword = 'Confirma tu contraseña.';
     else if (this.registerPassword !== this.registerConfirmPassword) this.registerFieldErrors.confirmPassword = 'Las contraseñas no coinciden.';
+    if (this.registerFieldErrors.confirmPassword) this.showRegisterConfirmPasswordRequirements = true;
     return Object.keys(this.registerFieldErrors).length === 0;
+  }
+
+  private buildPasswordRequirements(password: string): PasswordRequirement[] {
+    const value = password ?? '';
+    return [
+      { label: this.registerPasswordRequirementLabels.hasLetter, valid: /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(value) },
+      { label: this.registerPasswordRequirementLabels.hasUppercase, valid: /[A-ZÁÉÍÓÚÑ]/.test(value) },
+      { label: this.registerPasswordRequirementLabels.hasNumber, valid: /\d/.test(value) },
+      { label: this.registerPasswordRequirementLabels.hasMinLength, valid: value.length >= 8 }
+    ];
   }
 
   protected buildRegisterEmail(): string { return `${this.registerEmailLocal.trim().toLowerCase()}@${this.registerEmailDomain}`; }

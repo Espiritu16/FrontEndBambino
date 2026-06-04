@@ -65,7 +65,12 @@
                 <div class="menu-card__body">
                   <h3>{{ item.nombre }}</h3>
                   <p>{{ item.descripcion || 'Producto del catálogo Bambino.' }}</p>
-                  <strong>S/ {{ item.precioBase }}</strong>
+                  <div class="menu-card__price">
+                    @if (tieneOferta(item)) {
+                      <span>S/ {{ item.precioBase.toFixed(2) }}</span>
+                    }
+                    <strong>S/ {{ precioVigente(item).toFixed(2) }}</strong>
+                  </div>
                   <div class="menu-card__actions">
                     <button class="btn menu-card__btn" type="button" (click)="onAgregarClick($event, item)" [disabled]="addingProductId === item.idProducto">
                       {{ addingProductId === item.idProducto ? 'Agregando...' : 'Agregar' }}
