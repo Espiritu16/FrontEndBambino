@@ -242,6 +242,22 @@
   margin: 0;
 }
 
+.menu-card__price {
+  align-items: baseline;
+  display: flex;
+  gap: 0.55rem;
+}
+
+.menu-card__price span {
+  color: #8b8179;
+  font-weight: 800;
+  text-decoration: line-through;
+}
+
+.menu-card__price strong {
+  color: #97040b;
+}
+
 .menu-card__btn {
   width: fit-content;
   border: 1.5px solid #97040b;

@@ -59,7 +59,13 @@
 
         <aside class="detail-panel">
           <h1>{{ producto.nombre }}</h1>
-          <strong class="big-price">S/ {{ producto.precioBase.toFixed(2) }}</strong>
+          <div class="detail-price">
+            @if (productoTieneOferta) {
+              <span>S/ {{ producto.precioBase.toFixed(2) }}</span>
+              <em>{{ producto.ofertaNombre || 'Oferta vigente' }}</em>
+            }
+            <strong class="big-price">S/ {{ precioVigente.toFixed(2) }}</strong>
+          </div>
           <p>{{ producto.descripcion || 'Incluye papas, ensalada y cremas.' }}</p>
           <hr />
 

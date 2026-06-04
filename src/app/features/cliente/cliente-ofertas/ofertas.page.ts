@@ -32,6 +32,11 @@ interface ProductoResponse {
   estado: string;
   imagenUrl: string | null;
   ordenVisual: number;
+  precioFinal?: number | null;
+  descuentoAplicado?: number | null;
+  idOfertaActiva?: number | null;
+  ofertaNombre?: string | null;
+  ofertaTipo?: string | null;
 }
 
 @Component({
@@ -108,8 +113,17 @@ export class OfertasPageComponent implements OnInit {
   }
 
   protected badgeFor(producto: ProductoResponse): string | undefined {
+    if ((producto.descuentoAplicado ?? 0) > 0) return producto.ofertaNombre || 'Oferta';
     if (this.masPedidosIds.has(producto.idProducto)) return 'Más pedido';
     return undefined;
+  }
+
+  protected precioVigente(producto: ProductoResponse): number {
+    return Number(producto.precioFinal ?? producto.precioBase ?? 0);
+  }
+
+  protected tieneOferta(producto: ProductoResponse): boolean {
+    return Number(producto.descuentoAplicado ?? 0) > 0 && this.precioVigente(producto) < Number(producto.precioBase ?? 0);
   }
 
   protected get sectionTitle(): string {
