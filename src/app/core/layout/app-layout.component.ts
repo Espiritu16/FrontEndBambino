@@ -243,6 +243,11 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
     return !this.isRoleBlockedForMyOrder(role);
   }
 
+  protected canShowMisPedidos(): boolean {
+    const role = (this.currentRole || '').trim().toUpperCase();
+    return !this.isRoleBlockedForMyOrder(role) && !this.isAdminRole(role);
+  }
+
   protected submitHeaderSearch(): void {
     const first = this.headerSearchResults[0];
     if (first) {
