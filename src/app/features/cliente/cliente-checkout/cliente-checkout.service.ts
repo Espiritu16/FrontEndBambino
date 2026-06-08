@@ -140,6 +140,41 @@ export interface CulqiPublicConfig {
   habilitado: boolean;
 }
 
+export interface ComprobanteDetalleResponse {
+  idComprobanteDetalle: number;
+  descripcionItem: string | null;
+  cantidad: number;
+  precioUnitario: number;
+  descuentoUnitario: number;
+  subtotalLinea: number;
+}
+
+export interface ComprobanteResponse {
+  idComprobante: number;
+  idPedido: number;
+  tipo: string;
+  serie: string;
+  correlativo: number;
+  numeroCompleto: string;
+  estado: string;
+  docReceptorTipo: string | null;
+  docReceptorNumero: string | null;
+  razonSocialReceptor: string | null;
+  direccionFiscalReceptor: string | null;
+  subtotal: number;
+  impuestoTotal: number;
+  total: number;
+  fechaEmision: string;
+  correoEnviado: boolean;
+  correoDestino: string | null;
+  fechaCorreoEnvio: string | null;
+  correoError: string | null;
+  pdfPath: string | null;
+  pdfToken: string | null;
+  fechaPdfGenerado: string | null;
+  detalle: ComprobanteDetalleResponse[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ClienteCheckoutService {
   private readonly http = inject(HttpClient);
@@ -205,6 +240,20 @@ export class ClienteCheckoutService {
       },
       { headers: this.authHeaders() }
     );
+  }
+
+  obtenerComprobantePorPedido(idPedido: number): Observable<ComprobanteResponse> {
+    return this.http.get<ComprobanteResponse>(`${API_ENDPOINTS.cliente.comprobantes}/pedido/${idPedido}`, {
+      headers: this.authHeaders(),
+      context: withoutCache()
+    });
+  }
+
+  obtenerComprobantePdfPorPedido(idPedido: number): Observable<Blob> {
+    return this.http.get(`${API_ENDPOINTS.cliente.comprobantes}/pedido/${idPedido}/pdf`, {
+      headers: this.authHeaders(),
+      responseType: 'blob'
+    });
   }
 
   confirmarPagoCheckout(request: PagoCheckoutConfirmarRequest): Observable<PagoCheckoutResponse> {
