@@ -97,6 +97,28 @@ describe('ClienteCheckoutService', () => {
     cancelarReq.flush({ idPedido: 99, codigoPedido: 'PED-TEST', estadoActual: 'CANCELADO', total: 23.6 });
   });
 
+  it('loads cliente comprobante data and pdf by pedido', () => {
+    service.obtenerComprobantePorPedido(99).subscribe();
+    const detalleReq = http.expectOne(`${API_ENDPOINTS.cliente.comprobantes}/pedido/99`);
+    expect(detalleReq.request.method).toBe('GET');
+    expect(detalleReq.request.headers.get('Authorization')).toBe('Basic token-test');
+    detalleReq.flush({
+      idComprobante: 31,
+      idPedido: 99,
+      tipo: 'BOLETA',
+      numeroCompleto: 'B001-000000001',
+      total: 23.6,
+      detalle: []
+    });
+
+    service.obtenerComprobantePdfPorPedido(99).subscribe();
+    const pdfReq = http.expectOne(`${API_ENDPOINTS.cliente.comprobantes}/pedido/99/pdf`);
+    expect(pdfReq.request.method).toBe('GET');
+    expect(pdfReq.request.headers.get('Authorization')).toBe('Basic token-test');
+    expect(pdfReq.request.responseType).toBe('blob');
+    pdfReq.flush(new Blob(['pdf'], { type: 'application/pdf' }));
+  });
+
   it('confirms Culqi checkout payment', () => {
     const payload = {
       modalidad: 'RECOJO' as const,

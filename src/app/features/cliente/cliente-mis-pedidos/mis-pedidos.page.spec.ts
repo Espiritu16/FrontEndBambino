@@ -37,7 +37,42 @@ describe('MisPedidosPageComponent', () => {
 
   const checkoutServiceMock = {
     listarPedidos: vi.fn(() => of([pedidoCreado, pedidoConfirmado])),
-    cancelarPedido: vi.fn(() => of({ ...pedidoCreado, estadoActual: 'CANCELADO' }))
+    cancelarPedido: vi.fn(() => of({ ...pedidoCreado, estadoActual: 'CANCELADO' })),
+    obtenerComprobantePorPedido: vi.fn(() => of({
+      idComprobante: 31,
+      idPedido: 11,
+      tipo: 'BOLETA',
+      serie: 'B001',
+      correlativo: 1,
+      numeroCompleto: 'B001-000000001',
+      estado: 'EMITIDO',
+      docReceptorTipo: 'DNI',
+      docReceptorNumero: '12345678',
+      razonSocialReceptor: 'Cliente Test',
+      direccionFiscalReceptor: null,
+      subtotal: 20,
+      impuestoTotal: 3.6,
+      total: 23.6,
+      fechaEmision: '2026-06-01T10:05:00',
+      correoEnviado: false,
+      correoDestino: null,
+      fechaCorreoEnvio: null,
+      correoError: null,
+      pdfPath: null,
+      pdfToken: null,
+      fechaPdfGenerado: null,
+      detalle: [
+        {
+          idComprobanteDetalle: 41,
+          descripcionItem: '1/4 Pollo',
+          cantidad: 1,
+          precioUnitario: 20,
+          descuentoUnitario: 0,
+          subtotalLinea: 20
+        }
+      ]
+    })),
+    obtenerComprobantePdfPorPedido: vi.fn()
   };
 
   beforeEach(async () => {
@@ -92,5 +127,23 @@ describe('MisPedidosPageComponent', () => {
     expect(checkoutServiceMock.cancelarPedido).toHaveBeenCalledWith(10, 'Cancelado por el cliente');
     expect(component.orders.find((order) => order.idPedido === 10)?.estadoActual).toBe('CANCELADO');
     expect(component.orders.map((order) => order.idPedido)).toEqual([10, 11]);
+  });
+
+  it('opens the order comprobante modal from history', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const component = fixture.componentInstance as unknown as {
+      openOrderModal(order: PedidoResponse): Promise<void>;
+      comprobanteDetalle: { numeroCompleto: string; total: number } | null;
+    };
+
+    await component.openOrderModal(pedidoConfirmado);
+    fixture.detectChanges();
+
+    expect(checkoutServiceMock.obtenerComprobantePorPedido).toHaveBeenCalledWith(11);
+    expect(component.comprobanteDetalle?.numeroCompleto).toBe('B001-000000001');
+    expect(fixture.nativeElement.textContent).toContain('B001-000000001');
+    expect(fixture.nativeElement.textContent).toContain('Abrir PDF');
   });
 });

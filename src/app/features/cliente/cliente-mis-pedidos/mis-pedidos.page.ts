@@ -6,13 +6,13 @@ import { firstValueFrom, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../../core/http/api-endpoints';
 import { ConfirmModalComponent } from '../../../shared/components/confirm-modal/confirm-modal.component';
 import { ToastService } from '../../../shared/services/toast.service';
-import { ClienteCheckoutService, PedidoResponse } from '../cliente-checkout/cliente-checkout.service';
+import { ClienteCheckoutService, ComprobanteDetalleResponse, ComprobanteResponse, PedidoResponse } from '../cliente-checkout/cliente-checkout.service';
 
-type AuthYoResponse = {
+interface AuthYoResponse {
   usuario?: string;
   nombres?: string;
   apellidos?: string;
-};
+}
 
 @Component({
   selector: 'app-mis-pedidos-page',
@@ -40,6 +40,11 @@ export class MisPedidosPageComponent implements OnInit {
   protected profileEmail = '';
   protected orders: PedidoResponse[] = [];
   protected cancelTarget: PedidoResponse | null = null;
+  protected comprobanteTargetOrder: PedidoResponse | null = null;
+  protected comprobanteDetalle: ComprobanteResponse | null = null;
+  protected comprobanteLoading = false;
+  protected comprobanteError = '';
+  protected pdfLoading = false;
 
   ngOnInit(): void {
     this.hidratarSidebarDesdeSesion();
@@ -120,6 +125,78 @@ export class MisPedidosPageComponent implements OnInit {
     }
   }
 
+  protected async openOrderModal(order: PedidoResponse): Promise<void> {
+    this.comprobanteTargetOrder = order;
+    this.comprobanteDetalle = null;
+    this.comprobanteError = '';
+    this.comprobanteLoading = true;
+    this.cdr.markForCheck();
+
+    try {
+      this.comprobanteDetalle = await firstValueFrom(
+        this.pedidosService.obtenerComprobantePorPedido(order.idPedido).pipe(timeout(10000))
+      );
+    } catch (error: unknown) {
+      this.comprobanteError = this.errorMessage(error, 'No se pudo cargar el comprobante de este pedido.');
+    } finally {
+      this.comprobanteLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  protected closeOrderModal(): void {
+    if (this.pdfLoading) return;
+    this.comprobanteTargetOrder = null;
+    this.comprobanteDetalle = null;
+    this.comprobanteError = '';
+    this.comprobanteLoading = false;
+    this.cdr.markForCheck();
+  }
+
+  protected async openComprobantePdf(): Promise<void> {
+    if (!this.comprobanteTargetOrder || this.pdfLoading) return;
+
+    const popup = window.open('', '_blank');
+    if (!popup) {
+      this.comprobanteError = 'El navegador bloqueo la ventana del PDF. Habilita ventanas emergentes para abrirlo.';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    popup.document.write('<title>Generando PDF</title><p style="font-family:Arial,sans-serif">Generando comprobante...</p>');
+    this.pdfLoading = true;
+    this.comprobanteError = '';
+    this.cdr.markForCheck();
+
+    try {
+      const pdf = await firstValueFrom(
+        this.pedidosService.obtenerComprobantePdfPorPedido(this.comprobanteTargetOrder.idPedido).pipe(timeout(15000))
+      );
+      const pdfUrl = URL.createObjectURL(pdf);
+      popup.location.href = pdfUrl;
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
+    } catch (error: unknown) {
+      popup.close();
+      this.comprobanteError = this.errorMessage(error, 'No se pudo abrir el PDF del comprobante.');
+    } finally {
+      this.pdfLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  protected label(value: string | null | undefined): string {
+    return (value || '').replaceAll('_', ' ');
+  }
+
+  protected money(value: number | string | null | undefined): string {
+    const numberValue = Number(value ?? 0);
+    return `S/ ${numberValue.toFixed(2)}`;
+  }
+
+  protected itemPrecioCobrado(item: ComprobanteDetalleResponse): string {
+    return this.money(Number(item.precioUnitario ?? 0) - Number(item.descuentoUnitario ?? 0));
+  }
+
   protected logout(): void {
     localStorage.removeItem(this.authStorageKey);
     localStorage.removeItem('bambino_user_name');
@@ -137,5 +214,19 @@ export class MisPedidosPageComponent implements OnInit {
     if (nombre) {
       this.profileName = nombre;
     }
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    if (typeof error !== 'object' || error === null) {
+      return fallback;
+    }
+    const candidate = error as { error?: { mensaje?: unknown }; message?: unknown };
+    if (typeof candidate.error?.mensaje === 'string' && candidate.error.mensaje.trim()) {
+      return candidate.error.mensaje;
+    }
+    if (typeof candidate.message === 'string' && candidate.message.trim()) {
+      return candidate.message;
+    }
+    return fallback;
   }
 }

@@ -22,6 +22,7 @@ export const API_ENDPOINTS = {
     direcciones: `${API_BASE_URL}/api/cliente/direcciones`,
     carrito: `${API_BASE_URL}/api/cliente/carrito`,
     pedidos: `${API_BASE_URL}/api/cliente/pedidos`,
+    comprobantes: `${API_BASE_URL}/api/cliente/comprobantes`,
     pagos: `${API_BASE_URL}/api/cliente/pagos`,
     libroReclamaciones: `${API_BASE_URL}/api/cliente/libro-reclamaciones`
   },

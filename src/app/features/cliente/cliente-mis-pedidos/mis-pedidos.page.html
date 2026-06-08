@@ -37,6 +37,7 @@
               <div class="order-item__right">
                 <strong>S/ {{ order.total }}</strong>
                 <p>{{ order.fechaCreacion | date: 'dd/MM/yyyy HH:mm' }}</p>
+                <button class="order-view-btn" type="button" (click)="openOrderModal(order)">Ver pedido</button>
                 @if (canCancel(order)) {
                   <button class="order-cancel-btn" type="button" (click)="openCancelModal(order)">Cancelar pedido</button>
                 }
@@ -58,4 +59,96 @@
     (cancel)="closeCancelModal()"
     (confirm)="confirmCancelOrder()"
   />
+}
+
+@if (comprobanteTargetOrder) {
+  <div class="order-modal-backdrop" role="presentation">
+    <section
+      class="order-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pedido-modal-title">
+      <header class="order-modal__head">
+        <div>
+          <span>Pedido {{ comprobanteTargetOrder.codigoPedido }}</span>
+          <h2 id="pedido-modal-title">Comprobante</h2>
+        </div>
+        <button class="order-modal__close" type="button" (click)="closeOrderModal()" [disabled]="pdfLoading" aria-label="Cerrar detalle de pedido">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+
+      @if (comprobanteLoading) {
+        <p class="order-modal__state">Cargando comprobante...</p>
+      } @else if (comprobanteError && !comprobanteDetalle) {
+        <div class="order-modal__state order-modal__state--error">
+          <p>{{ comprobanteError }}</p>
+          <button type="button" (click)="openOrderModal(comprobanteTargetOrder)">Reintentar</button>
+        </div>
+      } @else if (comprobanteDetalle) {
+        @if (comprobanteError) {
+          <p class="order-modal__error">{{ comprobanteError }}</p>
+        }
+
+        <div class="receipt-summary">
+          <div>
+            <span>Numero</span>
+            <strong>{{ comprobanteDetalle.numeroCompleto || (comprobanteDetalle.serie + '-' + comprobanteDetalle.correlativo) }}</strong>
+          </div>
+          <div>
+            <span>Tipo</span>
+            <strong>{{ label(comprobanteDetalle.tipo) }}</strong>
+          </div>
+          <div>
+            <span>Emision</span>
+            <strong>{{ comprobanteDetalle.fechaEmision | date: 'dd/MM/yyyy HH:mm' }}</strong>
+          </div>
+          <div>
+            <span>Total</span>
+            <strong>{{ money(comprobanteDetalle.total) }}</strong>
+          </div>
+        </div>
+
+        <section class="receipt-section">
+          <h3>Receptor</h3>
+          <div class="receipt-fields">
+            <p><span>Documento</span><strong>{{ comprobanteDetalle.docReceptorTipo || 'DOC' }} {{ comprobanteDetalle.docReceptorNumero || 'No registrado' }}</strong></p>
+            <p><span>Razon social</span><strong>{{ comprobanteDetalle.razonSocialReceptor || 'No registrada' }}</strong></p>
+            @if (comprobanteDetalle.direccionFiscalReceptor) {
+              <p><span>Direccion fiscal</span><strong>{{ comprobanteDetalle.direccionFiscalReceptor }}</strong></p>
+            }
+          </div>
+        </section>
+
+        <section class="receipt-section">
+          <h3>Detalle</h3>
+          <div class="receipt-items">
+            @for (item of comprobanteDetalle.detalle; track item.idComprobanteDetalle) {
+              <div class="receipt-item">
+                <div>
+                  <strong>{{ item.descripcionItem || 'Item' }}</strong>
+                  <span>{{ item.cantidad }} x {{ itemPrecioCobrado(item) }}</span>
+                </div>
+                <strong>{{ money(item.subtotalLinea) }}</strong>
+              </div>
+            }
+          </div>
+        </section>
+
+        <div class="receipt-totals">
+          <p><span>Subtotal</span><strong>{{ money(comprobanteDetalle.subtotal) }}</strong></p>
+          <p><span>IGV</span><strong>{{ money(comprobanteDetalle.impuestoTotal) }}</strong></p>
+          <p><span>Total</span><strong>{{ money(comprobanteDetalle.total) }}</strong></p>
+        </div>
+
+        <footer class="order-modal__actions">
+          <button class="order-modal__secondary" type="button" (click)="closeOrderModal()" [disabled]="pdfLoading">Cerrar</button>
+          <button class="order-modal__primary" type="button" (click)="openComprobantePdf()" [disabled]="pdfLoading">
+            <span class="material-symbols-outlined">picture_as_pdf</span>
+            {{ pdfLoading ? 'Generando...' : 'Abrir PDF' }}
+          </button>
+        </footer>
+      }
+    </section>
+  </div>
 }
