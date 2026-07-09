@@ -1,0 +1,226 @@
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="overline">Diagnóstico</p>
+      <h2>Logs de errores</h2>
+      <p>Revisa errores HTTP registrados por el backend, filtra incidencias y abre el detalle técnico para soporte.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="ghost-button" (click)="loadLogs()" [disabled]="loading">Actualizar</button>
+    </div>
+  </header>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Total filtrado</span>
+      <strong>{{ totalElements }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>En esta página</span>
+      <strong>{{ logsFiltrados.length }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Errores 5xx</span>
+      <strong>{{ errores500 }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Errores 4xx</span>
+      <strong>{{ erroresCliente }}</strong>
+    </article>
+  </div>
+
+  <section class="panel">
+    <div class="filters">
+      <label>
+        Código
+        <select [(ngModel)]="statusCode">
+          @for (option of statusOptions; track option.label) {
+            <option [ngValue]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Desde
+        <input type="datetime-local" [(ngModel)]="desde" />
+      </label>
+      <label>
+        Hasta
+        <input type="datetime-local" [(ngModel)]="hasta" />
+      </label>
+      <label>
+        Ruta
+        <input type="search" [(ngModel)]="ruta" placeholder="/api/admin..." />
+      </label>
+      <label>
+        Usuario
+        <input type="search" [(ngModel)]="usuarioEmail" placeholder="admin@..." />
+      </label>
+      <label>
+        Excepción
+        <input type="search" [(ngModel)]="exceptionClass" placeholder="NullPointer..." />
+      </label>
+      <label>
+        Buscar local
+        <input type="search" [(ngModel)]="search" placeholder="Mensaje, request id..." />
+      </label>
+      <button type="button" class="primary-button" (click)="loadLogs(true)" [disabled]="loading">Aplicar</button>
+      <button type="button" class="clear-button" (click)="clearFilters()" [disabled]="loading">Limpiar</button>
+    </div>
+
+    @if (loading) {
+    <div class="state-box state-box--loading">
+      <app-loading-spinner size="lg" label="Cargando logs"></app-loading-spinner>
+    </div>
+    }
+    @if (!loading && error) {
+    <div class="state-box error">
+      <span>{{ error }}</span>
+      <button type="button" (click)="loadLogs()">Reintentar</button>
+    </div>
+    }
+    @if (!loading && !error && logsFiltrados.length === 0) {
+    <div class="state-box">
+      No hay logs de errores para los filtros seleccionados.
+    </div>
+    }
+
+    @if (!loading && !error && logsFiltrados.length > 0) {
+    <div class="table-wrap table-wrap--scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Código</th>
+            <th>Método</th>
+            <th>Ruta</th>
+            <th>Usuario</th>
+            <th>Mensaje</th>
+            <th>Excepción</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logsFiltrados; track log.idError) {
+          <tr>
+            <td>
+              {{ date(log.fecha) }}
+              <small>#{{ log.idError }}</small>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="badge(log.statusCode)">{{ log.statusCode }}</span>
+              <small>{{ log.error || 'Sin error' }}</small>
+            </td>
+            <td><span class="method-pill">{{ log.metodoHttp || 'N/D' }}</span></td>
+            <td class="path-cell">{{ log.ruta || 'Sin ruta' }}</td>
+            <td>
+              {{ log.usuarioEmail || 'Anónimo' }}
+              <small>{{ label(log.actorTipo) }}</small>
+            </td>
+            <td class="message-cell">{{ log.mensaje || 'Sin mensaje' }}</td>
+            <td>
+              <span>{{ log.exceptionClass || 'Sin excepción' }}</span>
+              @if (log.requestId) {
+                <small>{{ log.requestId }}</small>
+              }
+            </td>
+            <td>
+              <button type="button" class="detail-button" (click)="openDetail(log)">Detalle</button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    @if (!loading && !error && totalElements > 0) {
+    <footer class="pagination">
+      <span>Página {{ page + 1 }} de {{ totalPages || 1 }} · {{ totalElements }} registros</span>
+      <div>
+        <button type="button" class="ghost-button" (click)="previousPage()" [disabled]="!canPrevious">Anterior</button>
+        <button type="button" class="ghost-button" (click)="nextPage()" [disabled]="!canNext">Siguiente</button>
+      </div>
+    </footer>
+    }
+  </section>
+</section>
+
+@if (loadingDetail || selectedLog || detailError) {
+<div class="detail-backdrop">
+  <button type="button" class="detail-backdrop__close" aria-label="Cerrar detalle" (click)="closeDetail()"></button>
+  <aside class="detail-panel" role="dialog" aria-modal="true" aria-label="Detalle del log">
+    <header>
+      <div>
+        <p class="overline">Detalle</p>
+        <h3>Log de error</h3>
+      </div>
+      <button type="button" class="icon-button" aria-label="Cerrar detalle" (click)="closeDetail()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    @if (loadingDetail) {
+    <div class="state-box state-box--loading">
+      <app-loading-spinner size="md" label="Cargando detalle"></app-loading-spinner>
+    </div>
+    }
+    @if (!loadingDetail && detailError) {
+    <div class="state-box error">{{ detailError }}</div>
+    }
+
+    @if (!loadingDetail && selectedLog) {
+    <div class="detail-content">
+      <dl>
+        <div>
+          <dt>Código</dt>
+          <dd><span class="status-badge" [ngClass]="badge(selectedLog.statusCode)">{{ selectedLog.statusCode }}</span></dd>
+        </div>
+        <div>
+          <dt>Fecha</dt>
+          <dd>{{ date(selectedLog.fecha) }}</dd>
+        </div>
+        <div>
+          <dt>Ruta</dt>
+          <dd>{{ selectedLog.metodoHttp }} {{ selectedLog.ruta }}</dd>
+        </div>
+        <div>
+          <dt>Usuario</dt>
+          <dd>{{ selectedLog.usuarioEmail || 'Anónimo' }} · {{ label(selectedLog.actorTipo) }}</dd>
+        </div>
+        <div>
+          <dt>Request ID</dt>
+          <dd>{{ selectedLog.requestId || 'Sin request id' }}</dd>
+        </div>
+        <div>
+          <dt>IP</dt>
+          <dd>{{ selectedLog.ip || 'Sin IP' }}</dd>
+        </div>
+        <div>
+          <dt>User agent</dt>
+          <dd>{{ selectedLog.userAgent || 'Sin user agent' }}</dd>
+        </div>
+        <div>
+          <dt>Excepción</dt>
+          <dd>{{ selectedLog.exceptionClass || 'Sin excepción' }}</dd>
+        </div>
+      </dl>
+
+      <section>
+        <h4>Mensaje</h4>
+        <p>{{ selectedLog.mensaje }}</p>
+      </section>
+
+      <section>
+        <h4>Detalles JSON</h4>
+        <pre>{{ prettyJson(selectedLog.detallesJson) }}</pre>
+      </section>
+
+      <section>
+        <h4>Stacktrace resumido</h4>
+        <pre>{{ selectedLog.stacktraceResumen || 'Sin stacktrace registrado' }}</pre>
+      </section>
+    </div>
+    }
+  </aside>
+</div>
+}

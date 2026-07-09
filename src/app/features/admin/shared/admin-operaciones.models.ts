@@ -125,3 +125,45 @@ export interface AuditoriaEvento {
   metadataJson: string | null;
   fechaCreacion: string | null;
 }
+
+export interface AdminPageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+export interface ErrorLogResumen {
+  idError: number;
+  fecha: string | null;
+  statusCode: number;
+  error: string | null;
+  mensaje: string | null;
+  ruta: string | null;
+  metodoHttp: string | null;
+  usuarioEmail: string | null;
+  actorTipo: string | null;
+  requestId: string | null;
+  exceptionClass: string | null;
+}
+
+export interface ErrorLogDetalle extends ErrorLogResumen {
+  ip: string | null;
+  userAgent: string | null;
+  stacktraceResumen: string | null;
+  detallesJson: string | null;
+}
+
+export interface ErrorLogFiltros {
+  statusCode?: number | null;
+  desde?: string | null;
+  hasta?: string | null;
+  ruta?: string | null;
+  usuarioEmail?: string | null;
+  exceptionClass?: string | null;
+  page?: number;
+  size?: number;
+}

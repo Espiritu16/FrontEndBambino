@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
     configuracionEmpresas: `${API_BASE_URL}/api/admin/configuracion/empresas`,
     configuracionMedia: `${API_BASE_URL}/api/admin/configuracion/media`,
     auditoria: `${API_BASE_URL}/api/admin/auditoria`,
+    logsErrores: `${API_BASE_URL}/api/admin/logs/errores`,
     seguridadUsuarios: `${API_BASE_URL}/api/admin/seguridad/usuarios`,
     zonasDelivery: `${API_BASE_URL}/api/admin/configuracion/zonas-delivery`
   }

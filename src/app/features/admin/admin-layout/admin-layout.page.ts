@@ -1,13 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ConfirmModalComponent } from '../../../shared/components/confirm-modal/confirm-modal.component';
 
-type AdminNavItem = {
+interface AdminNavItem {
   label: string;
   icon: string;
   to: string;
   exact?: boolean;
-};
+}
 
 @Component({
   selector: 'app-admin-layout-page',
@@ -17,11 +17,10 @@ type AdminNavItem = {
   styleUrl: './admin-layout.page.scss'
 })
 export class AdminLayoutPageComponent implements OnInit {
+  private readonly router = inject(Router);
   private readonly authStorageKey = 'bambino_basic_auth';
   private readonly userNameStorageKey = 'bambino_user_name';
   private readonly userRoleStorageKey = 'bambino_user_role';
-
-  constructor(private readonly router: Router) {}
 
   protected userFullName = 'Administrador';
   protected userEmail = 'admin@bambino.com';
@@ -36,6 +35,7 @@ export class AdminLayoutPageComponent implements OnInit {
     { label: 'Empresa', icon: 'apartment', to: '/admin/empresa' },
     { label: 'Configuración', icon: 'tune', to: '/admin/configuracion' },
     { label: 'Usuarios y Roles', icon: 'group', to: '/admin/usuarios' },
+    { label: 'Logs', icon: 'bug_report', to: '/admin/logs' },
     { label: 'Auditoría', icon: 'policy', to: '/admin/auditoria' }
   ];
 

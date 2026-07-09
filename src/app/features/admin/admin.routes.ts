@@ -19,6 +19,7 @@ export const adminRoutes: Routes = [
       { path: 'empresa', loadChildren: () => import('./admin-empresa/admin-empresa.routes').then((m) => m.adminempresaRoutes) },
       { path: 'configuracion', loadChildren: () => import('./admin-configuracion/admin-configuracion.routes').then((m) => m.adminconfiguracionRoutes) },
       { path: 'usuarios', loadChildren: () => import('./admin-usuarios/admin-usuarios.routes').then((m) => m.adminusuariosRoutes) },
+      { path: 'logs', loadChildren: () => import('./admin-logs/admin-logs.routes').then((m) => m.adminlogsRoutes) },
       { path: 'auditoria', loadChildren: () => import('./admin-auditoria/admin-auditoria.routes').then((m) => m.adminauditoriaRoutes) }
     ]
   }
