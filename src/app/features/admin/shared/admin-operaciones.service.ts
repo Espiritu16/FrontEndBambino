@@ -1,14 +1,18 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 import { API_ENDPOINTS } from '../../../core/http/api-endpoints';
 import {
   AdminComprobante,
+  AdminPageResponse,
   AdminPago,
   AdminPedido,
   AuditoriaEvento,
   ConfiguracionGlobal,
   EmpresaAdmin,
+  ErrorLogDetalle,
+  ErrorLogFiltros,
+  ErrorLogResumen,
   SerieComprobanteAdmin,
   TransicionPedidoAdmin,
   ZonaDelivery
@@ -16,9 +20,8 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class AdminOperacionesService {
+  private readonly http = inject(HttpClient);
   private readonly authStorageKey = 'bambino_basic_auth';
-
-  constructor(private readonly http: HttpClient) {}
 
   listarPedidos() {
     return this.http.get<AdminPedido[]>(API_ENDPOINTS.admin.pedidos, { headers: this.authHeaders() });
@@ -136,6 +139,28 @@ export class AdminOperacionesService {
       headers: this.authHeaders(),
       params,
       responseType: 'blob'
+    });
+  }
+
+  listarLogsErrores(filtros: ErrorLogFiltros = {}) {
+    let params = new HttpParams()
+      .set('page', String(filtros.page ?? 0))
+      .set('size', String(filtros.size ?? 20));
+    if (filtros.statusCode) params = params.set('statusCode', String(filtros.statusCode));
+    if (filtros.desde) params = params.set('desde', filtros.desde);
+    if (filtros.hasta) params = params.set('hasta', filtros.hasta);
+    if (filtros.ruta) params = params.set('ruta', filtros.ruta);
+    if (filtros.usuarioEmail) params = params.set('usuarioEmail', filtros.usuarioEmail);
+    if (filtros.exceptionClass) params = params.set('exceptionClass', filtros.exceptionClass);
+    return this.http.get<AdminPageResponse<ErrorLogResumen>>(API_ENDPOINTS.admin.logsErrores, {
+      headers: this.authHeaders(),
+      params
+    });
+  }
+
+  obtenerLogError(idError: number) {
+    return this.http.get<ErrorLogDetalle>(`${API_ENDPOINTS.admin.logsErrores}/${idError}`, {
+      headers: this.authHeaders()
     });
   }
 
