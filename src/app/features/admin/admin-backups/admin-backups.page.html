@@ -75,7 +75,7 @@
   }
 
   @if (!loading) {
-    <section class="panel">
+    <section class="panel history-panel">
       <div class="panel-title">
         <div>
           <p class="overline">Historial</p>
@@ -86,7 +86,7 @@
       @if (backups.length === 0) {
         <div class="state-box">Todavia no hay backups registrados.</div>
       } @else {
-        <div class="table-wrap">
+        <div class="table-wrap history-table-wrap">
           <table>
             <thead>
               <tr>

@@ -200,10 +200,27 @@ input {
   color: #027a48;
 }
 
+.history-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: min(42rem, calc(100vh - 19rem));
+}
+
+.history-panel .panel-title {
+  flex: 0 0 auto;
+}
+
 .table-wrap {
   width: 100%;
   min-width: 0;
   overflow-x: auto;
+}
+
+.history-table-wrap {
+  flex: 1 1 auto;
+  min-height: 14rem;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 table {
