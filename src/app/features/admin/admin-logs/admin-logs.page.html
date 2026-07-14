@@ -31,7 +31,7 @@
 
   <section class="panel">
     <div class="filters">
-      <label>
+      <label class="filter-field filter-field--code">
         Código
         <select [(ngModel)]="statusCode">
           @for (option of statusOptions; track option.label) {
@@ -39,32 +39,34 @@
           }
         </select>
       </label>
-      <label>
+      <label class="filter-field filter-field--date">
         Desde
         <input type="datetime-local" [(ngModel)]="desde" />
       </label>
-      <label>
+      <label class="filter-field filter-field--date">
         Hasta
         <input type="datetime-local" [(ngModel)]="hasta" />
       </label>
-      <label>
+      <label class="filter-field">
         Ruta
         <input type="search" [(ngModel)]="ruta" placeholder="/api/admin..." />
       </label>
-      <label>
+      <label class="filter-field">
         Usuario
         <input type="search" [(ngModel)]="usuarioEmail" placeholder="admin@..." />
       </label>
-      <label>
+      <label class="filter-field">
         Excepción
         <input type="search" [(ngModel)]="exceptionClass" placeholder="NullPointer..." />
       </label>
-      <label>
+      <label class="filter-field filter-field--search">
         Buscar local
         <input type="search" [(ngModel)]="search" placeholder="Mensaje, request id..." />
       </label>
-      <button type="button" class="primary-button" (click)="loadLogs(true)" [disabled]="loading">Aplicar</button>
-      <button type="button" class="clear-button" (click)="clearFilters()" [disabled]="loading">Limpiar</button>
+      <div class="filter-actions">
+        <button type="button" class="primary-button" (click)="loadLogs(true)" [disabled]="loading">Aplicar</button>
+        <button type="button" class="clear-button" (click)="clearFilters()" [disabled]="loading">Limpiar</button>
+      </div>
     </div>
 
     @if (loading) {

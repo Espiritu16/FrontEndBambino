@@ -8,6 +8,9 @@ import {
   AdminPago,
   AdminPedido,
   AuditoriaEvento,
+  BackupConfiguracion,
+  BackupHistorial,
+  BackupPreview,
   ConfiguracionGlobal,
   EmpresaAdmin,
   ErrorLogDetalle,
@@ -160,6 +163,49 @@ export class AdminOperacionesService {
 
   obtenerLogError(idError: number) {
     return this.http.get<ErrorLogDetalle>(`${API_ENDPOINTS.admin.logsErrores}/${idError}`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  obtenerBackupConfiguracion() {
+    return this.http.get<BackupConfiguracion>(`${API_ENDPOINTS.admin.backups}/configuracion`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  actualizarBackupConfiguracion(configuracion: Pick<BackupConfiguracion, 'activo' | 'horaEjecucion' | 'retencionCantidad' | 'rutaDestino'>) {
+    return this.http.put<BackupConfiguracion>(`${API_ENDPOINTS.admin.backups}/configuracion`, configuracion, {
+      headers: this.authHeaders()
+    });
+  }
+
+  listarBackups() {
+    return this.http.get<BackupHistorial[]>(API_ENDPOINTS.admin.backups, {
+      headers: this.authHeaders()
+    });
+  }
+
+  generarBackup() {
+    return this.http.post<BackupHistorial>(`${API_ENDPOINTS.admin.backups}/generar`, null, {
+      headers: this.authHeaders()
+    });
+  }
+
+  obtenerBackupPreview(idBackup: number) {
+    return this.http.get<BackupPreview>(`${API_ENDPOINTS.admin.backups}/${idBackup}/preview`, {
+      headers: this.authHeaders()
+    });
+  }
+
+  descargarBackup(idBackup: number) {
+    return this.http.get(`${API_ENDPOINTS.admin.backups}/${idBackup}/descargar`, {
+      headers: this.authHeaders(),
+      responseType: 'blob'
+    });
+  }
+
+  eliminarBackup(idBackup: number) {
+    return this.http.delete<void>(`${API_ENDPOINTS.admin.backups}/${idBackup}`, {
       headers: this.authHeaders()
     });
   }

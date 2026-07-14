@@ -36,6 +36,7 @@ export class AdminLayoutPageComponent implements OnInit {
     { label: 'Configuración', icon: 'tune', to: '/admin/configuracion' },
     { label: 'Usuarios y Roles', icon: 'group', to: '/admin/usuarios' },
     { label: 'Logs', icon: 'bug_report', to: '/admin/logs' },
+    { label: 'Backups', icon: 'backup', to: '/admin/backups' },
     { label: 'Auditoría', icon: 'policy', to: '/admin/auditoria' }
   ];
 

@@ -167,3 +167,35 @@ export interface ErrorLogFiltros {
   page?: number;
   size?: number;
 }
+
+export interface BackupConfiguracion {
+  idConfig: number;
+  activo: boolean;
+  horaEjecucion: string;
+  retencionCantidad: number;
+  rutaDestino: string;
+  fechaActualizacion: string | null;
+}
+
+export interface BackupHistorial {
+  idBackup: number;
+  nombreArchivo: string;
+  rutaArchivo: string;
+  tamanioBytes: number;
+  estado: 'GENERANDO' | 'COMPLETADO' | 'ERROR';
+  mensajeError: string | null;
+  fechaInicio: string | null;
+  fechaFin: string | null;
+  tipoDisparo: 'MANUAL' | 'AUTOMATICO';
+}
+
+export interface BackupPreview {
+  idBackup: number;
+  nombreArchivo: string;
+  tamanioBytes: number;
+  estado: string;
+  fechaInicio: string | null;
+  fechaFin: string | null;
+  tablas: string[];
+  primerasLineas: string[];
+}
