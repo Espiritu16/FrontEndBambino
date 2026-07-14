@@ -1,0 +1,201 @@
+<section class="admin-page">
+  <header class="page-header">
+    <div>
+      <p class="overline">Respaldo</p>
+      <h2>Backups de base de datos</h2>
+      <p>Programa respaldos automaticos, genera copias manuales y descarga archivos SQL comprimidos.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="ghost-button" (click)="load()" [disabled]="loading || generating">Actualizar</button>
+      <button type="button" class="primary-button" (click)="generateNow()" [disabled]="loading || generating">
+        {{ generating ? 'Generando...' : 'Generar ahora' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="summary-grid">
+    <article class="summary-card">
+      <span>Backups completos</span>
+      <strong>{{ completedBackups() }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Programacion</span>
+      <strong>{{ configuracion?.activo ? 'Activa' : 'Pausada' }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Ultimo backup</span>
+      <strong>{{ lastBackup() ? date(lastBackup()!.fechaInicio) : 'Sin backups' }}</strong>
+    </article>
+  </div>
+
+  @if (loading) {
+    <div class="panel state-box state-box--loading">
+      <app-loading-spinner size="lg" label="Cargando backups"></app-loading-spinner>
+    </div>
+  }
+
+  @if (!loading && configuracion) {
+    <section class="panel config-panel">
+      <div class="panel-title">
+        <div>
+          <p class="overline">Configuracion</p>
+          <h3>Backup automatico</h3>
+        </div>
+        <label class="toggle-field">
+          <input type="checkbox" [(ngModel)]="configuracion.activo" />
+          <span>{{ configuracion.activo ? 'Activo' : 'Inactivo' }}</span>
+        </label>
+      </div>
+
+      <div class="config-grid">
+        <label>
+          Hora
+          <input type="time" [(ngModel)]="configuracion.horaEjecucion" />
+        </label>
+        <label>
+          Retencion
+          <input type="number" min="1" max="60" [(ngModel)]="configuracion.retencionCantidad" />
+        </label>
+        <label class="path-field">
+          Ruta destino
+          <input type="text" [(ngModel)]="configuracion.rutaDestino" placeholder="backups/db" />
+        </label>
+        <button type="button" class="primary-button" (click)="saveConfig()" [disabled]="saving">
+          {{ saving ? 'Guardando...' : 'Guardar' }}
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (error) {
+    <div class="state-box error">{{ error }}</div>
+  }
+  @if (success) {
+    <div class="state-box success">{{ success }}</div>
+  }
+
+  @if (!loading) {
+    <section class="panel history-panel">
+      <div class="panel-title">
+        <div>
+          <p class="overline">Historial</p>
+          <h3>Archivos generados</h3>
+        </div>
+      </div>
+
+      @if (backups.length === 0) {
+        <div class="state-box">Todavia no hay backups registrados.</div>
+      } @else {
+        <div class="table-wrap history-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Archivo</th>
+                <th>Estado</th>
+                <th>Tipo</th>
+                <th>Tamano</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (backup of backups; track backup.idBackup) {
+                <tr>
+                  <td>
+                    {{ date(backup.fechaInicio) }}
+                    @if (backup.fechaFin) {
+                      <small>Fin {{ date(backup.fechaFin) }}</small>
+                    }
+                  </td>
+                  <td class="file-cell">
+                    <strong>{{ backup.nombreArchivo }}</strong>
+                    <small>{{ backup.rutaArchivo }}</small>
+                    @if (backup.mensajeError) {
+                      <small class="error-text">{{ backup.mensajeError }}</small>
+                    }
+                  </td>
+                  <td>
+                    <span class="status-badge" [ngClass]="'status-' + backup.estado.toLowerCase()">
+                      {{ statusLabel(backup.estado) }}
+                    </span>
+                  </td>
+                  <td>{{ triggerLabel(backup.tipoDisparo) }}</td>
+                  <td>{{ size(backup.tamanioBytes) }}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="ghost-button" (click)="openPreview(backup)" [disabled]="backup.estado !== 'COMPLETADO'">Preview</button>
+                      <button type="button" class="ghost-button" (click)="download(backup)" [disabled]="backup.estado !== 'COMPLETADO'">Descargar</button>
+                      <button type="button" class="danger-button" (click)="deleteBackup(backup)">Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</section>
+
+@if (previewLoading || preview || previewError) {
+  <div class="preview-backdrop">
+    <button type="button" class="preview-backdrop__close" aria-label="Cerrar preview" (click)="closePreview()"></button>
+    <aside class="preview-panel" role="dialog" aria-modal="true" aria-label="Preview del backup">
+      <header>
+        <div>
+          <p class="overline">Preview</p>
+          <h3>{{ preview?.nombreArchivo || 'Backup' }}</h3>
+        </div>
+        <button type="button" class="icon-button" aria-label="Cerrar preview" (click)="closePreview()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+
+      @if (previewLoading) {
+        <div class="state-box state-box--loading">
+          <app-loading-spinner size="md" label="Leyendo backup"></app-loading-spinner>
+        </div>
+      }
+      @if (!previewLoading && previewError) {
+        <div class="state-box error">{{ previewError }}</div>
+      }
+      @if (!previewLoading && preview) {
+        <div class="preview-content">
+          <dl>
+            <div>
+              <dt>Tamano</dt>
+              <dd>{{ size(preview.tamanioBytes) }}</dd>
+            </div>
+            <div>
+              <dt>Estado</dt>
+              <dd>{{ statusLabel(preview.estado) }}</dd>
+            </div>
+            <div>
+              <dt>Fecha</dt>
+              <dd>{{ date(preview.fechaInicio) }}</dd>
+            </div>
+            <div>
+              <dt>Tablas</dt>
+              <dd>{{ preview.tablas.length }}</dd>
+            </div>
+          </dl>
+
+          <section>
+            <h4>Tablas incluidas</h4>
+            <div class="table-list">
+              @for (tabla of preview.tablas; track tabla) {
+                <span>{{ tabla }}</span>
+              }
+            </div>
+          </section>
+
+          <section>
+            <h4>Primeras lineas</h4>
+            <pre>{{ preview.primerasLineas.join('\n') }}</pre>
+          </section>
+        </div>
+      }
+    </aside>
+  </div>
+}
