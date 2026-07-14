@@ -64,7 +64,7 @@ export class AdminConfiguracionPageComponent implements OnInit {
     {
       name: 'Portainer',
       description: 'Administracion general de contenedores y servicios del VPS.',
-      url: 'https://portainer-bambino.proyectoutp.com',
+      url: 'https://portainer.proyectoutp.com',
       tag: 'VPS'
     }
   ];
