@@ -203,7 +203,9 @@ input {
 .history-panel {
   display: flex;
   flex-direction: column;
-  max-height: min(42rem, calc(100vh - 19rem));
+  height: min(42rem, calc(100dvh - 19rem));
+  min-height: 18rem;
+  overflow: hidden;
 }
 
 .history-panel .panel-title {
@@ -218,6 +220,7 @@ input {
 
 .history-table-wrap {
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 14rem;
   overflow: auto;
   overscroll-behavior: contain;
@@ -428,6 +431,10 @@ pre {
 
   .header-actions button {
     flex: 1;
+  }
+
+  .history-panel {
+    height: min(38rem, calc(100dvh - 16rem));
   }
 }
 
