@@ -21,6 +21,7 @@
       <button type="button" [class.active]="activeTab === 'empresas'" (click)="setTab('empresas')">Empresas</button>
       <button type="button" [class.active]="activeTab === 'series'" (click)="setTab('series')">Series</button>
       <button type="button" [class.active]="activeTab === 'transiciones'" (click)="setTab('transiciones')">Transiciones</button>
+      <button type="button" [class.active]="activeTab === 'monitoreo'" (click)="setTab('monitoreo')">Monitoreo</button>
     </nav>
 
     <section *ngIf="activeTab === 'delivery'" class="panel">
@@ -229,6 +230,28 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </section>
+
+    <section *ngIf="activeTab === 'monitoreo'" class="panel">
+      <div class="section-heading">
+        <div>
+          <h3>Herramientas de monitoreo</h3>
+          <p>Accesos externos para revisar metricas, dashboards y contenedores del VPS.</p>
+        </div>
+      </div>
+
+      <div class="monitoring-grid">
+        <article class="monitoring-card" *ngFor="let item of monitoringAccess">
+          <div>
+            <span class="tool-tag">{{ item.tag }}</span>
+            <h4>{{ item.name }}</h4>
+            <p>{{ item.description }}</p>
+          </div>
+          <a class="tool-link" [href]="item.url" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Abrir ' + item.name + ' en nueva pestana'">
+            Abrir
+          </a>
+        </article>
       </div>
     </section>
   </ng-container>

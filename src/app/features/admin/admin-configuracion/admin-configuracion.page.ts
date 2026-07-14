@@ -15,6 +15,15 @@ import { formatMoney, labelFromEnum } from '../shared/admin-formatters';
 import { scheduleUiRefresh } from '../../../shared/utils/async-ui.util';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
+type ConfiguracionTab = 'delivery' | 'global' | 'empresas' | 'series' | 'transiciones' | 'monitoreo';
+
+interface MonitoringAccess {
+  name: string;
+  description: string;
+  url: string;
+  tag: string;
+}
+
 @Component({
   selector: 'app-admin-configuracion-page',
   standalone: true,
@@ -31,7 +40,7 @@ export class AdminConfiguracionPageComponent implements OnInit {
   protected savingGlobal = false;
   protected error = '';
   protected success = '';
-  protected activeTab: 'delivery' | 'global' | 'empresas' | 'series' | 'transiciones' = 'delivery';
+  protected activeTab: ConfiguracionTab = 'delivery';
   protected global: ConfiguracionGlobal | null = null;
   protected zonas: ZonaDelivery[] = [];
   protected empresas: EmpresaAdmin[] = [];
@@ -39,6 +48,26 @@ export class AdminConfiguracionPageComponent implements OnInit {
   protected transiciones: TransicionPedidoAdmin[] = [];
   protected savingZonaIds = new Set<number | 'new'>();
   protected zonaErrors: Record<string, string> = {};
+  protected readonly monitoringAccess: MonitoringAccess[] = [
+    {
+      name: 'Grafana',
+      description: 'Dashboards visuales de rendimiento, errores, memoria y estado del backend.',
+      url: 'https://grafana-bambino.proyectoutp.com',
+      tag: 'Dashboards'
+    },
+    {
+      name: 'Prometheus',
+      description: 'Metricas tecnicas crudas recolectadas desde Spring Boot Actuator.',
+      url: 'https://prometheus-bambino.proyectoutp.com',
+      tag: 'Metricas'
+    },
+    {
+      name: 'Portainer',
+      description: 'Administracion general de contenedores y servicios del VPS.',
+      url: 'https://portainer-bambino.proyectoutp.com',
+      tag: 'VPS'
+    }
+  ];
 
   ngOnInit(): void {
     void this.loadConfiguracion();
@@ -147,7 +176,7 @@ export class AdminConfiguracionPageComponent implements OnInit {
     return this.zonaErrors[String(zona.idZona ?? 'new')] ?? '';
   }
 
-  protected setTab(tab: typeof this.activeTab): void {
+  protected setTab(tab: ConfiguracionTab): void {
     this.activeTab = tab;
   }
 
