@@ -142,11 +142,11 @@ describe('AlmacenDemo', () => {
     });
 
     it('cambiar el estado deja rastro en la auditoría', () => {
-      const antes = almacen.listarAuditoria().totalElements;
+      const antes = almacen.listarAuditoria().length;
       almacen.cambiarEstadoPedido(12, 'CONFIRMADO');
 
       expect(almacen.obtenerPedido(12).estadoActual).toBe('CONFIRMADO');
-      expect(almacen.listarAuditoria().totalElements).toBe(antes + 1);
+      expect(almacen.listarAuditoria()).toHaveLength(antes + 1);
     });
 
     it('no permite mover un pedido ya entregado', () => {
@@ -224,8 +224,9 @@ describe('AlmacenDemo', () => {
     });
 
     it('la auditoría filtra por entidad', () => {
-      const pagina = almacen.listarAuditoria({ entidad: 'PEDIDO' });
-      expect(pagina.content.every((e) => e.entidad === 'PEDIDO')).toBe(true);
+      const eventos = almacen.listarAuditoria({ entidad: 'PEDIDO' });
+      expect(eventos.length).toBeGreaterThan(0);
+      expect(eventos.every((e) => e.entidad === 'PEDIDO')).toBe(true);
     });
   });
 
@@ -236,5 +237,70 @@ describe('AlmacenDemo', () => {
 
     expect(almacen.listarCarrito()).toHaveLength(0);
     expect(almacen.obtenerProducto(1).precioFinal).toBe(55.92);
+  });
+});
+
+describe('AlmacenDemo · contratos que consume el panel', () => {
+  let almacen: AlmacenDemo;
+
+  beforeEach(() => {
+    almacen = new AlmacenDemo();
+  });
+
+  it('las ofertas del panel traen los campos que la tabla muestra', () => {
+    const ofertas = almacen.listarOfertasAdmin();
+
+    expect(ofertas.length).toBeGreaterThan(0);
+    for (const oferta of ofertas) {
+      expect(oferta).toHaveProperty('idOferta');
+      expect(oferta).toHaveProperty('valorDescuento');
+      expect(oferta).toHaveProperty('idsProductos');
+      expect(['PORCENTAJE', 'MONTO_FIJO']).toContain(oferta.tipo);
+      expect(['BORRADOR', 'PROGRAMADA', 'ACTIVA', 'INACTIVA', 'EXPIRADA']).toContain(oferta.estado);
+    }
+  });
+
+  it('una oferta desactivada se refleja como INACTIVA en el panel', () => {
+    almacen.actualizarOferta(1, { activo: false });
+    const oferta = almacen.listarOfertasAdmin().find((o) => o.idOferta === 1)!;
+
+    expect(oferta.estado).toBe('INACTIVA');
+  });
+
+  it('guardar desde el panel entiende su propio contrato', () => {
+    const creada = almacen.crearOferta({
+      nombre: 'Jueves de parrilla',
+      tipo: 'MONTO_FIJO',
+      valorDescuento: 15,
+      idsProductos: [9],
+      estado: 'ACTIVA',
+    });
+
+    expect(creada.tipo).toBe('MONTO');
+    expect(creada.valor).toBe(15);
+    expect(creada.idProducto).toBe(9);
+    expect(almacen.listarOfertasAdmin()[0].estado).toBe('ACTIVA');
+  });
+
+  it('la auditoría se entrega como lista, que es lo que espera la pantalla', () => {
+    const eventos = almacen.listarAuditoria();
+
+    expect(Array.isArray(eventos)).toBe(true);
+    expect(eventos.length).toBeGreaterThan(0);
+  });
+
+  it('la media trae el contrato completo: sin algún campo la pantalla falla', () => {
+    for (const clave of ['HOME_HERO_BANNER', 'CARTA_PDF', 'OTRA_CLAVE']) {
+      const media = almacen.media(clave);
+      for (const campo of ['idMedia', 'clave', 'nombre', 'descripcion', 'tipo', 'url', 'publicId', 'versionTag', 'activa']) {
+        expect(media, `${clave} sin ${campo}`).toHaveProperty(campo);
+      }
+    }
+  });
+
+  it('la portada y la carta llegan activas y con contenido', () => {
+    expect(almacen.media('HOME_HERO_BANNER').activa).toBe(true);
+    expect(almacen.media('HOME_HERO_BANNER').url).toContain('data:image/svg+xml');
+    expect(almacen.media('CARTA_PDF').url).toContain('data:application/pdf');
   });
 });

@@ -215,9 +215,19 @@
   .admin-shell {
     min-height: 100vh;
     height: auto;
-    grid-template-columns: 1fr;
+    /* `1fr` se expandía al ancho de las tablas y arrastraba consigo la barra
+       lateral, dejando toda la página desplazable en horizontal. Con
+       `minmax(0, …)` la columna respeta el ancho de la pantalla y el scroll
+       queda dentro de cada tabla. */
+    grid-template-columns: minmax(0, 1fr);
     overflow: visible;
   }
+
+  .admin-sidebar,
+  .admin-content {
+    min-width: 0;
+  }
+
 
   .admin-sidebar {
     position: static;

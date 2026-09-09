@@ -307,7 +307,7 @@ const RUTAS: Ruta[] = [
     patron: /^\/api\/admin\/catalogo\/categorias\/(\d+)$/,
     manejar: (a, { partes, cuerpo }) => a.actualizarCategoria(Number(partes[0]), cuerpo ?? {}),
   },
-  { metodo: 'GET', patron: /^\/api\/admin\/catalogo\/ofertas$/, manejar: (a) => a.listarOfertas() },
+  { metodo: 'GET', patron: /^\/api\/admin\/catalogo\/ofertas$/, manejar: (a) => a.listarOfertasAdmin() },
   { metodo: 'POST', patron: /^\/api\/admin\/catalogo\/ofertas$/, manejar: (a, { cuerpo }) => a.crearOferta(cuerpo ?? {}) },
   {
     metodo: 'PUT',

@@ -222,14 +222,29 @@ input {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 14rem;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
 }
 
 table {
   width: 100%;
-  min-width: 980px;
+  /* El `min-width` de 980px no cabía en el panel y dejaba la tabla desplazable
+     en horizontal. Con anchos fijos se ajusta y el texto largo se recorta. */
+  table-layout: fixed;
   border-collapse: collapse;
+}
+
+thead th:nth-child(1) { width: 17%; }
+thead th:nth-child(2) { width: 34%; }
+thead th:nth-child(3) { width: 13%; }
+thead th:nth-child(4) { width: 13%; }
+thead th:nth-child(5) { width: 11%; }
+thead th:nth-child(6) { width: 12%; }
+
+tbody td {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 th,

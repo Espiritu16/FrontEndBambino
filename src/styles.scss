@@ -145,3 +145,18 @@ h3,
 .admin-shell .pdf-preview__frame--btn:disabled {
   cursor: not-allowed;
 }
+
+/* Panel administrativo en pantallas pequeñas.
+   Los paneles de cada página se estiraban al ancho de su tabla y arrastraban
+   toda la página, que quedaba desplazable en horizontal. Estas reglas van aquí
+   y no en el SCSS del layout porque la encapsulación de estilos de Angular
+   impide que alcancen a los componentes hijos. */
+@media (max-width: 960px) {
+  .admin-content section,
+  .admin-content .panel,
+  .admin-content .table-wrap,
+  .admin-content .history-table-wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+}

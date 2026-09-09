@@ -245,6 +245,33 @@ export class AlmacenDemo {
     }));
   }
 
+  /** Estado derivado de la vigencia, como en el panel real. */
+  private estadoOferta(oferta: OfertaDemo): string {
+    if (!oferta.activo) return 'INACTIVA';
+    const ahoraMs = Date.now();
+    if (oferta.fechaFin && new Date(oferta.fechaFin).getTime() < ahoraMs) return 'EXPIRADA';
+    if (oferta.fechaInicio && new Date(oferta.fechaInicio).getTime() > ahoraMs) return 'PROGRAMADA';
+    return 'ACTIVA';
+  }
+
+  /**
+   * El panel administrativo maneja un contrato distinto al del catálogo público:
+   * `valorDescuento`, `estado` como enumerado, `idsProductos` y `MONTO_FIJO`.
+   */
+  listarOfertasAdmin() {
+    return this.ofertas.map((oferta) => ({
+      idOferta: oferta.idOferta,
+      nombre: oferta.nombre,
+      tipo: oferta.tipo === 'MONTO' ? 'MONTO_FIJO' : 'PORCENTAJE',
+      valorDescuento: oferta.valor,
+      precioEspecial: null,
+      estado: this.estadoOferta(oferta),
+      fechaInicio: oferta.fechaInicio ?? '',
+      fechaFin: oferta.fechaFin ?? '',
+      idsProductos: oferta.idProducto != null ? [oferta.idProducto] : [],
+    }));
+  }
+
   listarProductosEnOferta() {
     const conOferta = this.ofertas.filter((o) => o.activo).map((o) => o.idProducto);
     return this.productos.filter((p) => conOferta.includes(p.idProducto)).map((p) => this.conOferta(p));
@@ -610,18 +637,32 @@ export class AlmacenDemo {
     return categoria;
   }
 
-  crearOferta(datos: Record<string, unknown>) {
-    const oferta: OfertaDemo = {
-      idOferta: this.nuevoId(),
-      nombre: String(datos['nombre'] ?? 'Oferta'),
-      descripcion: (datos['descripcion'] as string) ?? null,
-      tipo: (datos['tipo'] as OfertaDemo['tipo']) ?? 'PORCENTAJE',
-      valor: Number(datos['valor'] ?? 0),
-      idProducto: datos['idProducto'] != null ? Number(datos['idProducto']) : null,
-      activo: datos['activo'] !== false,
-      fechaInicio: (datos['fechaInicio'] as string) ?? ahora(),
-      fechaFin: (datos['fechaFin'] as string) ?? null,
+  /** Traduce el contrato del panel al modelo interno de la demo. */
+  private desdePayloadOferta(datos: Record<string, unknown>, base?: OfertaDemo): OfertaDemo {
+    const productos = (datos['idsProductos'] as number[]) ?? null;
+    const tipoPanel = String(datos['tipo'] ?? base?.tipo ?? 'PORCENTAJE');
+    return {
+      idOferta: base?.idOferta ?? this.nuevoId(),
+      nombre: String(datos['nombre'] ?? base?.nombre ?? 'Oferta'),
+      descripcion: (datos['descripcion'] as string) ?? base?.descripcion ?? null,
+      tipo: tipoPanel.startsWith('MONTO') ? 'MONTO' : 'PORCENTAJE',
+      valor: Number(datos['valorDescuento'] ?? datos['valor'] ?? base?.valor ?? 0),
+      idProducto:
+        productos?.length ? Number(productos[0])
+        : datos['idProducto'] != null ? Number(datos['idProducto'])
+        : base?.idProducto ?? null,
+      activo:
+        datos['estado'] != null ? String(datos['estado']) === 'ACTIVA'
+        : datos['activo'] != null ? Boolean(datos['activo'])
+        : base?.activo ?? true,
+      fechaInicio: (datos['fechaInicio'] as string) ?? base?.fechaInicio ?? ahora(),
+      fechaFin: (datos['fechaFin'] as string) ?? base?.fechaFin ?? null,
     };
+  }
+
+  crearOferta(datos: Record<string, unknown>) {
+    const oferta = this.desdePayloadOferta(datos);
+    if (!oferta.nombre.trim()) throw new ErrorDemo(400, 'El nombre de la oferta es obligatorio.');
     this.ofertas.unshift(oferta);
     return oferta;
   }
@@ -629,14 +670,7 @@ export class AlmacenDemo {
   actualizarOferta(idOferta: number, datos: Record<string, unknown>) {
     const oferta = this.ofertas.find((o) => o.idOferta === Number(idOferta));
     if (!oferta) throw new ErrorDemo(404, 'Oferta no encontrada.');
-    Object.assign(oferta, {
-      nombre: datos['nombre'] ?? oferta.nombre,
-      descripcion: datos['descripcion'] ?? oferta.descripcion,
-      tipo: datos['tipo'] ?? oferta.tipo,
-      valor: datos['valor'] != null ? Number(datos['valor']) : oferta.valor,
-      idProducto: datos['idProducto'] != null ? Number(datos['idProducto']) : oferta.idProducto,
-      activo: datos['activo'] != null ? Boolean(datos['activo']) : oferta.activo,
-    });
+    Object.assign(oferta, this.desdePayloadOferta(datos, oferta));
     return oferta;
   }
 
@@ -679,14 +713,16 @@ export class AlmacenDemo {
     return zona;
   }
 
+  /** El panel espera la lista de eventos, no una página. */
   listarAuditoria(filtros: { entidad?: string; accion?: string; actorTipo?: string } = {}) {
-    const items = this.auditoria.filter(
-      (e) =>
-        (!filtros.entidad || e.entidad === filtros.entidad) &&
-        (!filtros.accion || e.accion === filtros.accion) &&
-        (!filtros.actorTipo || e.actorTipo === filtros.actorTipo)
-    );
-    return this.paginar(items, 0, items.length);
+    return this.auditoria
+      .filter(
+        (e) =>
+          (!filtros.entidad || e.entidad === filtros.entidad) &&
+          (!filtros.accion || e.accion === filtros.accion) &&
+          (!filtros.actorTipo || e.actorTipo === filtros.actorTipo)
+      )
+      .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime());
   }
 
   listarLogs(filtros: { statusCode?: number; page?: number; size?: number } = {}) {
@@ -817,25 +853,50 @@ export class AlmacenDemo {
     return { llavePublica: 'pk_test_demo', habilitado: false, mensaje: 'Pagos deshabilitados en la demostración.' };
   }
 
+  /**
+   * Contrato completo de una media: el panel administrativo procesa todos estos
+   * campos al cargarla, y si falta alguno la pantalla falla al construir su
+   * formulario.
+   */
   media(clave: string) {
-    // `activa` es obligatorio: las páginas descartan la media que no lo trae.
-    // `versionTag` va nulo para no añadir query a los data URI de las ilustraciones.
+    const base = {
+      idMedia: 1,
+      clave,
+      mediaKey: clave,
+      nombre: '',
+      descripcion: '',
+      tipo: 'IMAGEN' as 'IMAGEN' | 'PDF' | 'VIDEO',
+      url: '',
+      publicId: '',
+      versionTag: null as string | null,
+      activa: false,
+      actualizadoEn: fechaRelativa(20),
+    };
+
     if (clave === 'CARTA_PDF') {
       return {
-        clave, mediaKey: clave, url: cartaPdfDemo(), nombreArchivo: 'carta-demo.pdf',
-        activa: true, versionTag: null, tipo: 'PDF', actualizadoEn: fechaRelativa(10),
+        ...base,
+        idMedia: 2,
+        nombre: 'Carta en PDF',
+        descripcion: 'Carta de demostración generada en el navegador.',
+        tipo: 'PDF' as const,
+        url: cartaPdfDemo(),
+        activa: true,
+        actualizadoEn: fechaRelativa(10),
       };
     }
+
     if (clave === 'HOME_HERO_BANNER') {
       return {
-        clave, mediaKey: clave, url: imagenHero(), nombreArchivo: 'portada-demo.svg',
-        activa: true, versionTag: null, tipo: 'IMAGEN', actualizadoEn: fechaRelativa(20),
+        ...base,
+        nombre: 'Portada de inicio',
+        descripcion: 'Ilustración de demostración generada en el navegador.',
+        url: imagenHero(),
+        activa: true,
       };
     }
-    return {
-      clave, mediaKey: clave, url: '', nombreArchivo: null,
-      activa: false, versionTag: null, tipo: 'IMAGEN', actualizadoEn: fechaRelativa(20),
-    };
+
+    return { ...base, nombre: clave, descripcion: 'Sin contenido en la demostración.' };
   }
 }
 

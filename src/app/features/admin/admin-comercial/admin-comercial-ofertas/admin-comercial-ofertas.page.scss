@@ -115,8 +115,15 @@ select {
 
 table {
   border-collapse: collapse;
-  min-width: 920px;
+  /* El `min-width` superaba por unos píxeles el ancho del panel y dejaba la
+     tabla desplazable en horizontal. */
+  table-layout: fixed;
   width: 100%;
+}
+
+tbody td {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 th,
