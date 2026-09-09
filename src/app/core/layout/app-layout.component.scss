@@ -279,6 +279,22 @@
   gap: 2rem;
 }
 
+/* Sin esto las cuatro columnas seguían en fila en el móvil y empujaban el ancho
+   de la página, que quedaba desplazable en horizontal. */
+@media (max-width: 900px) {
+  .footer__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.75rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer__grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
 .footer h3,
 .footer h4 {
   color: var(--color-white);
