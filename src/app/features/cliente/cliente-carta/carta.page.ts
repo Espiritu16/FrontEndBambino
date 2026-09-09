@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
@@ -24,6 +24,7 @@ type ConfiguracionMediaPublicResponse = {
 export class CartaPageComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly apiBase = API_ENDPOINTS.public.configuracionMedia;
   private readonly cartaPdfCacheKey = 'bambino_carta_pdf_url';
 
@@ -71,6 +72,8 @@ export class CartaPageComponent implements OnInit {
       }
     } finally {
       this.loading = false;
+      // Sin zone.js la vista no se entera de que terminó la carga.
+      this.cdr.detectChanges();
     }
   }
 

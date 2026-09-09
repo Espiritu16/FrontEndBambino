@@ -1,14 +1,15 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ang-bambino",
-  "compatibility_date": "2026-05-20",
-  "observability": {
-    "enabled": true
-  },
-  "assets": {
-    "directory": "dist/"
-  },
-  "compatibility_flags": [
-    "nodejs_compat"
-  ]
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "bambino-demo",
+	"compatibility_date": "2026-09-09",
+	// Demo 100% estática: sin "main", no se ejecuta ningún Worker.
+	// La API la resuelve el propio navegador (src/demo/).
+	"routes": [
+		{ "pattern": "bambino.kevin-espiritu.com", "custom_domain": true }
+	],
+	"assets": {
+		"directory": "./dist/frontend-bambino-app/browser",
+		// Angular es una SPA: cualquier ruta profunda debe servir index.html.
+		"not_found_handling": "single-page-application"
+	}
 }

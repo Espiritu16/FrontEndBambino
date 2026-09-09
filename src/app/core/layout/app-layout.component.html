@@ -130,6 +130,25 @@
           </button>
         </form>
 
+        <div class="login-modal__demo">
+          <p class="login-modal__demo-title">Demostración</p>
+          <p class="login-modal__demo-text">
+            Demo sin backend: los datos son ficticios y viven en tu navegador. Entra con un clic
+            para recorrerla con cada rol.
+          </p>
+          <div class="login-modal__demo-list">
+            @for (cuenta of cuentasDemo; track cuenta.email) {
+              <button type="button" class="login-modal__demo-item" [disabled]="loginLoading" (click)="entrarComo(cuenta)">
+                <span>
+                  <strong>{{ cuenta.rol }}</strong>
+                  <small>{{ cuenta.descripcion }}</small>
+                </span>
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
+            }
+          </div>
+        </div>
+
         <div class="login-modal__register">
           ¿No tienes cuenta? <button type="button" (click)="openRegister()">Regístrate aquí</button>
         </div>

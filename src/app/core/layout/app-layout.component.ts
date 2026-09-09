@@ -8,6 +8,7 @@ import { PlannedFeatureModalComponent } from '../../shared/components/planned-fe
 import { matchesSearchQuery } from '../../shared/utils/search-match.util';
 import { API_BASE_URL } from '../http/api-endpoints';
 import { resolveBackendAssetUrl } from '../../shared/utils/media-url.util';
+import { CUENTAS_DEMO, CuentaDemo } from '../../../demo/demo.config';
 
 type RegisterFieldErrors = {
   email?: string;
@@ -118,8 +119,10 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
   protected modalView: 'login' | 'forgot' | 'register' = 'login';
   protected forgotStep: 'request' | 'code' | 'reset' | 'done' = 'request';
 
-  protected loginEmail = '';
-  protected loginPassword = '';
+  /** En la demo el formulario llega precargado con la cuenta de cliente. */
+  protected loginEmail = CUENTAS_DEMO[0].email;
+  protected loginPassword = CUENTAS_DEMO[0].password;
+  protected readonly cuentasDemo = CUENTAS_DEMO;
   protected showLoginPassword = false;
   protected loginError = '';
   protected loginLoading = false;
@@ -970,6 +973,13 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
 
   protected buildRegisterEmail(): string { return `${this.registerEmailLocal.trim().toLowerCase()}@${this.registerEmailDomain}`; }
   private clearRegisterDraft(): void { try { localStorage.removeItem(this.registerDraftStorageKey); } catch {} }
+
+  /** Acceso rápido de la demo: rellena las credenciales del rol y entra. */
+  protected entrarComo(cuenta: CuentaDemo): void {
+    this.loginEmail = cuenta.email;
+    this.loginPassword = cuenta.password;
+    void this.submitLogin();
+  }
 
   private async authenticateBasic(email: string, password: string): Promise<{ token: string; usuario: string | null; nombres: string | null; apellidos: string | null; rol: string | null } | null> {
     const token = btoa(`${email}:${password}`);
