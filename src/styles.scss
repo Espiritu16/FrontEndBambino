@@ -146,17 +146,17 @@ h3,
   cursor: not-allowed;
 }
 
-/* Panel administrativo en pantallas pequeñas.
-   Los paneles de cada página se estiraban al ancho de su tabla y arrastraban
-   toda la página, que quedaba desplazable en horizontal. Estas reglas van aquí
-   y no en el SCSS del layout porque la encapsulación de estilos de Angular
-   impide que alcancen a los componentes hijos. */
-@media (max-width: 960px) {
-  .admin-content section,
-  .admin-content .panel,
-  .admin-content .table-wrap,
-  .admin-content .history-table-wrap {
-    min-width: 0;
-    max-width: 100%;
-  }
+/* Panel administrativo: los paneles y los contenedores de tabla se estiraban al
+   ancho de su contenido y arrastraban toda la página, que quedaba desplazable en
+   horizontal. Acotándolos, cada tabla ancha se desplaza dentro de su propio
+   contenedor —que ya declara `overflow-x: auto`— y la página nunca.
+
+   Estas reglas van aquí y no en el SCSS del layout porque la encapsulación de
+   estilos de Angular impide que alcancen a los componentes hijos. */
+.admin-content section,
+.admin-content .panel,
+.admin-content .table-wrap,
+.admin-content .history-table-wrap {
+  min-width: 0;
+  max-width: 100%;
 }
