@@ -182,11 +182,31 @@ select {
   max-height: calc(100dvh - 360px);
   min-height: 360px;
   overflow-y: auto;
+  overflow-x: hidden;
+}
+
+thead th:nth-child(1) { width: 13%; }
+thead th:nth-child(2) { width: 9%; }
+thead th:nth-child(3) { width: 9%; }
+thead th:nth-child(4) { width: 8%; }
+thead th:nth-child(5) { width: 18%; }
+thead th:nth-child(6) { width: 10%; }
+thead th:nth-child(7) { width: 11%; }
+thead th:nth-child(8) { width: 8%; }
+thead th:nth-child(9) { width: 7%; }
+thead th:nth-child(10) { width: 7%; }
+
+tbody td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 table {
   width: 100%;
-  min-width: 1080px;
+  /* Con `min-width: 1080px` la tabla no cabía en el panel y dejaba la página
+     desplazable en horizontal; con anchos fijos se ajusta y el texto se recorta. */
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
